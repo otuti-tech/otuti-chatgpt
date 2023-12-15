@@ -496,7 +496,7 @@ function submitChat(
   let arkoseToken;
   const startTime = Date.now();
   const interval = setInterval(() => {
-    arkoseToken = window.localStorage.getItem('arkoseToken');
+    arkoseToken = true; // window.localStorage.getItem('arkoseToken');
     if (Date.now() - startTime > 30000) {
       clearInterval(interval);
       return;
@@ -1031,7 +1031,7 @@ function overrideSubmitForm() {
   const inputForm = main.querySelector('form');
   if (!inputForm) return;
   inputForm.addEventListener('submit', (e) => {
-    window.localStorage.removeItem('arkoseToken');
+    // window.localStorage.removeItem('arkoseToken');
     const textAreaElement = inputForm.querySelector('textarea');
     e.preventDefault();
     e.stopPropagation();
@@ -1270,7 +1270,7 @@ ${settings.autoSplitChunkPrompt}`;
   const submitButtonClone = submitButton.cloneNode(true);
   submitButtonClone.type = 'button';
   submitButtonClone.addEventListener('click', () => {
-    window.localStorage.removeItem('arkoseToken');
+    // window.localStorage.removeItem('arkoseToken');
     chrome.storage.local.get(['settings'], ({ settings }) => {
       if (settings.selectedModel.slug.includes('gpt-4')) {
         if (!inputForm.querySelector('#enforcement-trigger')) {
