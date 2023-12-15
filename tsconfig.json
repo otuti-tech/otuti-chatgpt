@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "target": "es6", // Target ECMAScript version
+    "module": "commonjs", // Module system
+    "strict": true, // Enable all strict type-checking options
+    "esModuleInterop": true, // Allows default imports from modules with no default export
+    "skipLibCheck": true, // Skip type checking of declaration files
+    "outDir": "./dist", // Output directory for compiled files
+    // "sourceMap": true, // Generate source maps to help debugging
+    "allowJs": true, // Allow JavaScript files to be compiled
+    "checkJs": false, // Report errors in .js files
+    "forceConsistentCasingInFileNames": true, // Disallow inconsistently-cased references to the same file
+
+    "baseUrl": ".", // Base directory to resolve non-absolute module names
+    // "paths": {}
+    "types": ["chrome", "node"] // Type declaration files to be included in compilation
+  },
+  "include": [
+    "src/**/*"
+    // "src/**/*.ts" // Include all TypeScript files in src folder
+  ],
+  "exclude": [
+    "node_modules" // Exclude node_modules
+  ]
+}

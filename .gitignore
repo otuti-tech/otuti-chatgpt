@@ -24,6 +24,9 @@ Icon
 .env.production.local
 .env.local
 
+# TypeScript output
+/dist
+
 # Next.js build output
 .next
 out
