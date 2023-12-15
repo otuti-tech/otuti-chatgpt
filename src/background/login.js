@@ -6,6 +6,7 @@ chrome.storage.local.get('environment', ({ environment }) => {
     API_URL = 'https://dev.wfh.team:8000';
   }
 });
+// TODO remove this
 function registerUser(data) {
   chrome.storage.local.get(['account'], (r) => {
     const { account } = r;

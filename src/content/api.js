@@ -800,30 +800,6 @@ function deletePrompt(promptId) {
     }).then((res) => res.json());
   });
 }
-function getNewsletters() {
-  return fetch(`${API_URL}/gptx/newsletters/`, {
-    method: 'GET',
-    headers: {
-      ...defaultHeaders,
-    },
-  }).then((res) => res.json());
-}
-function getNewsletter(id) {
-  return fetch(`${API_URL}/gptx/${id}/newsletter/`, {
-    method: 'GET',
-    headers: {
-      ...defaultHeaders,
-    },
-  }).then((res) => res.json());
-}
-function getLatestNewsletter(id) {
-  return fetch(`${API_URL}/gptx/latest-newsletter/`, {
-    method: 'GET',
-    headers: {
-      ...defaultHeaders,
-    },
-  }).then((res) => res.json());
-}
 function getReleaseNote(version) {
   return fetch(`${API_URL}/gptx/release-notes/`, {
     method: 'POST',
@@ -833,14 +809,7 @@ function getReleaseNote(version) {
     body: JSON.stringify({ version }),
   }).then((res) => res.json());
 }
-function getLatestAnnouncement() {
-  return fetch(`${API_URL}/gptx/announcements/`, {
-    method: 'GET',
-    headers: {
-      ...defaultHeaders,
-    },
-  }).then((res) => res.json());
-}
+// TODO
 function getSponsor(version) {
   return fetch(`${API_URL}/gptx/sponsor/`, {
     method: 'GET',
@@ -913,42 +882,5 @@ function report(promptId) {
       },
       body: JSON.stringify({ openai_id: openaiId }),
     }).then((response) => response.json());
-  });
-}
-
-function incrementOpenRate(newsletterId) {
-  const url = `${API_URL}/gptx/increment-open-rate/`;
-  return fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ newsletter_id: newsletterId }),
-  }).then((response) => response.json());
-}
-
-function incrementClickRate(newsletterId) {
-  const url = `${API_URL}/gptx/increment-click-rate/`;
-  return fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ newsletter_id: newsletterId }),
-  }).then((response) => response.json());
-}
-
-function updateEmailNewsletter(emailNewsletter) {
-  chrome.storage.sync.get(['openai_id'], (result) => {
-    const openaiId = result.openai_id;
-    // increment report count
-    const url = `${API_URL}/gptx/update-email-newsletter/`;
-    return fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ p: openaiId, email_newsletter: emailNewsletter }),
-    });
   });
 }

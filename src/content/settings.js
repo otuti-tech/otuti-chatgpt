@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global createModal, updateEmailNewsletter, createReleaseNoteModal, languageList, writingStyleList, toneList, toast, loadConversationList, modelSwitcher, addModelSwitcherEventListener, API_URL:true */
+/* global createModal, createReleaseNoteModal, languageList, writingStyleList, toneList, toast, loadConversationList, modelSwitcher, addModelSwitcherEventListener, API_URL:true */
 const defaultPrompts = [
   { title: 'Continue', text: 'Please continue', isDefault: true },
   {
@@ -62,8 +62,6 @@ function selectedTabContent(selectedTab) {
     case 5:
       return splitterTabContent();
     case 6:
-      return newsletterTabContent();
-    case 7:
       return supportersTabContent();
     default:
       return generalTabContent();
@@ -77,7 +75,6 @@ function settingsModalContent(initialTab = 0) {
     'Custom Prompts',
     'Export',
     'Splitter',
-    'Newsletter',
     'Supporters',
   ];
   let activeTab = initialTab;
@@ -1402,25 +1399,7 @@ Summary: A short summary of the last chunk. Keep important facts and names in th
     );
   });
 }
-function newsletterTabContent() {
-  const content = document.createElement('div');
-  content.id = 'settings-modal-tab-content';
-  content.style =
-    'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
-  // daily newsletter
-  const dailyNewsletterSwitch = createSwitch(
-    'Hide daily newsletter',
-    'Automatically hide the daily newsletter popup.',
-    'hideNewsletter',
-    false,
-  );
-  content.appendChild(dailyNewsletterSwitch);
 
-  // const sendNewsletterToEmailSwitch = createSwitch('Email newsletter', 'Send the Superpower ChatGPT daily newsletter to my email', 'emailNewsletter', false, updateEmailNewsletter, 'Coming soon');
-
-  // content.appendChild(sendNewsletterToEmailSwitch);
-  return content;
-}
 function supportersTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
@@ -1772,10 +1751,10 @@ function initializeSettings() {
               result.settings?.showExamplePrompts !== undefined
                 ? result.settings.showExamplePrompts
                 : false,
-            hideNewsletter:
-              result.settings?.hideNewsletter !== undefined
-                ? result.settings.hideNewsletter
-                : false,
+            // hideNewsletter:
+            //   result.settings?.hideNewsletter !== undefined
+            //     ? result.settings.hideNewsletter
+            //     : false,
             customInstruction:
               result.settings?.customInstruction !== undefined
                 ? result.settings.customInstruction
@@ -1796,10 +1775,10 @@ function initializeSettings() {
               result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
             promptTemplate:
               result.settings?.promptTemplate !== undefined ? result.settings.promptTemplate : true,
-            emailNewsletter:
-              result.settings?.emailNewsletter !== undefined
-                ? result.settings.emailNewsletter
-                : false,
+            // emailNewsletter:
+            //   result.settings?.emailNewsletter !== undefined
+            //     ? result.settings.emailNewsletter
+            //     : false,
             autoClick: result.settings?.autoClick !== undefined ? result.settings.autoClick : false,
             showGpt4Counter:
               result.settings?.showGpt4Counter !== undefined

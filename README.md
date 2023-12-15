@@ -1,7 +1,7 @@
 <img width="100%" alt="Superpower ChatGPT" src="https://user-images.githubusercontent.com/574142/232174790-a91d7d76-ec48-40ef-97ce-76edaa52053a.png">
 
-[link-chrome]: https://chrome.google.com/webstore/detail/superpower-chatgpt/amhmeenmapldpjdedekalnfifgnpfnkc "Chrome Web Store"
-[link-firefox]: https://addons.mozilla.org/en-US/firefox/addon/superpower-chatgpt "Firefox Addons"
+[link-chrome]: https://chrome.google.com/webstore/detail/superpower-chatgpt/amhmeenmapldpjdedekalnfifgnpfnkc 'Chrome Web Store'
+[link-firefox]: https://addons.mozilla.org/en-US/firefox/addon/superpower-chatgpt 'Firefox Addons'
 
 # Superpower ChatGPT ⚡️
 
@@ -91,11 +91,11 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 
 📏 Custom Conversation Width: Adjust the width of the conversation to your liking
 
-🔄  Smart Replace: Automatically replace pre-defined phrases with longer text as you type prompts
+🔄 Smart Replace: Automatically replace pre-defined phrases with longer text as you type prompts
 
 🖱️ Auto Click: Automatically click on the default custom prompt button at the end of each response
 
-👉 Custom Instruction: Don't repeat yourself. Automatically  add a custom instruction to the end of each prompt
+👉 Custom Instruction: Don't repeat yourself. Automatically add a custom instruction to the end of each prompt
 
 📊 Word and Character Count: Add the word and character counters to both the user input and the ChatGPT responses
 
@@ -114,22 +114,6 @@ https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6
 ⏫⏬ Scroll to the top/bottom
 
 🆕 GPT4 Support: Support GPT4 and shows the number GPT4 requests made based on latest limit from OpenAI
-
-## Newsletter inside ChatGPT
-
-📰 AI Newsletter: Read our popular daily AI newsletter right inside ChatGPT
-
-🗄️ Newsletter Archive: Access the newsletter archive and read all the previous versions
-
----
-
-## Superpower Daily Newsletter
-
-We have a popular newsletter that covers the latest AI news, research, and products. There are two ways to read the newsletter:
-
-1. You can read the newsletter right inside ChatGPT. You can also access the newsletter archive and read all the previous versions.
-
-2. You can read the newsletter, see the full archive, and share it with your friends all from our website: https://superpowerdaily.com
 
 ---
 
@@ -151,7 +135,7 @@ We have a popular newsletter that covers the latest AI news, research, and produ
 
 ```
 "background": {
-	"service_worker": "scripts/background/background.js"
+	"service_worker": "src/background/background.js"
 },
 ```
 
@@ -166,8 +150,8 @@ with
 
 "background": {
 	"scripts": [
-		"scripts/background/initialize.js",
-		"scripts/background/login.js"
+		"src/background/initialize.js",
+		"src/background/login.js"
 	]
 },
 ```
@@ -194,7 +178,6 @@ with
     <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=saeedezzati/superpower-chatgpt&type=Date" />
   </picture>
 </a>
-
 
 ## FAQ
 

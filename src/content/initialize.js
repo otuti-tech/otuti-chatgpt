@@ -1,4 +1,4 @@
-/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, addDevIndicator, addExpandButton, openLinksInNewTab, addEnforcementTriggerElement, initializeKeyboardShortcuts, addArkoseCallback, addQuickAccessMenuEventListener, upgradeCustomInstructions, watchError, showAutoSyncToast */
+/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeAutoSave, addNavToggleButton, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, addDevIndicator, addExpandButton, openLinksInNewTab, addEnforcementTriggerElement, initializeKeyboardShortcuts, addArkoseCallback, addQuickAccessMenuEventListener, upgradeCustomInstructions, watchError, showAutoSyncToast */
 
 // eslint-disable-next-line no-unused-vars
 function initialize() {
@@ -24,9 +24,7 @@ function initialize() {
         upgradeCustomInstructions();
         initializeExport();
         initializeContinue();
-        initializeNewsletter();
         initializeSettings();
-        initializeAnnouncement();
         initializeReleaseNote();
         initializePromptLibrary();
         initializePromptHistory();

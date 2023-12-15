@@ -280,9 +280,9 @@ input:checked + .slider:before {
   white-space: initial;
 }
 /* announcement */
-#modal-content-newsletter {
+/* #modal-content-newsletter {
  line-height:28px;
-}
+} */
 
 /* ezgif images have transparent background */
 #modal-content-general img,
@@ -303,13 +303,13 @@ input:checked + .slider:before {
   box-shadow: 0 0 8px rgb(162, 154, 106);
 }
 
-#modal-content-newsletter a,
+/* #modal-content-newsletter a, */
 #modal-content-general a,
 [id^="modal-content-release-note"] a {
   color: gold !important;
   text-decoration: none !important;
 }
-#modal-content-newsletter a:hover,
+/* #modal-content-newsletter a:hover, */
 #modal-content-general a:hover,
 [id^="modal-content-release-note"] a:hover {
   text-decoration: underline;

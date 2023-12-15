@@ -45,10 +45,6 @@ function keyboardShortcutsModalContent() {
       <td>Open Plugin Store</td>
     </tr>
     <tr>
-      <td>CTRL/CMD + SHIFT + L</td>
-      <td>Open Newsletter Archive</td>
-    </tr>
-    <tr>
       <td>CTRL/CMD + SHIFT + X (or SHIFT + Click on New Prompt Chain button)</td>
       <td>Open Prompt Chain List</td>
     </tr>
@@ -214,13 +210,13 @@ function registerShortkeys() {
         }, 300);
       }
       // cmd/ctrl + shift + l
-      if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.shiftKey && e.keyCode === 76) {
-        if (!document.querySelector('#modal-newsletter-archive')) {
-          // open newsletter
-          e.preventDefault();
-          document.querySelector('#newsletter-button')?.click();
-        }
-      }
+      // if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.shiftKey && e.keyCode === 76) {
+      //   if (!document.querySelector('#modal-newsletter-archive')) {
+      //     // open newsletter
+      //     e.preventDefault();
+      //     document.querySelector('#newsletter-button')?.click();
+      //   }
+      // }
     });
   });
 }
