@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, showHideTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, addArkoseScript, addEnforcementTriggerElement, languageList, writingStyleList, toneList */
+/* global getConversation, submitChat, openSubmitPromptModal, initializeRegenerateResponseButton, showHideTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, refreshConversations, initializeStopGeneratingResponseButton, chatStreamIsClosed:true, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, addEnforcementTriggerElement, languageList, writingStyleList, toneList */
 
 function addPinNav(sortedNodes) {
   chrome.storage.local.get(['settings'], (res) => {
