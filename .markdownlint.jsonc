@@ -1,0 +1,21 @@
+{
+  "extends": "markdownlint/style/prettier",
+  // Line Length
+  "MD013": {
+    // Number of characters
+    "line_length": 100,
+    // Include Tables
+    "tables": false,
+    // Include Code Blocks
+    "code_blocks": false,
+    // Include Headings
+    "headings": false
+  },
+  "MD018": false, // So I can use `#` for Tags. e.g. `#tag1 #tag2`
+  "MD024": false, // No Duplicated Heading
+  "MD026": false, // No Trailing Punctuation in Heading
+  "MD033": false, // No Inline HTML
+  "MD036": false, // No Emphasis as Heading
+  "MD041": false // First line in file should be a top level heading
+  // "MD046": false // Code block style
+}

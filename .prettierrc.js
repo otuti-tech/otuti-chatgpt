@@ -5,7 +5,7 @@ const config = {
   printWidth: 100,
   proseWrap: 'preserve',
   singleQuote: true,
-  //   tabWidth: 2,
+  // tabWidth: 2,
 
   // proseWrap: "always", // default: preserve
 };
