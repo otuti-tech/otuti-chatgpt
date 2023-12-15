@@ -2,66 +2,33 @@
 <html>
 
 <head>
-    <link rel="stylesheet" href="popup.css" />
-    <script src="https://code.jquery.com/jquery-3.6.0.js"
-        integrity="sha384-VkVcAf8PwarG6pjvWEldRD2poYG8DyJtrlaKtCsegdRgFoI5HQ24pSWnaLKaUPO7"
-        crossorigin="anonymous"></script>
+	<link rel="stylesheet" href="popup.css" />
 </head>
 
 <body>
-    <div class="welcome-message">
-        <h3>Welcome to ATLANTIS.AI!</h3>
-        <p class="message"></p>
-    </div>
-    <div class="positive-message">
-        <h4>Random Positive Life Messages:</h4>
-        <ul>
-            <li>Simplicity is ultimate sophistication.</li>
-            <li>The only time you should ever glance back, is to see how far you have come.</li>
-            <li>Inhale courage. Exhale fear.</li>
-            <li>Good things take time.</li>
-            <li>Begin, be afraid, but do it anyways.</li>
-            <li>Your soul speaks to you in quiet moments. Listen.</li>
-            <li>Enjoy little things in life, because someday you will realise they were the big things.</li>
-            <li>We do not remember days, we remember moments.</li>
-            <li>Happiness is not the absence of problems it's the ability to deal with them incredibly.</li>
-            <li>Every day is beautiful if you choose to see it.</li>
-        </ul>
-    </div>
-    <a target="_blank" href="https://chat.openai.com/">
-        <button id="chatgpt">ChatGPT <span>&#8594;</span></button>
-    </a>
-    <a href="https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24">
-        <button id="faq">FAQ
-            <span>&#8594;</span></button>
-    </a>
-    <script src="popup.js"></script>
-    <script>
-        $(document).ready(function() {
-            let positive_messages = $('.positive-message ul');
-            let messages = [
-                "Simplicity is ultimate sophistication.",
-                "The only time you should ever glance back, is to see how far you have come.", 
-                "Inhale courage. Exhale fear.",
-                "Good things take time.",
-                "Begin, be afraid, but do it anyways.",
-                "Your soul speaks to you in quiet moments. Listen..",
-                "Enjoy little things in life, because someday realising will know which was the big thing..",
-                "We do not remember days, we remember moments.",
-                "Happiness is not the absence of problems it's the ability to deal unimaginably.",
-                "Every day is beautiful, Some days we just choose to pick beauty.";
-            ];
-            let random_messages = [];
-            while (random_messages.length < 10) {
-                let message = messages[Math.floor(Math.random() * messages.length)];
-                if (random_messages.indexOf(message) === -1) {
-                    random_messages.push(message);
-                }
-            }
-            $(random_messages).each(function(index, item) {
-                positive_messages.append('<li>'+ item +'</li>');
-            });
-        });
-    </script>
+	<a target="_blank" href="https://chat.openai.com/">
+		<button id="chatgpt">ChatGPT <span>&#8594;</span></button>
+	</a>
+	<a target="_blank" href="https://www.superpowerdaily.com/">
+		<button id="newsletter">Newsletter <span>&#8594;</span></button>
+	</a>
+	<a target="_blank" href="https://www.passionfroot.me/superpower">
+		<button id="sponsorship">Advertise with us
+			<span>&#8594;</span></button>
+	</a>
+	<a target="_blank" href="https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24">
+		<button id="faq">FAQ
+			<span>&#8594;</span></button>
+	</a>
+	<a target="_blank"
+		href="https://www.paypal.com/donate/?business=TAF9NBUWQQQ7J&no_recurring=0&item_name=Thank+you+for+supporting+Superpower+ChatGPT+%F0%9F%99%87%F0%9F%8F%BB%E2%80%8D%E2%99%82%EF%B8%8F&currency_code=USD">
+		<button id="paypel">Support (Paypal) <span>&#8594;</span></button>
+	</a>
+	<a target="_blank" href="https://buy.stripe.com/6oE6s0dQS7y2bjG9AA">
+		<button id="stripe">Support (Stripe)
+			<span>&#8594;</span></button>
+	</a>
+	<script src="popup.js"></script>
 </body>
+
 </html>

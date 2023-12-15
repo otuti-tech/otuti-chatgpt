@@ -1,8 +1,8 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable no-restricted-globals */
 /* global formatDate, showAllCheckboxes, hideAllButLastCheckboxes, deleteConversation, renameConversation, loadConversation, highlight, showNewChatPage, emptyFolderElement, shiftKeyPressed:true, isWindows, createShare, shareModal, addShareModalEventListener */
-
-const notSelectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-20 group';
+//masalai changed py-3 to py-1
+const notSelectedClassList = 'flex py-1 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-20 group';
 const selectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md cursor-pointer break-all hover:pr-20 bg-gray-800 hover:bg-gray-800 group selected border-l border-gold';
 
 function getConversationElementClassList(conversation) {

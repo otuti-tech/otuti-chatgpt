@@ -18,10 +18,10 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
       curFolderElement?.click();
     }
   });
-  // folder element
+  // folder element - changed to py-1 from py-3
   const folderElement = document.createElement('div');
   folderElement.id = `folder-${folderId}`;
-  folderElement.classList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-20 group';
+  folderElement.classList = 'flex py-1 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-20 group';
   folderElement.style.backgroundColor = folder.color || 'transparent';
   folderElement.addEventListener('click', (e) => {
     e.preventDefault();

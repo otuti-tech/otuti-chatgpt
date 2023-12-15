@@ -20,7 +20,7 @@ async function autoSaveCountDownAsync(isPaid) {
   await new Promise((resolve) => {
     autoSaveTimeoutId = setTimeout(() => {
       resolve();
-    }, isPaid ? 100 : 100);
+    }, isPaid ? 2000 : 2000);
   });
 }
 async function addConversationToStorage(conv) {
@@ -304,7 +304,7 @@ function initializeAutoSave(skipInputFormReload = false, forceRefreshIds = []) {
     }
     chrome.storage.local.get(['conversationsOrder', 'conversations', 'account', 'settings'], (result) => {
       const { account, settings, conversationsOrder } = result;
-      const isPaid = true;
+      const isPaid = account?.accounts?.default?.entitlement?.has_active_subscription || false;
       if (result.conversations && Object.keys(result.conversations).length > 0) {
         localConversations = result.conversations;
       }
