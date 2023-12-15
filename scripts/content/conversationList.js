@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global arkoseTrigger, TurndownService, generateInstructions, generateChat, formatDate, loadConversation, resetSelection, initializeAutoDelete, ChatGPTIcon, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, isGenerating:true, generateTitle, debounce, initializeStopGeneratingResponseButton, showHideTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, createTemplateWordsModal, initializePromptChain, initializeUpgradeButton, insertNextChain, runningPromptChainSteps:true, runningPromptChainIndex:true, lastPromptSuggestions, playSound, toast, curImageAssets:true, curFileAttachments:true, addConversationsEventListeners, addFinalCompletionClassToLastMessageWrapper, addMessagePluginToggleButtonsEventListeners, addNodeToRowAssistant, showDefaultFolderActions, updateLastMessagePluginDropdown, textAreaElementOldValue:true, addArkoseCallback, conversationSettingsMenu, toggleKeepFoldersAtTheTop, addConversationSettingsMenuEventListener, addCustomInstructionInfoIconEventListener, getGizmoById, observeGizmoBootstrapList, updateGPTEditIcon, renderGizmoDiscoveryPage, initializeCustomSelectionMenu,getGizmoIdFromUrl, getMousePosition, updateGizmoSidebar, formatTime, replaceAllConfimationWrappersWithActionStopped, initializeGallery, resetFolders, generateRandomDarkColor */
+/* global TurndownService, generateInstructions, generateChat, formatDate, loadConversation, resetSelection, initializeAutoDelete, ChatGPTIcon, rowUser, rowAssistant, updateOrCreateConversation, replaceTextAreaElemet, isGenerating:true, generateTitle, debounce, initializeStopGeneratingResponseButton, showHideTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, createTemplateWordsModal, initializePromptChain, initializeUpgradeButton, insertNextChain, runningPromptChainSteps:true, runningPromptChainIndex:true, lastPromptSuggestions, playSound, toast, curImageAssets:true, curFileAttachments:true, addConversationsEventListeners, addFinalCompletionClassToLastMessageWrapper, addMessagePluginToggleButtonsEventListeners, addNodeToRowAssistant, showDefaultFolderActions, updateLastMessagePluginDropdown, textAreaElementOldValue:true, conversationSettingsMenu, toggleKeepFoldersAtTheTop, addConversationSettingsMenuEventListener, addCustomInstructionInfoIconEventListener, getGizmoById, observeGizmoBootstrapList, updateGPTEditIcon, renderGizmoDiscoveryPage, initializeCustomSelectionMenu,getGizmoIdFromUrl, getMousePosition, updateGizmoSidebar, formatTime, replaceAllConfimationWrappersWithActionStopped, initializeGallery, resetFolders, generateRandomDarkColor */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -536,17 +536,14 @@ function updateNewChatButtonSynced() {
   });
 }
 function submitChat(userInput, conversation, messageId, parentId, settings, account, models, imageAssets = [], fileAttachments = [], continueGenerating = false, regenerateResponse = false, authorRole = 'user', authorName = '', initialMetadata = {}) {
-  const isPaid = account?.accounts?.default?.entitlement?.has_active_subscription || false;
-  // check window. localstorage every 200ms until arkoseToken is set
-  let arkoseToken = window.localStorage.getItem('arkoseToken');
-  if (!arkoseToken) {
-    arkoseTrigger();
-  }
+  const isPaid = true;
+  
+  
   const userMessageId = messageId;
   let assistantData = [];
   const startTime = Date.now();
   const interval = setInterval(() => {
-    arkoseToken = window.localStorage.getItem('arkoseToken');
+    
 
     if (Date.now() - startTime > 5000) {
       clearInterval(interval);
@@ -568,8 +565,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, acco
       submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
       return;
     }
-    // if (arkoseToken || (isPaid && !settings.selectedModel.tags.includes('gpt4'))) {
-    if (arkoseToken) {
+    if (true) {
       clearInterval(interval);
       scrolUpDetected = false;
       // clear search
@@ -614,7 +610,7 @@ function submitChat(userInput, conversation, messageId, parentId, settings, acco
       // eslint-disable-next-line no-nested-ternary
       const action = regenerateResponse ? 'variant' : continueGenerating ? 'continue' : 'next';
       getGizmoById(gizmoId).then((gizmoData) => {
-        generateChat(userInputParts, conversation?.id, userMessageId, parentId, arkoseToken, gizmoData?.resource, metadata, lastPromptSuggestions, saveHistory, authorRole, authorName, action, contentType).then((chatStream) => {
+        generateChat(userInputParts, conversation?.id, userMessageId, parentId, gizmoData?.resource, metadata, lastPromptSuggestions, saveHistory, authorRole, authorName, action, contentType).then((chatStream) => {
           userChatIsActuallySaved = regenerateResponse || continueGenerating || authorRole !== 'user';
           let userChatSavedLocally = regenerateResponse || continueGenerating || authorRole !== 'user'; // false by default unless regenerateResponse is true
           let assistantChatSavedLocally = false;
@@ -681,13 +677,13 @@ function submitChat(userInput, conversation, messageId, parentId, settings, acco
                         if (runningPromptChainSteps && runningPromptChainSteps.length > 1 && runningPromptChainIndex < runningPromptChainSteps.length - 1) {
                           setTimeout(() => {
                             insertNextChain(runningPromptChainSteps, runningPromptChainIndex + 1);
-                          }, isPaid ? 700 : 2000);
+                          }, isPaid ? 100 : 100);
                         } else {
                           runningPromptChainSteps = undefined;
                           runningPromptChainIndex = 0;
                           setTimeout(() => {
                             insertNextChunk(settings, finalMessage);
-                          }, isPaid ? 700 : 2000);
+                          }, isPaid ? 100 : 100);
                         }
                       } else {
                         runningPromptChainSteps = undefined;
@@ -1347,8 +1343,7 @@ function loadConversationList(skipInputFormReload = false) {
       if (!skipInputFormReload) addScrollButtons();
       if (!skipInputFormReload) initializePromptChain();
       if (!skipInputFormReload) setBackButtonDetection();
-      setTimeout(() => {
-        if (!skipInputFormReload) addArkoseCallback();
+      setTimeout(() => {        
         initializeAutoDelete();
       }, 1000);
     }

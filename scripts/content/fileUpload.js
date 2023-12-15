@@ -1,4 +1,4 @@
-/* global toast, arkoseTrigger, createFileInServer, isDescendant, uploadFileAPI, uploadedAPI, getThumbnail */
+/* global toast, createFileInServer, isDescendant, uploadFileAPI, uploadedAPI, getThumbnail */
 // eslint-disable-next-line no-unused-vars
 let curImageAssets = [];
 let curFileAttachments = [];
@@ -100,9 +100,7 @@ function fileChangeHandler(files) {
     toast(`Too many files uploaded. Maximum number of files at a time is ${uploadLimit}`, 'error');
     return;
   }
-  if (existingFileElements.length === 0) {
-    arkoseTrigger();
-  }
+
   const textAreaElement = document.querySelector('main form textarea');
   const existingFileWrapperElement = textAreaElement.parentElement.querySelector('#file-wrapper-element');
   if (!existingFileWrapperElement) {

@@ -1,4 +1,4 @@
-/* global isGenerating, textAreaElementInputEventListener, textAreaElementKeydownEventListenerSync, addUploadFileButton, curFileAttachments, addPageDragAndDropEventListener, overrideSubmitForm, arkoseTrigger, */
+/* global isGenerating, textAreaElementInputEventListener, textAreaElementKeydownEventListenerSync, addUploadFileButton, curFileAttachments, addPageDragAndDropEventListener, overrideSubmitForm, */
 
 // eslint-disable-next-line prefer-const
 let textAreaElementOldValue = '';
@@ -102,9 +102,6 @@ function replaceTextAreaElemet(settings) {
 
     if (textAreaElementOldValue === '' && newTextAreaElement.value !== textAreaElementOldValue) {
       textAreaElementOldValue = newTextAreaElement.value;
-      if (fileElement.length === 0) {
-        arkoseTrigger();
-      }
     } else if (newTextAreaElement.value !== textAreaElementOldValue) {
       textAreaElementOldValue = newTextAreaElement.value;
     }

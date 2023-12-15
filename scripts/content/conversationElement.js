@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-/* global ChatGPTIcon, formatDate, showAllCheckboxes, hideAllButLastCheckboxes, deleteConversation, renameConversation, loadConversation, showNewChatPage, emptyFolderElement, shiftKeyPressed:true, isWindows, createShare, shareModal, addShareModalEventListener, arkoseWasInitialized, updateOutOfDateConversation, defaultFolderActions, addToFolderAction, hideAllEditIcons, formatTime */
+/* global ChatGPTIcon, formatDate, showAllCheckboxes, hideAllButLastCheckboxes, deleteConversation, renameConversation, loadConversation, showNewChatPage, emptyFolderElement, shiftKeyPressed:true, isWindows, createShare, shareModal, addShareModalEventListener, updateOutOfDateConversation, defaultFolderActions, addToFolderAction, hideAllEditIcons, formatTime */
 
 const notSelectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-20 group';
 const selectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md cursor-pointer break-all hover:pr-20 bg-gray-800 hover:bg-gray-800 group selected border-l border-gold';
@@ -30,7 +30,7 @@ function createConversation(conversation, searchValue = '') {
       window.open(`https://chat.openai.com/${gizmoPath}c/${conversation.id}`, '_blank');
       return;
     }
-    if (arkoseWasInitialized()) {
+    if (true) {
       const conversationId = pathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
       if (searchValue || conversationId !== conversation.id) {
         window.history.pushState({}, '', `https://chat.openai.com/${gizmoPath}c/${conversation.id}`);

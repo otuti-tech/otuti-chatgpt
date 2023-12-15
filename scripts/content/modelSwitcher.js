@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-/* global getInstalledPlugins, addUploadFileButton, arkoseTrigger, curImageAssets:true, curFileAttachments:true */
+/* global getInstalledPlugins, addUploadFileButton, curImageAssets:true, curFileAttachments:true */
 // eslint-disable-next-line no-unused-vars
 function modelSwitcher(models, selectedModel, idPrefix, customModels, autoSync, forceDark = false) {
   return `<button id="${idPrefix}-model-switcher-button" class="relative w-full cursor-pointer rounded-md border ${forceDark ? 'border-white/20 bg-gray-800' : 'border-gray-300 bg-white'} pt-1 pl-3 pr-10 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 dark:border-white/20 dark:bg-gray-800 sm:text-sm" type="button">
@@ -187,9 +187,7 @@ function addModelSwitcherEventListener(idPrefix, forceDark = false) {
         }
         chrome.storage.local.set({ settings: { ...settings, selectedModel } }, () => {
           const textAreaElement = document.querySelector('main form textarea');
-          if (textAreaElement?.value?.length > 0) {
-            arkoseTrigger();
-          }
+          
           addUploadFileButton();
           // focus on input
           const textInput = document.querySelector('main form textarea');

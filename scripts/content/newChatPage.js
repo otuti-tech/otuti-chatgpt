@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global createSwitch, gptSVG, getUserSystemMessage, setUserSystemMessage, profileDropdown, profileDropdownButton, handleQueryParams, updateOutOfDateConversation, arkoseWasInitialized, notSelectedClassList, runningPromptChainSteps:true, runningPromptChainIndex:true, replaceTextAreaElemet, showHideTextAreaElement, initializeNavbar, replacePageContent, languageList, writingStyleList, toneList, getExamplePrompts, addInputFormActionWrapper, getGizmoUserActionSettings */
+/* global createSwitch, gptSVG, getUserSystemMessage, setUserSystemMessage, profileDropdown, profileDropdownButton, handleQueryParams, updateOutOfDateConversation, notSelectedClassList, runningPromptChainSteps:true, runningPromptChainIndex:true, replaceTextAreaElemet, showHideTextAreaElement, initializeNavbar, replacePageContent, languageList, writingStyleList, toneList, getExamplePrompts, addInputFormActionWrapper, getGizmoUserActionSettings */
 
 // eslint-disable-next-line no-unused-vars
 function showNewChatPage(gizmoResource = null, shouldResetSearch = true) {
@@ -18,7 +18,7 @@ function showNewChatPage(gizmoResource = null, shouldResetSearch = true) {
   updateOutOfDateConversation();
 
   const targetPath = gizmoResource ? `/g/${gizmoResource.gizmo?.short_url}` : '/';
-  if (!arkoseWasInitialized()) {
+  if (true) {
     window.location.href = `https://chat.openai.com${targetPath}`;
     return;
   }

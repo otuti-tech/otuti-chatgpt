@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global TurndownService, conversationSettingsMenu, addConversationSettingsMenuEventListener, submitChat, openSubmitPromptModal, showHideTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, initializeStopGeneratingResponseButton, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, languageList, writingStyleList, toneList, arkoseTrigger, createFullSizeFileWrapper, addFullSizeFileWrapperEventListener, addUploadFileButton, getMousePosition, renderAllDalleImages, getGizmoById, initializeNavbar, replacePageContent, replaceTextAreaElemet, addFinalCompletionClassToLastMessageWrapper, highlightSearch, getGizmoUserActionSettings, actionAllowedRenderer, actionDeniedRenderer, updateLastMessagePluginDropdown, initializeAutoSave, renderAllPythonImages, getDownloadUrlFromFileId, getDownloadUrlFromSandBoxPath, toast, downloadFileFrmoUrl */
+/* global TurndownService, conversationSettingsMenu, addConversationSettingsMenuEventListener, submitChat, openSubmitPromptModal, showHideTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, initializeStopGeneratingResponseButton, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, languageList, writingStyleList, toneList, createFullSizeFileWrapper, addFullSizeFileWrapperEventListener, addUploadFileButton, getMousePosition, renderAllDalleImages, getGizmoById, initializeNavbar, replacePageContent, replaceTextAreaElemet, addFinalCompletionClassToLastMessageWrapper, highlightSearch, getGizmoUserActionSettings, actionAllowedRenderer, actionDeniedRenderer, updateLastMessagePluginDropdown, initializeAutoSave, renderAllPythonImages, getDownloadUrlFromFileId, getDownloadUrlFromSandBoxPath, toast, downloadFileFrmoUrl */
 
 function showCustomInstructionTooltip(event, aboutUser, aboutModel) {
   const { x, y } = getMousePosition(event);
@@ -399,7 +399,6 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
         chrome.storage.local.get(['conversations', 'settings', 'models', 'account'], (result) => {
           const conversation = result.conversations[conversationId];
           const message = conversation.mapping[messageId];
-          arkoseTrigger();
           let newMessage = textArea.value;
           // this is the right way, but OpenAI always creat a new chat even if you don't change the input, so we follow the same behavior
           // const newMessageId = newMessage !== userInput ? self.crypto.randomUUID() : messageId;

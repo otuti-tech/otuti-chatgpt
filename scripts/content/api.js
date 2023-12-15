@@ -80,7 +80,6 @@ function generateChat(userInputParts, conversationId, messageId, parentMessageId
       action,
       force_paragen: false,
       force_rate_limit: false,
-      arkose_token: token,
       model: res.settings.selectedModel.slug,
       parent_message_id: parentMessageId,
       history_and_training_disabled: !saveHistory,
@@ -143,8 +142,6 @@ function generateChat(userInputParts, conversationId, messageId, parentMessageId
       payload.plugin_ids = newEnabledPluginIds;
       chrome.storage.local.set({ enabledPluginIds: newEnabledPluginIds });
     }
-    // clear arkose once used
-    window.localStorage.removeItem('arkoseToken');
     const eventSource = new SSE(
       '/backend-api/conversation',
       {
