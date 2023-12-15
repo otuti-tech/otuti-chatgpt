@@ -43,7 +43,7 @@ function announcementModalContent(data, email = '') {
       chrome.runtime.sendMessage({
         incrementClickRate: true,
         detail: {
-          newsletterId: data.id,
+          announcementId: data.id,
         },
       });
     }
@@ -88,9 +88,11 @@ function announcementModalActions(data) {
 // eslint-disable-next-line no-unused-vars
 function initializeAnnouncement() {
   setTimeout(() => {
-    chrome.storage.sync.get(['lastSeenAnnouncementId', 'lastSeenNewsletterId', 'email'], (result) => {
-      chrome.storage.local.get(['settings'], (res) => {
-        const { lastSeenAnnouncementId, lastSeenNewsletterId, email } = result;
+    chrome.storage.sync.get(['lastSeenAnnouncementId', 'email'], (result) => {
+      chrome.storage.local.get(['readNewsletterIds', 'settings'], (res) => {
+        const { lastSeenAnnouncementId, email } = result;
+        const readNewsletterIds = res.readNewsletterIds || [];
+
         // try getting latest announcement first
         chrome.runtime.sendMessage({
           getLatestAnnouncement: true,
@@ -98,26 +100,35 @@ function initializeAnnouncement() {
           if (announcement && announcement.id && lastSeenAnnouncementId !== announcement.id) {
             createAnnouncementModal(announcement);
             chrome.storage.sync.set({ lastSeenAnnouncementId: announcement.id });
+            chrome.runtime.sendMessage({
+              incrementOpenRate: true,
+              detail: {
+                announcementId: announcement.id,
+              },
+            });
           } else {
             // if no announcement was found, try getting the latest newsletter
-            if (res.settings?.hideNewsletter) return;
             chrome.runtime.sendMessage({
               getLatestNewsletter: true,
             }, (newsletter) => {
               if (!newsletter || !newsletter.id) return;
-              if (lastSeenNewsletterId !== newsletter.id) {
-                createAnnouncementModal(newsletter, email);
-                chrome.storage.sync.set({ lastSeenNewsletterId: newsletter.id });
-                chrome.storage.local.get(['readNewsletterIds'], (results) => {
-                  const readNewsletterIds = results.readNewsletterIds || [];
-                  chrome.storage.local.set({ readNewsletterIds: [...readNewsletterIds, newsletter.id] });
-                });
-                chrome.runtime.sendMessage({
-                  incrementOpenRate: true,
-                  detail: {
-                    newsletterId: newsletter.id,
-                  },
-                });
+              if (!readNewsletterIds.includes(newsletter.id)) {
+                if (res.settings?.hideNewsletter) {
+                  const newsletterButton = document.querySelector('#newsletter-button');
+                  const newsletterNotification = document.createElement('div');
+                  newsletterNotification.id = 'newsletter-notification';
+                  newsletterNotification.style = 'position:absolute; top:8px; right:70px; width: 8px; height: 8px; background-color: red; border-radius: 50%;';
+                  newsletterButton.appendChild(newsletterNotification);
+                } else {
+                  createAnnouncementModal(newsletter, email);
+                  chrome.storage.local.set({ readNewsletterIds: [newsletter.id, ...readNewsletterIds] });
+                  chrome.runtime.sendMessage({
+                    incrementOpenRate: true,
+                    detail: {
+                      announcementId: newsletter.id,
+                    },
+                  });
+                }
               }
             });
           }

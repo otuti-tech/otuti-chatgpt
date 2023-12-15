@@ -1,86 +1,7 @@
-/* global allAsistantChats, getConversation,getConversations, getSelectedConversations, toast, JSZip, saveAs, canSubmitPrompt, resetSelection, getBrowser */
+/* global getConversation,getConversations, formatTime, getSelectedConversations, JSZip, saveAs, resetSelection */
 let exportAllCanceled = false;
-let exportFailed = false;
-let interval;
 let timeout;
-function getSingelConversation(conversationId, title) {
-  getConversation(conversationId).then((conversation) => {
-    const conversationTitle = conversation.title.replace(/[^a-zA-Z0-9]/g, '_');
-    const createDate = new Date(conversation.create_time * 1000);
-    const filePrefix = `${createDate.getHours()}-${createDate.getMinutes()}-${createDate.getSeconds()}`;
 
-    let currentNode = conversation.current_node;
-    let messages = [];
-    while (currentNode) {
-      const { message, parent } = conversation.mapping[currentNode];
-      if (message) messages.push(message);
-      currentNode = parent;
-    }
-    // get export mode from settings
-    chrome.storage.local.get('settings', ({ settings }) => {
-      const { exportMode } = settings;
-
-      if (exportMode === 'assistant') {
-        messages = messages.filter((m) => m.role === 'assistant' || m.author?.role === 'assistant');
-      }
-      if (title.toLowerCase() === 'json') {
-        const conversationJson = conversation;
-        const element = document.createElement('a');
-        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(conversationJson))}`);
-        element.setAttribute('download', `${filePrefix}-${conversationTitle}.${fileFormatConverter(title.toLowerCase())}`);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-        navigator.clipboard.writeText(JSON.stringify(conversationJson));
-        toast('Copied to clipboard');
-      }
-      // download as .txt file
-      if (title.toLowerCase() === 'text') {
-        const conversationText = messages.reverse().filter((m) => {
-          const role = m?.author?.role || m?.role;
-          const recipient = m?.recipient;
-          return role === 'user' || (recipient === 'all' && role === 'assistant');
-        }).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
-        const element = document.createElement('a');
-        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(conversationText)}`);
-        element.setAttribute('download', `${filePrefix}-${conversationTitle}.${fileFormatConverter(title.toLowerCase())}`);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-        navigator.clipboard.writeText(conversationText);
-        toast('Copied to clipboard');
-      }
-      // download as .md file
-      if (title.toLowerCase() === 'markdown') {
-        const conversationMarkdown = messages.reverse().filter((m) => {
-          const role = m?.author?.role || m?.role;
-          const recipient = m?.recipient;
-          return role === 'user' || (recipient === 'all' && role === 'assistant');
-        }).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
-        const element = document.createElement('a');
-        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(conversationMarkdown)}`);
-        // add timestamp to conversation title to make file name
-        element.setAttribute('download', `${filePrefix}-${conversationTitle}.${fileFormatConverter(title.toLowerCase())}`);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-        navigator.clipboard.writeText(conversationMarkdown);
-        toast('Copied to clipboard');
-      }
-      // download as .html file
-      if (title.toLowerCase() === 'html') {
-        if (getBrowser() === 'Firefox') {
-          toast('This feature is only available on Chrome browser', 'error');
-        } else {
-          chrome.runtime.sendMessage({ type: 'readMhtml', title: `${filePrefix}-${conversationTitle}` });
-        }
-      }
-    });
-  });
-}
 function fileFormatConverter(fileFormat) {
   switch (fileFormat) {
     case 'json':
@@ -96,165 +17,6 @@ function fileFormatConverter(fileFormat) {
   }
 }
 
-function addExportAsButton(title) {
-  const canSubmit = canSubmitPrompt();
-  if (!canSubmit) return null;
-
-  const exportAsButton = document.createElement('button');
-  // add event listener to darkmode change
-  exportAsButton.id = `${title.toLowerCase()}-export-conversation-button`;
-  exportAsButton.textContent = title;
-  exportAsButton.type = 'button';
-  exportAsButton.style = 'width:100px;border:none;';
-  exportAsButton.classList.add('btn', 'flex', 'justify-center', 'gap-2', 'btn-neutral', 'border');
-
-  exportAsButton.addEventListener('click', () => {
-    const { pathname } = new URL(window.location.toString());
-    let conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-    //  if conversation id is not valid uuid v4
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
-      // happens when auto-sync is off and create a new chat. there is no id in url initially
-      getConversations(0, 1).then((conversations) => {
-        const lastConversation = conversations.items[0];
-        if (lastConversation) {
-          conversationId = lastConversation.id;
-        }
-        getSingelConversation(conversationId, title);
-      }, () => {
-        toast('Error while getting conversation');
-      });
-    } else {
-      getSingelConversation(conversationId, title);
-    }
-  });
-  return exportAsButton;
-}
-function addExportButton() {
-  const assistantChats = allAsistantChats();
-  const textAreaElement = document.querySelector('main form textarea');
-  if (!textAreaElement) return;
-  const canSubmit = canSubmitPrompt();
-
-  const lastExportButton = document.querySelector('#export-conversation-button');
-  if ((!canSubmit || assistantChats.length === 0) && lastExportButton) {
-    lastExportButton.remove();
-    return;
-  }
-  if (lastExportButton) return;
-  if (!canSubmit) return;
-  if (assistantChats.length === 0) return;
-  const exportButton = document.createElement('button');
-  exportButton.id = 'export-conversation-button';
-  exportButton.type = 'button';
-  exportButton.textContent = 'Export';
-  exportButton.classList.add('btn', 'justify-center', 'gap-2', 'btn-neutral', 'border');
-  exportButton.style = 'position:absolute;right:0px;width:104px;display:none;';
-  // add icon
-  const exportButtonIcon = document.createElement('img');
-  exportButtonIcon.style = 'height:20px;';
-  exportButtonIcon.src = chrome.runtime.getURL('icons/export.png');
-  exportButton.prepend(exportButtonIcon);
-
-  // export menu
-  const exportMenu = document.createElement('div');
-  exportMenu.style = 'position:absolute;right:0px;bottom:44px;border:1px solid #565869;border-radius:4px;display:none;z-index:200;';
-  exportMenu.id = 'export-menu';
-  const divider = document.createElement('div');
-  divider.style = 'height:1px;background-color:#565869;margin:0px 4px;';
-
-  exportMenu.appendChild(addExportAsButton('Markdown'));
-  exportMenu.appendChild(divider);
-  exportMenu.appendChild(addExportAsButton('Json'));
-  exportMenu.appendChild(divider.cloneNode());
-  exportMenu.appendChild(addExportAsButton('Text'));
-  // exportMenu.appendChild(divider.cloneNode());
-  // exportMenu.appendChild(addExportAsButton('Html'));
-  // add exportMenu as sibling of exportButton
-  exportButton.appendChild(exportMenu);
-  const connector = document.createElement('div');
-  connector.style = 'position:absolute;right:-10px;bottom:34px;width:100px;height:12px;display:none;';
-  exportButton.appendChild(connector);
-
-  // add hover style to button
-  exportButton.addEventListener('mouseover', () => {
-    exportMenu.style.display = 'block';
-    connector.style.display = 'block';
-  });
-  exportButton.addEventListener('mouseout', () => {
-    // if not focused hide it
-    if (document.activeElement !== exportButton) {
-      exportMenu.style.display = 'none';
-      connector.style.display = 'none';
-    }
-  });
-  // if click outside hide it
-  document.addEventListener('click', (e) => {
-    if (e.target !== exportButton) {
-      exportMenu.style.display = 'none';
-      connector.style.display = 'none';
-    }
-  });
-
-  if (canSubmit) {
-    const inputForm = document.querySelector('main form');
-    const inputFormFirstChild = inputForm.firstChild;
-    chrome.storage.local.get('settings', ({ settings }) => {
-      let inputFormActionWrapper = settings.autoSync
-        ? inputForm.querySelector('#input-form-action-wrapper')
-        : inputForm.firstChild.firstChild.firstChild;
-      if (!settings.autoSync) {
-        const growElement = inputFormActionWrapper.querySelector('.grow');
-        if (growElement) {
-          growElement.remove();
-        }
-      }
-      if (!inputFormActionWrapper) {
-        if (!inputFormFirstChild.firstChild.contains(textAreaElement)) {
-          inputFormFirstChild.firstChild.remove();
-        }
-        // create new div
-        const newDiv = document.createElement('div');
-        newDiv.id = 'input-form-action-wrapper';
-        newDiv.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-4 gap-0 md:gap-2 justify-center items-end';
-        // prepent inputform with new div
-        inputFormFirstChild.prepend(newDiv);
-        inputFormActionWrapper = newDiv;
-      }
-      inputFormActionWrapper.style.minHeight = '38px';
-      exportButton.style.display = settings.showExportButton ? 'flex' : 'none';
-      const existingExportButton = document.querySelector('#export-conversation-button');
-      if (!existingExportButton) inputFormActionWrapper.appendChild(exportButton);
-    });
-  }
-}
-
-// countDown to use async/await
-async function exportCountDownAsync() {
-  let count = 2;
-  interval = setInterval(() => {
-    const progressBarFilename = document.getElementById('export-all-modal-progress-bar-filename');
-    if (count <= 0) {
-      clearInterval(interval);
-      clearTimeout(timeout);
-      if (progressBarFilename) {
-        progressBarFilename.textContent = '';
-      }
-      return;
-    }
-    if (progressBarFilename) {
-      progressBarFilename.textContent = `Waiting ${count} seconds to prevent rate limit...`;
-    }
-    count -= 1;
-  }, 1000);
-  await new Promise((resolve) => {
-    timeout = setTimeout(() => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-      resolve();
-    }, 2000);
-  });
-}
-
 function exportAllConversations(exportFormat) {
   const exportAllModalProgressBarLabel = document.getElementById('export-all-modal-progress-bar-label');
   const exportAllModalProgressBarFill = document.getElementById('export-all-modal-progress-bar-fill');
@@ -263,13 +25,13 @@ function exportAllConversations(exportFormat) {
     const zip = new JSZip();
     // fetch every conversation
     const fetchConversation = async (conversationId, exportMode) => {
-      if (exportAllCanceled || exportFailed) {
+      if (exportAllCanceled) {
         return;
       }
       await getConversation(conversationId).then((conversation) => {
         const conversationTitle = conversation.title.replace(/[^a-zA-Z0-9]/g, '_');
         let currentNode = conversation.current_node;
-        const createDate = new Date(conversation.create_time * 1000);
+        const createDate = new Date(formatTime(conversation.create_time));
         //  folderName = conversation.create_time in local time in the format of YYYY-MM-DD
         const folderName = `${createDate.getFullYear()}-${createDate.getMonth() + 1}-${createDate.getDate()}`;
         // create filePrefix  from conversation.create_time in user local time in the format of HH-MM-SS
@@ -292,7 +54,7 @@ function exportAllConversations(exportFormat) {
             const role = m?.author?.role || m?.role;
             const recipient = m?.recipient;
             return role === 'user' || (recipient === 'all' && role === 'assistant');
-          }).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
+          }).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content?.parts?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
           zip.file(`${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(exportFormat)}`, conversationText);
         }
         // download as .json file
@@ -306,7 +68,7 @@ function exportAllConversations(exportFormat) {
             const role = m?.author?.role || m?.role;
             const recipient = m?.recipient;
             return role === 'user' || (recipient === 'all' && role === 'assistant');
-          }).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
+          }).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content?.parts?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
           zip.file(`${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(exportFormat)}`, conversationMarkdown);
         }
 
@@ -317,28 +79,24 @@ function exportAllConversations(exportFormat) {
         exportAllModalProgressBarFill.style.width = `${percentage}%`;
         exportAllModalProgressBarFilename.textContent = `${conversationTitle}.${fileFormatConverter(exportFormat)}`;
       })
-        .catch((_err) => {
-          exportAllModalProgressBarFilename.textContent = 'Something went wrong. Please try again in a few minutes.';
-          exportAllModalProgressBarFilename.style.color = '#ff4a4a';
-          exportFailed = true;
-        });
+        .catch((_err) => { });
     };
 
     const fetchAllConversationsAsync = async (conversations, exportMode) => {
       for (let i = 0; i < conversations.length; i += 1) {
         // eslint-disable-next-line no-await-in-loop
         await fetchConversation(conversations[i].id, exportMode, i);
-        const fileCount = Object.values(zip.files).filter((f) => !f.dir).length;
-        if (fileCount > 0 && fileCount % 1 === 0) {
-          // eslint-disable-next-line no-await-in-loop
-          await chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings']).then(async (res) => {
-            const { conversationsAreSynced, settings } = res;
-            const { autoSync } = settings;
-            if (!conversationsAreSynced || !autoSync) {
-              await exportCountDownAsync();
-            }
-          });
-        }
+        // const fileCount = Object.values(zip.files).filter((f) => !f.dir).length;
+        // if (fileCount > 0 && fileCount % 1 === 0) {
+        //   // eslint-disable-next-line no-await-in-loop
+        //   await chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings']).then(async (res) => {
+        //     const { conversationsAreSynced, settings } = res;
+        //     const { autoSync } = settings;
+        //     if (!conversationsAreSynced || !autoSync) {
+        //       await exportCountDownAsync();
+        //     }
+        //   });
+        // }
       }
     };
     chrome.storage.local.get('settings', ({ settings }) => {
@@ -348,24 +106,20 @@ function exportAllConversations(exportFormat) {
           exportAllCanceled = false;
           return;
         }
-        clearInterval(interval);
         clearTimeout(timeout);
         zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }).then((content) => {
           saveAs(content, `${new Date().toISOString().slice(0, 10)}-conversations.zip`);
-          if (!exportFailed) {
-            const exportAllModal = document.getElementById('export-all-modal');
-            const exportAllButton = document.querySelector('#export-all-button');
-            exportAllButton.innerHTML = exportAllButton.innerHTML.replace(`Export ${convs.length} Selected`, 'Export All');
-            resetSelection();
-            setTimeout(() => {
-              exportAllModal.remove();
-            }, 500);
-          }
+          const exportAllModal = document.getElementById('export-all-modal');
+          const exportAllButton = document.querySelector('#export-all-button');
+          exportAllButton.innerHTML = exportAllButton.innerHTML.replace(/Export \d+ Selected/, 'Export All');
+          resetSelection();
+          setTimeout(() => {
+            exportAllModal.remove();
+          }, 500);
         });
       });
     });
-  }, () => {
-  });
+  }, () => { });
 }
 
 function openExportAllModal() {
@@ -473,6 +227,7 @@ function openExportAllModal() {
   const exportAllModalProgressBarFilename = document.createElement('div');
   exportAllModalProgressBarFilename.id = 'export-all-modal-progress-bar-filename';
   exportAllModalProgressBarFilename.style = 'font-size:0.875rem;margin:8px auto 32px;';
+  exportAllModalProgressBarFilename.classList = 'truncate w-full';
   exportAllModalProgressBarFilename.textContent = ' ';
   exportAllModalContent.appendChild(exportAllModalProgressBarFilename);
 
@@ -505,7 +260,6 @@ function openExportAllModal() {
   exportAllModalExportButton.disabled = true;
   exportAllModalExportButton.addEventListener('click', () => {
     exportAllCanceled = false;
-    exportFailed = false;
     exportAllModalExportButton.disabled = true;
     exportAllModalExportButton.textContent = 'Exporting...';
     exportAllModalExportButton.style.opacity = '0.5';
@@ -528,7 +282,7 @@ function openExportAllModal() {
         const { conversations: storageConversations, conversationsAreSynced, settings } = res;
         const { autoSync } = settings;
         if (conversationsAreSynced && autoSync) {
-          const allConversations = Object.values(storageConversations).filter((conversation) => !conversation.skipped);
+          const allConversations = Object.values(storageConversations);
 
           exportAllModalProgressBarLabel.textContent = `0 / ${allConversations.length}`;
           exportAllModalExportButton.disabled = allConversations.length === 0;
@@ -573,11 +327,8 @@ function addExportAllButton() {
   });
   // Add click event listener to setting button
   exportAllButton.addEventListener('click', () => {
-    clearInterval(interval);
     clearTimeout(timeout);
     exportAllCanceled = false;
-    exportFailed = false;
-    interval = '';
     // open the export all modal
     openExportAllModal();
   });
@@ -588,18 +339,5 @@ function addExportAllButton() {
 
 // eslint-disable-next-line no-unused-vars
 function initializeExport() {
-  const main = document.querySelector('main');
-  if (!main) return;
-  const inputForm = main.querySelector('form');
-  if (!inputForm) return;
-  addExportButton();
-  const observer = new MutationObserver(() => {
-    // const submitButton = inputForm.querySelector('textarea ~ button');
-    setTimeout(() => {
-      addExportButton();
-    }, 500);
-  });
-  observer.observe(main, { childList: true, subtree: true });
-
   addExportAllButton();
 }

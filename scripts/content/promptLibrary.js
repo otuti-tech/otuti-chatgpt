@@ -1,4 +1,4 @@
-/* global highlight, highlightBracket, addUserPromptToHistory, addButtonToNavFooter,createModal, debounce, toast, openSubmitPromptModal, dropdown, addDropdownEventListener, languageList, categoryList, sortByList, reportReasonList */
+/* global highlightSearch, highlightBracket, addUserPromptToHistory, addButtonToNavFooter,createModal, debounce, toast, openSubmitPromptModal, dropdown, addDropdownEventListener, languageList, categoryList, sortByList, reportReasonList */
 
 let promptLibraryPageNumber = 1;
 let promptLibrarySearchTerm = '';
@@ -40,11 +40,9 @@ function updateLibraryList(newElement) {
   modalElement.replaceWith(newElement);
   // scroll to top
   modalElementParent.scrollTop = 0;
-  // // highlight searched text
-  // if (promptLibrarySearchTerm.trim().length > 0) {
-  //   highlight(promptLibrarySearchTerm, 'library-list');
-  // }
+
   addReadMoreButtonsToLibrary();
+  highlightSearch([newElement], promptLibrarySearchTerm);
 }
 function addReadMoreButtonsToLibrary() {
   const libraryItemTexts = document.querySelectorAll('[id^="library-item-text-"]');
@@ -142,7 +140,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     libraryItemTitle.id = `library-item-title-${libraryPrompt.id}`;
     libraryItemTitle.dir = 'auto';
     libraryItemTitle.style = 'color: lightslategray; font-size:1em; font-weight: bold; width: 85%; white-space: break-spaces; overflow-wrap: break-word;margin-bottom: 8px;';
-    libraryItemTitle.innerHTML = highlight(libraryPrompt.title, promptLibrarySearchTerm);
+    libraryItemTitle.innerHTML = libraryPrompt.title;
     libraryItem.appendChild(libraryItemTitle);
     // text
     const libraryItemText = document.createElement('pre');
@@ -151,7 +149,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     libraryItemText.dataset.hidden = libraryPrompt.hide_full_prompt;
     libraryItemText.style = `color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; ${(promptLibrarySearchTerm && !libraryPrompt.hide_full_prompt) ? '' : 'overflow-wrap: break-word;display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;'}`;
     // highlight searched text
-    libraryItemText.innerHTML = highlightBracket(highlight(libraryPrompt.text, promptLibrarySearchTerm));
+    libraryItemText.innerHTML = highlightBracket(libraryPrompt.text);
     libraryItemText.title = libraryPrompt.text;
     libraryItem.appendChild(libraryItemText);
 
@@ -192,7 +190,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     const libraryItemCreatedByUrl = document.createElement('a');
     libraryItemCreatedByUrl.id = `library-item-created-by-url-${libraryPrompt.id}`;
     libraryItemCreatedByUrl.style = 'color: #919dd4; text-decoration:underline;max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;';
-    libraryItemCreatedByUrl.innerHTML = highlight(libraryPrompt.created_by?.nickname, promptLibrarySearchTerm);
+    libraryItemCreatedByUrl.innerHTML = libraryPrompt.created_by?.nickname;
     libraryItemCreatedByUrl.href = libraryPrompt.created_by?.url;
     libraryItemCreatedByUrl.target = '_blank';
     libraryItemCreatedByUrl.addEventListener('click', (e) => {
@@ -536,8 +534,6 @@ function promptLibraryModalContent(libraryData) {
   });
   librarySearchInput.addEventListener('input', (e) => {
     if (e.target.value.trim().length > 2) {
-      const listComponent = promptLibraryListComponent(libraryData, true);
-      updateLibraryList(listComponent);
       delayedSearch(e);
     } else if (e.target.value.length === 0) {
       promptLibrarySearchTerm = '';

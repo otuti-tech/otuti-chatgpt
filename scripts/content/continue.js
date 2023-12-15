@@ -1,4 +1,4 @@
-/* global toast, defaultPrompts, canSubmitPrompt, createSettingsModal */
+/* global toast, defaultPrompts, addInputFormActionWrapper, canSubmitPrompt, createSettingsModal */
 function promptDropdown() {
   const dropdown = document.createElement('ul');
   dropdown.id = 'continue-conversation-dropdown-list';
@@ -41,7 +41,7 @@ function promptDropdown() {
       });
       dropdownItem.addEventListener('click', (e) => {
         if (promptTitle === '+ Add more') {
-          createSettingsModal(3); // tab 2 is for prompts
+          createSettingsModal(6); // tab 2 is for prompts
           return;
         }
         const main = document.querySelector('main');
@@ -111,7 +111,7 @@ function addContinueButton() {
   });
   const shiftClickText = document.createElement('div');
   shiftClickText.textContent = 'Shift + Click to edit before running';
-  shiftClickText.style = 'font-size:10px;position:absolute;left:0px;bottom:40px;display:none;color:lightslategray;width:200px;';
+  shiftClickText.style = 'font-size:10px;position:absolute;left:0px;bottom:-15px;display:none;color:white;width:200px;';
   const continueButton = document.createElement('button');
   chrome.storage.local.get('customPrompts', ({ customPrompts }) => {
     continueButton.textContent = Array.isArray(customPrompts) ? customPrompts.find((p) => p.isDefault)?.title || 'Continue' : 'Continue';
@@ -140,10 +140,10 @@ function addContinueButton() {
     });
   });
   continueButton.addEventListener('mouseover', () => {
-    shiftClickText.style = 'font-size:10px;position:absolute;left:0px;bottom:40px;color:lightslategray;width:200px;';
+    shiftClickText.style = 'font-size:10px;position:absolute;left:0px;bottom:-15px;color:white;width:200px;';
   });
   continueButton.addEventListener('mouseout', () => {
-    shiftClickText.style = 'font-size:10px;position:absolute;left:0px;bottom:40px;display:none;color:lightslategray;width:200px;';
+    shiftClickText.style = 'font-size:10px;position:absolute;left:0px;bottom:-15px;display:none;color:white;width:200px;';
   });
 
   const autoClickButton = document.createElement('button');
@@ -186,35 +186,6 @@ function addContinueButton() {
         continueButtonWrapper.appendChild(autoClickButton);
       }
       if (canSubmit) {
-        const inputForm = document.querySelector('main form');
-        if (!inputForm) return;
-        const inputFormFirstChild = inputForm.firstChild;
-
-        const textAreaElement = inputForm.querySelector('textarea');
-        if (!textAreaElement) return;
-
-        let inputFormActionWrapper = settings.autoSync
-          ? inputForm.querySelector('#input-form-action-wrapper')
-          : inputForm.firstChild.firstChild.firstChild;
-        if (!settings.autoSync) {
-          const growElement = inputFormActionWrapper.querySelector('.grow');
-          if (growElement) {
-            growElement.remove();
-          }
-        }
-        if (!inputFormActionWrapper) {
-          if (!inputFormFirstChild.firstChild.contains(textAreaElement)) {
-            inputFormFirstChild.firstChild.remove();
-          }
-          // create new div
-          const newDiv = document.createElement('div');
-          newDiv.id = 'input-form-action-wrapper';
-          newDiv.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-4 gap-0 md:gap-2 justify-center items-end';
-          // prepent inputform with new div
-          inputFormActionWrapper = newDiv;
-          inputFormFirstChild.prepend(inputFormActionWrapper);
-        }
-        inputFormActionWrapper.style.minHeight = '38px';
         const existingContinueButton = document.querySelector('#continue-conversation-button-wrapper');
         const allMessageWrapper = document.querySelectorAll('[id^="message-wrapper-"]');
         let lastMessageWrapperElement;
@@ -222,10 +193,11 @@ function addContinueButton() {
           lastMessageWrapperElement = allMessageWrapper[allMessageWrapper.length - 1];
         }
         if (!settings.autoSync || !lastMessageWrapperElement || lastMessageWrapperElement.dataset.role !== 'user') {
-          if (!existingContinueButton) inputFormActionWrapper.appendChild(continueButtonWrapper);
+          const inputFormActionWrapper = addInputFormActionWrapper();
+          if (!existingContinueButton && inputFormActionWrapper) inputFormActionWrapper?.prepend(continueButtonWrapper);
         }
       }
-    }, 200);
+    }, 1000);
   });
 }
 

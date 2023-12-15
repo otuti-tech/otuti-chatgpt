@@ -1077,7 +1077,7 @@ var arkoseLabsClientApid975905a;
         var e = n(2585),
             t = n.n(e),
             o = (n(5941), "arkose"),
-            i = "1.5.2",
+            i = "1.5.5",
             a = "inline",
             c = "Verification challenge",
             s = ("data-".concat(o, "-challenge-api-url"), "data-".concat(o, "-event-blocked")),
@@ -2209,11 +2209,11 @@ var arkoseLabsClientApid975905a;
                             }({
                                 host: t,
                                 publicKey: n,
-                                file: "1.5.2/enforcement.64b3a4e29686f93d52816249ecbf9857.html",
+								file: "1.5.5/enforcement.fbfc14b0d793c6ef8359e0e4b4a91f67.html",
                                 environment: "production"
                             }),
                             p = document.createElement("iframe");
-                        p.setAttribute("src", "https://tcr9i.chat.openai.com/v2/1.5.2/enforcement.64b3a4e29686f93d52816249ecbf9857.html#35536E1E-65B4-4D96-9D97-6ADB7EFF8147"), p.setAttribute("class", l), p.setAttribute("title", c), p.setAttribute("aria-label", c), p.setAttribute("data-e2e", "enforcement-frame"), p.style.width = "0px", p.style.height = "0px", p.addEventListener("load", (function() {
+                        p.setAttribute("src", "https://tcr9i.chat.openai.com/v2/1.5.5/enforcement.fbfc14b0d793c6ef8359e0e4b4a91f67.html#35536E1E-65B4-4D96-9D97-6ADB7EFF8147"), p.setAttribute("class", l), p.setAttribute("title", c), p.setAttribute("aria-label", c), p.setAttribute("data-e2e", "enforcement-frame"), p.style.width = "0px", p.style.height = "0px", p.addEventListener("load", (function() {
                             s.subTimerEnd(L, F)
                         })), s.subTimerStart(L, F), Je.element.appendChild(p), Je.frame = p
                     } else Qe(Je.frame, l), Je.isActive || (Je.frame.style.width = 0, Je.frame.style.height = 0)

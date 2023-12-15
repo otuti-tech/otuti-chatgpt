@@ -3,15 +3,16 @@
 function createModal(title, subtitle, modalBodyContent, modalActionBarContent, allowFullscreen) {
   const modal = document.createElement('div');
   modal.id = `modal-${title.toLowerCase().replaceAll(' ', '-')}`;
-  modal.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background-color:rgba(0,0,0,0.5);display:flex;justify-content:center;align-items:center;z-index:10000;';
+  modal.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center;z-index:10000;';
+  modal.classList = 'bg-black/50 dark:bg-gray-600/70';
   const modalWrapper = document.createElement('div');
   modalWrapper.id = `modal-wrapper-${title.toLowerCase().replaceAll(' ', '-')}`;
-  modalWrapper.style = `width: ${window.innerWidth > 780 ? '50vw' : '100vw'}; height: ${window.innerWidth > 780 ? '70vh' : '80vh'}; background-color: #0b0d0e; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;box-shadow: rgb(0 0 0 / 72%) 0px 0px 20px 0px`;
+  modalWrapper.style = `width: ${window.innerWidth > 780 ? '60vw' : '100vw'}; height: ${window.innerWidth > 780 ? '80vh' : '80vh'}; background-color: #0b0d0e; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;box-shadow: rgb(0 0 0 / 72%) 0px 0px 20px 0px`;
   window.addEventListener('resize', () => {
     // eslint-disable-next-line no-nested-ternary
-    modalWrapper.style.width = window.innerWidth > 960 ? '50vw' : window.innerWidth > 780 ? '70vw' : '100vw';
+    modalWrapper.style.width = window.innerWidth > 780 ? '60vw' : '100vw';
     // eslint-disable-next-line no-nested-ternary
-    modalWrapper.style.height = window.innerWidth > 960 ? '70vh' : window.innerWidth > 780 ? '80vh' : '90vh';
+    modalWrapper.style.height = window.innerWidth > 780 ? '80vh' : '80vh';
   });
   const modalHeader = document.createElement('div');
   modalHeader.style = 'display: flex; justify-content: space-between; align-items: center;';
@@ -38,17 +39,17 @@ function createModal(title, subtitle, modalBodyContent, modalActionBarContent, a
     const modalBody = document.querySelector(`[id="modal-body-${title.toLowerCase().replaceAll(' ', '-')}"]`);
     const curModalWrapper = document.querySelector(`[id="modal-wrapper-${title.toLowerCase().replaceAll(' ', '-')}"]`);
     if (curModalWrapper.style.width === '100vw' && curModalWrapper.style.height === '100vh') {
-      curModalWrapper.style.width = window.innerWidth > 780 ? '50vw' : '100vw';
-      curModalWrapper.style.height = window.innerWidth > 780 ? '70vh' : '80vh';
-      modalContent.style.width = '100%';
-      modalBody.style.alignItems = 'center';
+      modalContent.style.width = 'auto';
+      modalBody.style.alignItems = 'stretch';
+      curModalWrapper.style.width = window.innerWidth > 780 ? '60vw' : '100vw';
+      curModalWrapper.style.height = window.innerWidth > 780 ? '80vh' : '80vh';
       return;
     }
 
+    modalContent.style.width = '60%';
+    modalBody.style.alignItems = 'center';
     curModalWrapper.style.width = '100vw';
     curModalWrapper.style.height = '100vh';
-    modalContent.style.width = '50%';
-    modalBody.style.alignItems = 'center';
   });
   if (allowFullscreen) modalHeaderRight.appendChild(modalFullScreenButton);
 
@@ -69,7 +70,7 @@ function createModal(title, subtitle, modalBodyContent, modalActionBarContent, a
 
   const modalBody = document.createElement('div');
   modalBody.id = `modal-body-${title.toLowerCase().replaceAll(' ', '-')}`;
-  modalBody.style = `display: flex; flex-direction: column; justify-content: space-between; border: solid 1px lightslategray; border-radius: 8px; height: 100%; overflow-y: ${allowFullscreen ? 'scroll' : 'hidden'};position: relative;`;
+  modalBody.style = `color: white;display: flex; flex-direction: column; justify-content: space-between; border: solid 1px lightslategray; border-radius: 8px; height: 100%; overflow-y: ${allowFullscreen ? 'scroll' : 'hidden'};position: relative;`;
   modalBody.appendChild(modalBodyContent);
   const modalActionBar = document.createElement('div');
   modalActionBar.style = 'display: flex; justify-content: start; 8px; ';

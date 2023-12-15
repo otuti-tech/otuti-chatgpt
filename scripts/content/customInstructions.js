@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-globals */
-/* global toast, setUserSystemMessage, customInstructionSettingsElement */
+/* global toast, setUserSystemMessage,removeGrammerly, customInstructionSettingsElement */
 
 function checkmarkIcon(placement, profileId) {
   const checkmark = document.createElement('span');
@@ -26,7 +26,7 @@ function trashIcon(placement, profileId) {
   });
   return trash;
 }
-function profileDropdown(customInstructionProfiles, placement) {
+function profileDropdown(customInstructionProfiles, customInstructionProfileIsEnabled, placement) {
   const dropdown = document.createElement('ul');
   dropdown.id = `custom-instructions-profile-dropdown-list-${placement}`;
   dropdown.style = 'max-height:300px;overflow-y:scroll;width:200px;top:46px;right:0;z-index:200;';
@@ -76,22 +76,35 @@ function profileDropdown(customInstructionProfiles, placement) {
         setUserSystemMessage(profileAboutUser, profileAboutModel, true);
       }
       if (profileName === '+ Add new profile' && !customInstructionsDialog) {
-        const userMenu = document.querySelector('#user-menu');
-        userMenu.querySelector('button').click();
-        // div element that contains the text "Custom instructions"
-        setTimeout(() => {
-          const menuButtons = userMenu.querySelectorAll('nav a');
-          const customInstructionsButton = [...menuButtons].find((b) => b.textContent === 'Custom instructions');
-          customInstructionsButton.click();
+        // press CMd/CTRL + SHIFT + i
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
-          setTimeout(() => {
-            const cusstomInstructionsProfileDropdown = document.querySelector('#custom-instructions-profile-dropdown-list-settings');
-            cusstomInstructionsProfileDropdown.lastChild.click();
-          }, 600);
-        }, 300);
+        const e = new KeyboardEvent('keydown', {
+          key: 'i',
+          ctrlKey: !isMac,
+          metaKey: isMac,
+          shiftKey: true,
+          bubbles: true,
+          cancelable: true,
+        });
+        document.dispatchEvent(e);
+
+        setTimeout(() => {
+          const customInstructionsProfileDropdown = document.querySelector('#custom-instructions-profile-dropdown-list-settings');
+          customInstructionsProfileDropdown?.lastChild?.click();
+        }, 600);
         return;
       }
+
       if (customInstructionsDialog) {
+        const toggleButton = customInstructionsDialog.querySelector('[role="switch"]');
+        if (profileName === '+ Add new profile') {
+          if (toggleButton.getAttribute('aria-checked') === 'false') {
+            toggleButton.click();
+          }
+        } else if ((toggleButton.getAttribute('aria-checked') === 'true') !== customInstructionProfileIsEnabled) {
+          toggleButton.click();
+        }
         const nameInput = document.querySelector('#custom-instructions-name-input');
         nameInput.value = profileName !== '+ Add new profile' ? profileName : '';
         const textAreaFields = document.querySelectorAll('[role="dialog"][data-state="open"][tabindex="-1"] textarea');
@@ -166,25 +179,25 @@ function profileDropdownButton(customInstructionProfiles, placement) {
   const button = document.createElement('button');
   button.id = `custom-instructions-profile-dropdown-button-${placement}`;
   button.title = 'Change the custom instructions profile';
-  button.className = 'w-full relative cursor-pointer rounded-md border bg-white border-gray-300 pt-1 pl-3 pr-10 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 dark:border-white/20 dark:bg-gray-800 sm:text-sm';
+  button.classList = 'w-full relative cursor-pointer rounded-md border bg-white border-gray-300 pt-1 pl-3 pr-10 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 dark:border-white/20 dark:bg-gray-800 sm:text-sm';
   button.type = 'button';
   const label = document.createElement('label');
-  label.className = 'block text-xs text-gray-700 dark:text-gray-500';
+  label.classList = 'block text-xs text-gray-700 dark:text-gray-500';
   label.textContent = 'Profile';
   button.appendChild(label);
   const span = document.createElement('span');
-  span.className = 'inline-flex w-full truncate font-semibold  text-gray-800 dark:text-gray-100';
+  span.classList = 'inline-flex w-full truncate font-semibold  text-gray-800 dark:text-gray-100';
   button.appendChild(span);
   const span2 = document.createElement('span');
-  span2.className = 'flex h-6 items-center gap-1 truncate';
+  span2.classList = 'flex h-6 items-center gap-1 truncate';
   span.appendChild(span2);
   const span3 = document.createElement('span');
-  span3.className = 'font-semibold truncate';
+  span3.classList = 'font-semibold truncate';
   span3.id = `custom-instructions-selected-profile-title-${placement}-${selectedProfile?.id}`;
   span3.textContent = selectedProfile?.name || customInstructionProfiles[0]?.name || 'No saved profile';
   span2.appendChild(span3);
   const span4 = document.createElement('span');
-  span4.className = 'pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2';
+  span4.classList = 'pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2';
   button.appendChild(span4);
   span4.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4  text-gray-400" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"></polyline></svg>';
   button.addEventListener('click', () => {
@@ -202,22 +215,19 @@ function profileDropdownButton(customInstructionProfiles, placement) {
 function upgradeCustomInstructions() {
   // observe the body and wait for the custom instructions dialog to be added
   // there should be a div with role="dialog" and a h2 with text "Custom instructions"
-  const targetNode = document.body;
-  const config = { childList: true, subtree: true };
   const callback = (mutationsList) => {
     mutationsList.forEach((mutation) => {
       if (mutation.type === 'childList') {
         setTimeout(() => {
           const customInstructionsDialog = document.querySelector('[role="dialog"][data-state="open"][tabindex="-1"]');
           if (!customInstructionsDialog) return;
-          chrome.storage.local.get(['customInstructionProfiles'], (result) => {
+          removeGrammerly();
+          chrome.storage.local.get(['customInstructionProfiles', 'customInstructionProfileIsEnabled'], (result) => {
             const customInstructionsDialogHeader = customInstructionsDialog.querySelector('h2');
             const existingProfileButtonWrapper = customInstructionsDialog.querySelector('#custom-instructions-profile-button-wrapper-settings');
             const textAreaFields = customInstructionsDialog.querySelectorAll('textarea');
             if (textAreaFields.length > 0 && !existingProfileButtonWrapper && customInstructionsDialog && customInstructionsDialogHeader.textContent === 'Custom instructions') {
-              // const aboutUser = textAreaFields[0]?.value;
-              // const aboutModel = textAreaFields[1]?.value;
-              const { customInstructionProfiles } = result;
+              const { customInstructionProfiles, customInstructionProfileIsEnabled } = result;
               const newCustomInstructionProfiles = customInstructionProfiles;
               const selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
 
@@ -229,33 +239,19 @@ function upgradeCustomInstructions() {
                 textAreaFields[1].dispatchEvent(new Event('input', { bubbles: true }));
                 textAreaFields[1].dispatchEvent(new Event('change', { bubbles: true }));
               }
-              // if (!selectedProfile || selectedProfile.aboutUser.replace(/[^a-zA-Z]/g, '') !== aboutUser.replace(/[^a-zA-Z]/g, '') || selectedProfile.aboutModel.replace(/[^a-zA-Z]/g, '') !== aboutModel.replace(/[^a-zA-Z]/g, '')) {
-              //   newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
-              //     if (p.aboutModel.replace(/[^a-zA-Z]/g, '') === aboutModel.replace(/[^a-zA-Z]/g, '') && p.aboutUser.replace(/[^a-zA-Z]/g, '') === aboutUser.replace(/[^a-zA-Z]/g, '')) {
-              //       selectedProfile = { ...p, isSelected: true };
-              //       return { ...p, isSelected: true };
-              //     }
-              //     if (p.isSelected) {
-              //       selectedProfile = undefined;
-              //       return { ...p, isSelected: false };
-              //     }
-              //     return p;
-              //   });
-              //   chrome.storage.local.set({ customInstructionProfiles: newCustomInstructionProfiles });
-              // }
 
               // header = first child
               const header = customInstructionsDialog.firstChild;
               const profileButtonWrapper = document.createElement('div');
               profileButtonWrapper.style = 'position:relative;width: 200px;';
               profileButtonWrapper.id = 'custom-instructions-profile-button-wrapper-settings';
-              profileButtonWrapper.appendChild(profileDropdown(newCustomInstructionProfiles, 'settings'));
+              profileButtonWrapper.appendChild(profileDropdown(newCustomInstructionProfiles, customInstructionProfileIsEnabled, 'settings'));
               profileButtonWrapper.appendChild(profileDropdownButton(newCustomInstructionProfiles, 'settings'));
               header.appendChild(profileButtonWrapper);
               // body  = second child
               const body = customInstructionsDialog.children[1];
               const nameLabel = document.createElement('label');
-              nameLabel.className = 'block text-xs text-gray-700 dark:text-gray-500 mb-2 text-gray-600';
+              nameLabel.classList = 'block text-xs text-gray-700 dark:text-gray-500 mb-2 text-gray-600';
               nameLabel.textContent = 'Name';
               const nameInput = document.createElement('input');
               nameInput.id = 'custom-instructions-name-input';
@@ -291,14 +287,14 @@ function upgradeCustomInstructions() {
                     const allButtons = body.querySelectorAll('button');
                     const saveButton = [...allButtons].find((b) => b.textContent === 'Save');
                     const curNameInput = document.querySelector('#custom-instructions-name-input');
-                    if (curNameInput.value === '') {
+                    if (saveButton && curNameInput.value === '') {
                       saveButton.disabled = true;
                       saveButton.classList.add('opacity-50', 'cursor-not-allowed');
-                    } else if (curNameInput.value !== selectedProfile?.name) {
+                    } else if (saveButton && curNameInput.value !== selectedProfile?.name) {
                       saveButton.disabled = false;
                       saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
                     }
-                  }, 10);
+                  }, 100);
                 });
               });
               // find a button inside body that has text "Save"
@@ -322,15 +318,18 @@ function upgradeCustomInstructions() {
                   setTimeout(() => {
                     const curAllButtons = body.querySelectorAll('button');
                     const curSaveButton = [...curAllButtons].find((b) => b.textContent === 'Save');
-                    if (curNameInput.value === '') {
+                    if (curSaveButton && curNameInput.value === '') {
                       curSaveButton.disabled = true;
                       curSaveButton.classList.add('opacity-50', 'cursor-not-allowed');
-                    } else if (curNameInput.value !== selectedProfile?.name) {
+                    } else if (curSaveButton && curNameInput.value !== selectedProfile?.name) {
                       curSaveButton.disabled = false;
                       curSaveButton.classList.remove('opacity-50', 'cursor-not-allowed');
                     }
-                  }, 10);
+                  }, 100);
                 });
+                if ((toggleButton.getAttribute('aria-checked') === 'true') !== customInstructionProfileIsEnabled) {
+                  toggleButton.click();
+                }
               }
               if (saveButton) {
                 // add a click listener to the save button
@@ -376,6 +375,8 @@ function upgradeCustomInstructions() {
       }
     });
   };
+  const targetNode = document.body;
+  const config = { childList: true, subtree: true };
   const observer = new MutationObserver(callback);
   observer.observe(targetNode, config);
 }

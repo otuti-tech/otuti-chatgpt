@@ -32,10 +32,14 @@ function newsletterListModalContent() {
         const releaseDate = new Date(newsletter.release_date);
         const releaseDateWithOffset = new Date(releaseDate.getTime() + (releaseDate.getTimezoneOffset() * 60000));
         const newsletterLine = document.createElement('div');
-        newsletterLine.style = `font-size:1em;display:flex;margin:8px 0;align-items:flex-start; ${readNewsletterIds.includes(newsletter.id) ? 'opacity:0.5;' : ''}`;
+        newsletterLine.style = `color:white;font-size:1em;display:flex;margin:8px 0;align-items:flex-start; ${readNewsletterIds.includes(newsletter.id) ? 'opacity:0.5;' : ''}`;
         const newsletterDate = document.createElement('div');
-        newsletterDate.style = 'border: solid 1px gold;border-radius:4px;padding:4px;color:gold;cursor:pointer;margin-right:8px;min-width:144px; text-align:center;';
+        newsletterDate.style = 'position:relative;border: solid 1px gold;border-radius:4px;padding:4px;color:gold;cursor:pointer;margin-right:8px;min-width:144px; text-align:center;';
         newsletterDate.textContent = releaseDateWithOffset.toDateString();
+        // red dot
+        const newsletterNotification = document.createElement('div');
+        newsletterNotification.id = 'newsletter-notification';
+        newsletterNotification.style = 'position:absolute; top:-4px; right:-4px; width: 8px; height: 8px; background-color: red; border-radius: 50%;';
         newsletterDate.addEventListener('click', () => {
           chrome.runtime.sendMessage({
             getNewsletter: true,
@@ -50,12 +54,15 @@ function newsletterListModalContent() {
                 chrome.runtime.sendMessage({
                   incrementOpenRate: true,
                   detail: {
-                    newsletterId: newsletter.id,
+                    announcementId: newsletter.id,
                   },
                 });
               }
-              chrome.storage.local.set({ readNewsletterIds: [...oldReadNewsletterIds, newsletter.id] }, () => {
+              chrome.storage.local.set({ readNewsletterIds: [newsletter.id, ...oldReadNewsletterIds] }, () => {
                 newsletterLine.style = 'font-size:1em;display:flex;margin:8px 0;align-items:flex-start; opacity:0.5;';
+                document.querySelectorAll('#newsletter-notification').forEach((notification) => {
+                  notification.remove();
+                });
               });
             });
           });
@@ -63,6 +70,9 @@ function newsletterListModalContent() {
         const newsletterTitle = document.createElement('div');
         newsletterTitle.style = 'align-self:center;';
         newsletterTitle.textContent = newsletter.title;
+        if (!readNewsletterIds.includes(newsletter.id) && i === 0) {
+          newsletterDate.appendChild(newsletterNotification);
+        }
         newsletterLine.appendChild(newsletterDate);
         newsletterLine.appendChild(newsletterTitle);
         newsletterListText.appendChild(newsletterLine);
@@ -83,7 +93,7 @@ function addNewsletterButton() {
   if (document.querySelector('#newsletter-button')) return;
   // create the setting button by copying the nav button
   const newsletterButton = document.createElement('a');
-  newsletterButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
+  newsletterButton.classList = 'flex relative py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
   newsletterButton.textContent = 'Newsletter Archive';
   newsletterButton.title = 'CMD/CTRL + SHIFT + L';
 

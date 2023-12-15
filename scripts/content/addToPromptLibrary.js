@@ -132,9 +132,9 @@ function openSubmitPromptModal(text = '', modelSlug = '', promptId = null, title
   submitPromptModalContent.appendChild(inputTitle('Prompt'));
   const textToSubmit = document.createElement('textarea');
   textToSubmit.id = 'prompt-text';
-  textToSubmit.style = 'min-height: 120px;width:100%;background-color:#0b0d0e;border:1px solid #565869;border-radius:4px;color:white;resize:none;';
+  textToSubmit.style = 'min-height: 120px;width:100%;background-color:#0b0d0e;border:1px solid #565869;border-radius:4px;color:white;';
   textToSubmit.value = text.trim();
-  textToSubmit.rows = 4;
+  textToSubmit.rows = 6;
   textToSubmit.addEventListener('input', () => {
     textToSubmit.style.border = '1px solid #565869';
   });
@@ -267,53 +267,4 @@ function openSubmitPromptModal(text = '', modelSlug = '', promptId = null, title
   });
   submitPromptModalActionWrapper.appendChild(submitButton);
   document.body.appendChild(submitPromptModal);
-}
-function addSubmitButtonToUserInputs(editButton) {
-  const userInputWrapper = editButton.parentElement.parentElement;
-  const existingAddToPromptLibraryButton = userInputWrapper.querySelector('#add-to-prompt-library-button');
-  if (existingAddToPromptLibraryButton) return;
-  const addToPromptLibraryButton = editButton.cloneNode(true);
-  addToPromptLibraryButton.id = 'add-to-prompt-library-button';
-  // replace the addToPromptLibraryButton icon with new svg
-  const addToPromptLibraryButtonSVG = addToPromptLibraryButton.querySelector('svg');
-  addToPromptLibraryButtonSVG.innerHTML = '<path d="M432 256C432 269.3 421.3 280 408 280h-160v160c0 13.25-10.75 24.01-24 24.01S200 453.3 200 440v-160h-160c-13.25 0-24-10.74-24-23.99C16 242.8 26.75 232 40 232h160v-160c0-13.25 10.75-23.99 24-23.99S248 58.75 248 72v160h160C421.3 232 432 242.8 432 256z"/>';
-  // change viewbox attribute
-  addToPromptLibraryButtonSVG.setAttribute('viewBox', '0 0 448 512');
-  addToPromptLibraryButtonSVG.setAttribute('fill', 'currentColor');
-
-  const userInput = userInputWrapper.textContent;
-  addToPromptLibraryButton.addEventListener('click', () => {
-    // open submit prompt modal
-    openSubmitPromptModal(userInput);
-  });
-
-  editButton.parentElement.insertBefore(addToPromptLibraryButton, editButton);
-}
-function addSubmitButtonToAllUserInputs() {
-  const editButtons = Array.from(document.querySelectorAll('path[d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"]')).map((buttonSVG) => buttonSVG.parentElement.parentElement);
-  if (editButtons.length === 0) return;
-  editButtons.forEach((editButton) => {
-    addSubmitButtonToUserInputs(editButton);
-    const userInputWrapper = editButton.parentElement.parentElement;
-
-    const newEditButton = userInputWrapper.querySelector('path[d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"]')?.parentElement?.parentElement;
-    const existingAddToPromptLibraryButton = userInputWrapper.querySelector('#add-to-prompt-library-button');
-    if (!newEditButton) return;
-    if (existingAddToPromptLibraryButton) return;
-    const observer = new MutationObserver(() => {
-      addSubmitButtonToUserInputs(newEditButton);
-    });
-    observer.observe(userInputWrapper, { childList: true });
-  });
-}
-// eslint-disable-next-line no-unused-vars
-function initializeAddToPromptLibrary() {
-  addSubmitButtonToAllUserInputs();
-  const main = document.querySelector('main');
-  if (!main) return;
-  selectedCategories = [];
-  const observer = new MutationObserver(() => {
-    addSubmitButtonToAllUserInputs();
-  });
-  observer.observe(main, { childList: true, subtree: true });
 }

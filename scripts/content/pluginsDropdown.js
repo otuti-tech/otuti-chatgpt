@@ -74,7 +74,7 @@ function createPluginsDropDown(installedPlugins, enabledPluginIds, idPrefix, for
 
 function addPluginsDropdownEventListener(idPrefix, forceDark = false) {
   const pluginDropdownButton = document.querySelector(`#${idPrefix}-plugins-dropdown-button`);
-  pluginDropdownButton.addEventListener('click', () => {
+  pluginDropdownButton?.addEventListener('click', () => {
     const pluginListDropdown = document.querySelector(`#${idPrefix}-plugin-list-dropdown`);
     const cl = pluginListDropdown.classList;
     if (cl.contains('block')) {
@@ -97,12 +97,12 @@ function addPluginsDropdownEventListener(idPrefix, forceDark = false) {
   });
 
   const pluginStoreButton = document.querySelector('#plugin-store-button');
-  pluginStoreButton.addEventListener('click', () => {
+  pluginStoreButton?.addEventListener('click', () => {
     const pluginListDropdown = document.querySelector(`#${idPrefix}-plugin-list-dropdown`);
     pluginListDropdown.classList.replace('block', 'hidden');
     chrome.storage.local.get(['allPlugins'], (result) => {
       const { allPlugins } = result;
-      const popularPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c.id).includes('most_popular'));
+      const popularPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c?.id).includes('most_popular'));
       const pluginStoreModal = initializePluginStoreModal(popularPlugins);
       const pluginStoreWrapper = document.createElement('div');
       pluginStoreWrapper.id = 'plugin-store-wrapper';
@@ -115,7 +115,7 @@ function addPluginsDropdownEventListener(idPrefix, forceDark = false) {
 
   const pluginDropdownOptions = document.querySelectorAll(`[id ^= ${idPrefix}-plugins-dropdown-option-]`);
 
-  pluginDropdownOptions.forEach((option) => {
+  pluginDropdownOptions?.forEach((option) => {
     option.addEventListener('mouseenter', () => {
       const darkMode = document.querySelector('html').classList.contains('dark');
       option.classList.add((darkMode || forceDark) ? 'bg-gray-600' : 'bg-gray-200');
@@ -163,38 +163,38 @@ function addPluginsDropdownEventListener(idPrefix, forceDark = false) {
         }
       });
     });
-    chrome.storage.onChanged.addListener((e) => {
-      if (e.enabledPluginIds && JSON.stringify(e.enabledPluginIds.newValue) !== JSON.stringify(e.enabledPluginIds.oldValue)) {
-        chrome.storage.local.get(['installedPlugins'], ({
-          installedPlugins,
-        }) => {
-          const newEnabledPluginIds = e.enabledPluginIds.newValue;
-          const enabledPluginLimit = document.querySelector('#enabled-plugins-limit');
-          enabledPluginLimit.innerHTML = `${newEnabledPluginIds?.length || 0}/3 Enabled`;
-          const enabledPluginsListElement = document.querySelector('#navbar-enabled-plugins-list');
-          if (newEnabledPluginIds.length === 0) {
-            enabledPluginsListElement.innerHTML = '<span class="flex h-6 items-center gap-1 truncate">No plugins enabled</span>';
-          } else {
-            const enabledPlugins = installedPlugins.filter((p) => newEnabledPluginIds?.includes(p.id));
-            enabledPluginsListElement.innerHTML = `<div class="flex gap-1">
-              ${enabledPlugins?.map((enabledPlugin) => `<div class="relative" style="width: 16px; height: 16px;"><img src="${enabledPlugin?.manifest.logo_url}" alt="${enabledPlugin.manifest.name_for_human} logo" class="h-full w-full bg-white rounded-sm"><div class="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-sm"></div></div>`).join('')}
-              </div>`;
-          }
-          const allPluginCheckmarkWrappers = document.querySelectorAll(`[id^=${idPrefix}-plugin-checkmark-]`);
-          allPluginCheckmarkWrappers.forEach((pluginCheckmarkWrapper) => {
-            pluginCheckmarkWrapper.innerHTML = `<div class="flex h-6 w-6 items-center justify-center rounded-full border transition-colors ${forceDark ? 'border-white/20' : 'border-black/5'} dark:border-white/20" aria-hidden="true">
-            <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 h-3 w-3 transition-opacity opacity-0 group-hover:opacity-50" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
+  });
+  chrome.storage.onChanged.addListener((e) => {
+    if (e.enabledPluginIds && JSON.stringify(e.enabledPluginIds.newValue) !== JSON.stringify(e.enabledPluginIds.oldValue)) {
+      chrome.storage.local.get(['installedPlugins'], ({
+        installedPlugins,
+      }) => {
+        const newEnabledPluginIds = e.enabledPluginIds.newValue;
+        const enabledPluginLimit = document.querySelector('#enabled-plugins-limit');
+        enabledPluginLimit.innerHTML = `${newEnabledPluginIds?.length || 0}/3 Enabled`;
+        const enabledPluginsListElement = document.querySelector('#navbar-enabled-plugins-list');
+        if (newEnabledPluginIds.length === 0) {
+          enabledPluginsListElement.innerHTML = '<span class="flex h-6 items-center gap-1 truncate">No plugins enabled</span>';
+        } else {
+          const enabledPlugins = installedPlugins.filter((p) => newEnabledPluginIds?.includes(p.id));
+          enabledPluginsListElement.innerHTML = `<div class="flex gap-1">
+            ${enabledPlugins?.map((enabledPlugin) => `<div class="relative" style="width: 16px; height: 16px;"><img src="${enabledPlugin?.manifest.logo_url}" alt="${enabledPlugin.manifest.name_for_human} logo" class="h-full w-full bg-white rounded-sm"><div class="absolute inset-0 ring-1 ring-inset ring-black/10 rounded-sm"></div></div>`).join('')}
             </div>`;
-          });
-          newEnabledPluginIds.forEach((enabledPluginId) => {
-            const pluginCheckmarkWrapper = document.querySelector(`#${idPrefix}-plugin-checkmark-${enabledPluginId}`);
-            pluginCheckmarkWrapper.innerHTML = `<div class="flex h-6 w-6 items-center justify-center rounded-full border transition-colors border-transparent bg-green-600 text-white" aria-hidden="true">
-              <svg stroke="currentColor" fill="none" stroke-width="2.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 h-3 w-3 transition-opacity opacity-100" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <polyline points="20 6 9 17 4 12"></polyline></svg></div>`;
-          });
+        }
+        const allPluginCheckmarkWrappers = document.querySelectorAll(`[id^=${idPrefix}-plugin-checkmark-]`);
+        allPluginCheckmarkWrappers.forEach((pluginCheckmarkWrapper) => {
+          pluginCheckmarkWrapper.innerHTML = `<div class="flex h-6 w-6 items-center justify-center rounded-full border transition-colors ${forceDark ? 'border-white/20' : 'border-black/5'} dark:border-white/20" aria-hidden="true">
+          <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 h-3 w-3 transition-opacity opacity-0 group-hover:opacity-50" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          </div>`;
         });
-      }
-    });
+        newEnabledPluginIds.forEach((enabledPluginId) => {
+          const pluginCheckmarkWrapper = document.querySelector(`#${idPrefix}-plugin-checkmark-${enabledPluginId}`);
+          pluginCheckmarkWrapper.innerHTML = `<div class="flex h-6 w-6 items-center justify-center rounded-full border transition-colors border-transparent bg-green-600 text-white" aria-hidden="true">
+            <svg stroke="currentColor" fill="none" stroke-width="2.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 h-3 w-3 transition-opacity opacity-100" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <polyline points="20 6 9 17 4 12"></polyline></svg></div>`;
+        });
+      });
+    }
   });
 }

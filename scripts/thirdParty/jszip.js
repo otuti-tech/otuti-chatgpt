@@ -1,3 +1,4 @@
+/* eslint-disable */
 /*!
 
 JSZip v3.10.1 - A JavaScript class for generating and reading zip files
@@ -11334,7 +11335,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":41}],53:[function(require,module,exports){
+}, {"../utils/common":41}], 53:[function(require, module, exports){
 'use strict';
 
 // (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -11383,7 +11384,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],54:[function(require,module,exports){
+}, {}], 54:[function(require, module, exports){
 (function (global){
 (function (global, undefined) {
     "use strict";
@@ -11572,6 +11573,6 @@ module.exports = ZStream;
     attachTo.clearImmediate = clearImmediate;
 }(typeof self === "undefined" ? typeof global === "undefined" ? this : global : self));
 
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}]},{},[10])(10)
+}).call(this, typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+}, {}]}, {}, [10])(10)
 });

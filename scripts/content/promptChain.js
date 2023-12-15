@@ -6,7 +6,7 @@ let runningPromptChainIndex = 0;
 function createPromptChainListModal() {
   const bodyContent = promptChainListModalContent();
   const actionsBarContent = promptChainListModalActions();
-  createModal('Prompt Chains', 'You can find and run all of your existing prompt chains here', bodyContent, actionsBarContent);
+  createModal('Prompt Chains', 'You can find and run all of your existing prompt chains here  <a href="https://www.youtube.com/watch?v=ha2AiwOglt4&ab_channel=Superpower" target="_blank" class="underline text-gold" rel="noreferrer">Learn more</a>', bodyContent, actionsBarContent);
 }
 function promptChainListModalContent() {
   const content = document.createElement('div');
@@ -17,12 +17,25 @@ function promptChainListModalContent() {
   logoWatermark.src = chrome.runtime.getURL('icons/logo.png');
   logoWatermark.style = 'position: fixed; top: 50%; right: 50%; width: 400px; height: 400px; opacity: 0.07; transform: translate(50%, -50%);box-shadow:none !important;';
   content.appendChild(logoWatermark);
+  const createPromptChainWrapper = document.createElement('div');
+  createPromptChainWrapper.style = 'display:flex;align-items:end;justify-content:end;width:100%;padding:8px;';
+  const createPromptChainButton = document.createElement('button');
+  createPromptChainButton.classList = 'btn flex justify-center gap-2 btn-primary border-0 md:border';
+  createPromptChainButton.style = 'margin-top:16px;';
+  createPromptChainButton.textContent = '+ Create New Prompt Chain';
+  createPromptChainButton.addEventListener('click', () => {
+    createNewPromptChainModal('', ['']);
+    addNewPromptModalEventListener();
+  });
+  createPromptChainWrapper.appendChild(createPromptChainButton);
+  content.appendChild(createPromptChainWrapper);
+
   const promptChainListText = document.createElement('article');
   promptChainListText.style = 'width:100%;height:100%;display:flex;align-items:center;justify-content:flex-start;overflow-y:scroll;padding:16px;flex-direction:column;position:relative;';
   chrome.storage.local.get(['promptChains'], (result) => {
     const allPromptChains = result.promptChains || [];
     if (allPromptChains.length === 0) {
-      promptChainListText.innerHTML = '<div style="font-size:1em;">You currently have no prompt chains saved. You can create a prompt chain from any conversation. When you save a new prompt chain, it will show up here.</div>';
+      promptChainListText.innerHTML = '<div style="font-size:1em;">You currently have no prompt chains saved. Click on Create New Prompt Chain button or create a prompt chain from any existing conversation using the button on the right side of the screen.</div>';
     } else {
       allPromptChains.forEach((promptChain, index) => {
         const promptChainElement = document.createElement('div');
@@ -137,6 +150,7 @@ function createPromptChainStep(promptChain, index) {
   promptRow.appendChild(promptInputActionWrapper);
 
   const promptInput = document.createElement('textarea');
+  promptInput.placeholder = 'Enter prompt text. Tip: Use {{ curly }} braces to mark template words.';
   promptInput.id = `prompt-chain-input-${index}`;
   promptInput.style = 'width: 100%; height: 140px; min-height: 140px; border-top-right-radius: 4px;border-bottom-right-radius: 4px; border: 1px solid #565869; background-color: #2d2d3a; color: #eee; padding: 4px 8px; font-size: 14px; resize: none;';
   promptInput.dir = 'auto';
@@ -166,7 +180,7 @@ function createNewPromptChainModal(promptChainName, promptChainSteps, chainIndex
   newPromptChainModalContent.appendChild(modalTitle);
   const modalSubtitle = document.createElement('div');
   modalSubtitle.style = 'color:lightslategray;font-size:0.875rem; margin-bottom: 16px;padding: 0 16px;';
-  modalSubtitle.textContent = 'Prompt chains are a series of prompts that can be run automatically in sequence. You can create a new prompt chain from any existing conversation. You can add, remove, edit, or reorder prompts in the chain.';
+  modalSubtitle.innerHTML = 'Prompt chains are a series of prompts that can be run automatically in sequence. You can create a new prompt chain from any existing conversation. You can add, remove, edit, or reorder prompts in the chain. <a href="https://www.youtube.com/watch?v=ha2AiwOglt4&ab_channel=Superpower" target="_blank" class="underline text-gold" rel="noreferrer">Learn more</a>';
   newPromptChainModalContent.appendChild(modalSubtitle);
   const promptInputListWrapper = document.createElement('div');
   promptInputListWrapper.id = 'prompt-chain-input-list-wrapper';
@@ -265,9 +279,11 @@ function createNewPromptChainModal(promptChainName, promptChainSteps, chainIndex
       }
       chrome.storage.local.set({ promptChains: allPromptChains }, () => {
         const modalBodyPromptChains = document.getElementById('modal-body-prompt-chains');
-        modalBodyPromptChains.innerHTML = '';
-        const newContent = promptChainListModalContent();
-        modalBodyPromptChains.appendChild(newContent);
+        if (modalBodyPromptChains) {
+          modalBodyPromptChains.innerHTML = '';
+          const newContent = promptChainListModalContent();
+          modalBodyPromptChains.appendChild(newContent);
+        }
       });
       newPromptChainModal.remove();
       toast(`Prompt Chain is ${isNew ? 'saved' : 'updated'}!`);
@@ -281,13 +297,19 @@ function createNewPromptChainModal(promptChainName, promptChainSteps, chainIndex
 
 function addPromptChainCreateButton() {
   const existingPromptChainCreateButton = document.getElementById('prompt-chain-create-button');
-  if (existingPromptChainCreateButton) existingPromptChainCreateButton.remove();
+
+  const textAreaElement = document.querySelector('main form textarea');
+  if (!textAreaElement) {
+    if (existingPromptChainCreateButton) existingPromptChainCreateButton.remove();
+    return;
+  }
+  if (existingPromptChainCreateButton) return;
 
   const promptChainCreateButton = document.createElement('button');
   promptChainCreateButton.id = 'prompt-chain-create-button';
   promptChainCreateButton.title = 'Create a new prompt chain (CMD/CTRL + SHIFT + C)';
   promptChainCreateButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="1.5em" viewBox="0 0 512 512" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" fill="currentColor"><path d="M72 48C85.25 48 96 58.75 96 72V120C96 133.3 85.25 144 72 144V232H128C128 218.7 138.7 208 152 208H200C213.3 208 224 218.7 224 232V280C224 293.3 213.3 304 200 304H152C138.7 304 128 293.3 128 280H72V384C72 388.4 75.58 392 80 392H128C128 378.7 138.7 368 152 368H200C213.3 368 224 378.7 224 392V440C224 453.3 213.3 464 200 464H152C138.7 464 128 453.3 128 440H80C49.07 440 24 414.9 24 384V144C10.75 144 0 133.3 0 120V72C0 58.75 10.75 48 24 48H72zM160 96C160 82.75 170.7 72 184 72H488C501.3 72 512 82.75 512 96C512 109.3 501.3 120 488 120H184C170.7 120 160 109.3 160 96zM288 256C288 242.7 298.7 232 312 232H488C501.3 232 512 242.7 512 256C512 269.3 501.3 280 488 280H312C298.7 280 288 269.3 288 256zM288 416C288 402.7 298.7 392 312 392H488C501.3 392 512 402.7 512 416C512 429.3 501.3 440 488 440H312C298.7 440 288 429.3 288 416z"/></svg>';
-  promptChainCreateButton.className = 'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
+  promptChainCreateButton.classList = 'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
   promptChainCreateButton.style = 'bottom: 11rem;right: 3rem;width: 2rem;height: 2rem;flex-wrap:wrap;border: solid 1px;';
   const plusIcon = document.createElement('div');
   plusIcon.classList = 'bg-gray-100 dark:bg-gray-700';
@@ -308,8 +330,8 @@ function addPromptChainCreateButton() {
       const userMessage = userMessageWrapper.querySelector('[id^="message-text-"]');
       if (userMessage) allUserMessages.push(userMessage.textContent);
     });
-    const promptChainName = document.querySelector('[id^="conversation-top"]')?.textContent || '';
-    createNewPromptChainModal(promptChainName, allUserMessages);
+    const promptChainName = document.querySelector('[id^="conversation-top-title"]')?.textContent || '';
+    createNewPromptChainModal(promptChainName, allUserMessages.length > 0 ? allUserMessages : ['']);
     addNewPromptModalEventListener();
   });
   document.body.appendChild(promptChainCreateButton);
@@ -360,5 +382,12 @@ function insertNextChain(promptChainSteps, promptChainIndex) {
   }, 300);
 }
 function initializePromptChain() {
-  addPromptChainCreateButton();
+  const observer = new MutationObserver(() => {
+    addPromptChainCreateButton();
+  });
+  const main = document.querySelector('main');
+  observer.observe(main, {
+    childList: true,
+    subtree: true,
+  });
 }

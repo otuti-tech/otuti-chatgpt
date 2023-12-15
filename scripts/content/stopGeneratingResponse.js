@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global isGenerating, chatStreamIsClosed:true */
+/* global isGenerating, chatStreamIsClosed:true, addInputFormActionWrapper */
 function toggleStopGeneratingResponseButton() {
   const textAreaElement = document.querySelector('main form textarea');
   if (!textAreaElement) return;
@@ -25,9 +25,8 @@ function toggleStopGeneratingResponseButton() {
     newStopGeneratingResponseButton.remove();
   });
 
-  const inputForm = document.querySelector('main form');
-  const inputFormActionWrapper = inputForm.querySelector('#input-form-action-wrapper');
-  inputFormActionWrapper.appendChild(newStopGeneratingResponseButton);
+  const inputFormActionWrapper = addInputFormActionWrapper();
+  inputFormActionWrapper?.appendChild(newStopGeneratingResponseButton);
 }
 
 // eslint-disable-next-line no-unused-vars

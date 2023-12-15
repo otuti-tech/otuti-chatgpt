@@ -410,7 +410,7 @@ function generateContent(nodes) {
 }
 
 function userRow(message) {
-  const messageContent = message.content.parts.join('\n');
+  const messageContent = message.content.parts.filter((p) => typeof p === 'string').join('\n');
   const messageContentPartsHTML = markdown('user')
     .render(messageContent);
   return `<div
@@ -462,7 +462,7 @@ function userRow(message) {
 </div>`;
 }
 function assistantRow(message) {
-  let messageContentParts = message.content.parts.join('\n');
+  let messageContentParts = message.content.parts.filter((p) => typeof p === 'string').join('\n');
 
   // if citations array is not mpty, replace text from start_ix to end_ix position with citation
   if (message.metadata.citations?.length > 0) {
@@ -470,14 +470,16 @@ function assistantRow(message) {
       const startIndex = citation.start_ix;
       const endIndex = citation.end_ix;
       const citationMetadata = citation.metadata;
-      const { url } = citationMetadata;
-      // number 1 with link to  url
-      let citationText = `[^1^](${url})`;
-      if (endIndex === message.metadata.citations[index - 1]?.start_ix) {
-        citationText = '';
-      }
+      if (citationMetadata) {
+        const { url } = citationMetadata;
+        // number 1 with link to  url
+        let citationText = `[^1^](${url})`;
+        if (endIndex === message.metadata.citations[index - 1]?.start_ix) {
+          citationText = '';
+        }
 
-      messageContentParts = messageContentParts.replace(messageContentParts.substring(startIndex, endIndex), citationText);
+        messageContentParts = messageContentParts.replace(messageContentParts.substring(startIndex, endIndex), citationText);
+      }
     });
   }
   messageContentParts = messageContentParts.replace(/[^n}]\n\\/g, '\n\n\\');
@@ -532,7 +534,7 @@ function assistantRow(message) {
           class="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap break-words"
         >
           <div
-            class="markdown prose flex flex-col w-full break-words dark:prose-invert dark"
+            class="markdown prose flex flex-col w-full break-words dark:prose-invert"
           >
             ${messageContentPartsHTML}
           </div>

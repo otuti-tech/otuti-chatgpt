@@ -53,7 +53,7 @@ function addQuickAccessMenuEventListener() {
       } else if (previousTriggerPosition === -1 || textAreaValue.lastIndexOf(' ', cursorPosition - 1) > previousTriggerPosition) {
         quickAccessMenuElement.remove();
       }
-    } else if (!quickAccessMenuElement.contains(e.target)) {
+    } else if (!quickAccessMenuElement.contains(e.target) && !e.target.id.startsWith('enforcement-trigger')) {
       quickAccessMenuElement.remove();
     }
   });
@@ -164,7 +164,7 @@ function quickAccessMenu(trigger) {
     menuHeaderButton.textContent = '+ Add More';
     menuHeaderButton.addEventListener('click', () => {
       menu.remove();
-      createSettingsModal(3);
+      createSettingsModal(6);
     });
     menu.appendChild(loadCustomPrompts());
   }
@@ -189,10 +189,11 @@ function loadCustomPrompts() {
   chrome.storage.local.get(['customPrompts'], (result) => {
     let { customPrompts } = result;
     if (!customPrompts) customPrompts = defaultPrompts;
-    const sortedCustomPrompts = customPrompts.sort((a, b) => a.title.localeCompare(b.title));
+    const sortedCustomPrompts = customPrompts?.sort((a, b) => a.title.localeCompare(b.title));
     for (let i = 0; i < sortedCustomPrompts.length; i += 1) {
       const prompt = sortedCustomPrompts[i];
       const promptElement = document.createElement('button');
+      promptElement.type = 'button';
       promptElement.id = `quick-access-menu-item-${i}`;
       promptElement.classList = 'btn w-full text-left focus:outline focus:ring-2 focus:ring-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700';
       promptElement.innerHTML = `<span style="font-weight:bold; font-size:16px; margin-right:16px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;">${prompt.title}</span><span style="font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;color:#888;">${prompt.text}</span>`;
@@ -224,7 +225,7 @@ function loadPromptChains() {
   menuContent.style = 'overflow-y: scroll;height: 100%; width: 100%;padding:1px;';
   chrome.storage.local.get(['promptChains'], (result) => {
     const { promptChains } = result;
-    const sortedPromptChains = promptChains.sort((a, b) => a.title.localeCompare(b.title));
+    const sortedPromptChains = promptChains?.sort((a, b) => a.title.localeCompare(b.title));
     if (!promptChains) {
       const noPromptChains = document.createElement('div');
       noPromptChains.classList = 'text-center text-gray-500';
@@ -235,6 +236,7 @@ function loadPromptChains() {
     for (let i = 0; i < sortedPromptChains.length; i += 1) {
       const prompt = sortedPromptChains[i];
       const promptElement = document.createElement('button');
+      promptElement.type = 'button';
       promptElement.id = `quick-access-menu-item-${i}`;
       promptElement.classList = 'btn w-full text-left focus:outline focus:ring-2 focus:ring-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700';
       promptElement.innerHTML = `<span style="font-weight:bold; font-size:16px; margin-right:16px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;">${prompt.title}</span><span style="font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;color:#888;">Step 1: ${prompt.steps[0]}</span>`;

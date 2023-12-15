@@ -1,3 +1,4 @@
+/* eslint-disable */
 /*! markdown-it 13.0.1 https://github.com/markdown-it/markdown-it @license MIT */
 (function(global, factory) {
 	typeof exports === "object" && typeof module !== "undefined" ? module.exports = factory() : typeof define === "function" && define.amd ? define(factory) : (global = typeof globalThis !== "undefined" ? globalThis : global || self, 

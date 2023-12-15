@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global createModal, createReleaseNoteModal, languageList, writingStyleList, toneList, toast, loadConversationList, modelSwitcher, addModelSwitcherEventListener, API_URL:true */
+/* global createModal, Sortable, getGizmoById, generateRandomDarkColor, createReleaseNoteModal, languageList, writingStyleList, toneList, toast, loadConversationList, modelSwitcher, openUpgradeModal, addModelSwitcherEventListener, dropdown, addDropdownEventListener, API_URL:true, showActionConfirm, initializeUpgradeButton */
 const defaultPrompts = [
   { title: 'Continue', text: 'Please continue', isDefault: true },
   { title: 'Rewrite', text: 'Please rewrite your last response', isDefault: false },
@@ -9,70 +9,90 @@ const defaultPrompts = [
   { title: 'Expand', text: 'Please expand your last response', isDefault: false },
   { title: 'Summarize', text: 'Please summarize your last response', isDefault: false },
 ];
+const autoDeleteModes = [{ code: 'days', name: 'Delete chats after' }, { code: 'number', name: 'Only keep the last' }];
+
 function createSettingsModal(initialTab = 0) {
   const bodyContent = settingsModalContent(initialTab);
   const actionsBarContent = settingsModalActions();
   createModal('Settings', 'Your can change the Superpower settings here', bodyContent, actionsBarContent);
 }
-const inactiveTabElementStyles = 'border: 1px solid lightslategray;border-bottom:0; border-top-right-radius: 8px;border-top-left-radius: 8px; font-size: 0.8em;  padding:8px 12px;color: lightslategray;margin:-1px;min-height:100%;';
-const activeTabElementStyles = 'background-color: #0b0d0e;border: 1px solid lightslategray; border-bottom:0; border-top-right-radius: 8px;border-top-left-radius: 8px; font-size: 0.8em;  padding:8px 12px;color: lightslategray;margin:-1px;min-height:100%;';
-function selectedTabContent(selectedTab) {
+const inactiveTabElementStyles = 'border-right: 1px solid lightslategray; border-bottom:2px solid white; border-top-right-radius: 16px; font-size: 0.8em;  padding:8px 12px;color: lightslategray;margin:-1px;height:100%;min-width:100px;';
+const activeTabElementStyles = 'background-color: #0b0d0e;border:solid 2px white; border-bottom:0; border-top-right-radius: 16px;font-size: 0.8em; padding:8px 12px;color: white;height:100%;min-width:100px;';
+function selectedTabContent(selectedTab, hasSubscription) {
   switch (selectedTab) {
     case 0:
-      return generalTabContent();
+      return generalTabContent(hasSubscription);
     case 1:
-      return autoSyncTabContent();
+      return autoSyncTabContent(hasSubscription);
     case 2:
-      return modelsTabContent();
+      return historyTabContent(hasSubscription);
     case 3:
-      return customPromptTabContent();
+      return conversationTabContent(hasSubscription);
     case 4:
-      return exportTabContent();
+      return promptInputTabContent(hasSubscription);
     case 5:
-      return splitterTabContent();
+      return modelsTabContent(hasSubscription);
     case 6:
-      return newsletterTabContent();
+      return customPromptTabContent(hasSubscription);
     case 7:
-      return supportersTabContent();
+      return exportTabContent(hasSubscription);
+    case 8:
+      return splitterTabContent(hasSubscription);
+    case 9:
+      return newsletterTabContent(hasSubscription);
     default:
-      return generalTabContent();
+      return generalTabContent(hasSubscription);
   }
 }
 function settingsModalContent(initialTab = 0) {
-  const settingsTabs = ['General', 'Auto Sync', 'Models', 'Custom Prompts', 'Export', 'Splitter', 'Newsletter', 'Supporters'];
+  const settingsTabs = ['General', 'Auto Sync', 'History', 'Conversation', 'Prompt Input', 'Models', 'Custom Prompts', 'Export', 'Splitter', 'Newsletter'];
   let activeTab = initialTab;
   // create history modal content
   const content = document.createElement('div');
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;width:100%; height: 100%;';
   const tabs = document.createElement('div');
-  tabs.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; background-color: #1e1e2f;z-index:1000;border-bottom: 1px solid lightslategray;';
-  settingsTabs.forEach((tab, index) => {
-    const tabButton = document.createElement('button');
-    if (activeTab === settingsTabs.indexOf(tab)) {
-      tabButton.classList = 'active-tab';
-    } else {
-      tabButton.removeAttribute('class');
-    }
-    tabButton.style = activeTab === settingsTabs.indexOf(tab) ? activeTabElementStyles : inactiveTabElementStyles;
-    tabButton.textContent = tab;
-    tabButton.addEventListener('click', () => {
-      activeTab = index;
-      const activeTabElemet = document.querySelector('.active-tab');
-      activeTabElemet.style = inactiveTabElementStyles;
-      activeTabElemet.removeAttribute('class');
-      tabButton.classList = 'active-tab';
-      tabButton.style = activeTabElementStyles;
-      const settingsModalTabContent = document.querySelector('#settings-modal-tab-content');
-      const newContent = selectedTabContent(activeTab);
-      settingsModalTabContent.parentNode.replaceChild(newContent, settingsModalTabContent);
+  tabs.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; background-color: #1e1e2f;z-index:1000;overflow:hidden; overflow-x:scroll;-ms-overflow-style: none; scrollbar-width: none;';
+  // hide scrollbar for chrome
+  tabs.classList.add('scrollbar-hide');
+  chrome.runtime.sendMessage({
+    checkHasSubscription: true,
+    detail: {
+      forceRefresh: false,
+    },
+  }, (hasSubscription) => {
+    settingsTabs.forEach((tab, index) => {
+      const tabButton = document.createElement('button');
+      if (activeTab === settingsTabs.indexOf(tab)) {
+        tabButton.classList = 'active-tab';
+      } else {
+        tabButton.removeAttribute('class');
+      }
+      tabButton.style = activeTab === settingsTabs.indexOf(tab) ? activeTabElementStyles : inactiveTabElementStyles;
+
+      tabButton.textContent = tab;
+      tabButton.addEventListener('click', () => {
+        activeTab = index;
+        const activeTabElemet = document.querySelector('.active-tab');
+        activeTabElemet.style = inactiveTabElementStyles;
+        activeTabElemet.removeAttribute('class');
+        tabButton.classList = 'active-tab';
+        tabButton.style = activeTabElementStyles;
+        const settingsModalTabContent = document.querySelector('#settings-modal-tab-content');
+        const newContent = selectedTabContent(activeTab, hasSubscription);
+        settingsModalTabContent.parentNode.replaceChild(newContent, settingsModalTabContent);
+      });
+      tabs.appendChild(tabButton);
     });
-    tabs.appendChild(tabButton);
+    const tabsLastChild = document.createElement('div');
+    tabsLastChild.style = 'width:100%; height:100%; border-bottom: solid 2px white;';
+    tabs.appendChild(tabsLastChild);
+    content.appendChild(selectedTabContent(activeTab, hasSubscription));
   });
+
   content.appendChild(tabs);
-  content.appendChild(selectedTabContent(activeTab));
   return content;
 }
-function generalTabContent() {
+function generalTabContent(hasSubscription = false) {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
   content.style = 'display: flex; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; height: 100%;padding-bottom:80px;';
@@ -80,9 +100,6 @@ function generalTabContent() {
   leftContent.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 50%;padding-right: 8px;';
   const rightContent = document.createElement('div');
   rightContent.style = 'display: flex; flex-direction: column; justify-content: start; align-items: end; width: 50%;padding-left: 8px;';
-  // input history
-  const promptHistorySwitch = createSwitch('Input History Shortkey', 'Enable/disable the up and down arrow to cycle through input history.', 'promptHistory', true);
-  leftContent.appendChild(promptHistorySwitch);
 
   // dark mode
   const darkModeSwitchWrapper = document.createElement('div');
@@ -91,7 +108,7 @@ function generalTabContent() {
   darkModeSwitch.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;color:white;';
   darkModeSwitch.textContent = 'Dark mode';
   const darkModeLabel = document.createElement('label');
-  darkModeLabel.className = 'switch';
+  darkModeLabel.classList = 'switch';
   const darkModeInput = document.createElement('input');
   darkModeInput.type = 'checkbox';
   darkModeInput.checked = !!document.querySelector('html').classList.contains('dark');
@@ -107,7 +124,7 @@ function generalTabContent() {
     }
   });
   const darkModeSlider = document.createElement('span');
-  darkModeSlider.className = 'slider round';
+  darkModeSlider.classList = 'slider round';
 
   darkModeLabel.appendChild(darkModeInput);
   darkModeLabel.appendChild(darkModeSlider);
@@ -115,65 +132,9 @@ function generalTabContent() {
   darkModeSwitchWrapper.appendChild(darkModeSwitch);
   leftContent.appendChild(darkModeSwitchWrapper);
 
-  // safe mode
-  // const safeModeSwitch = createSwitch('Safe Mode', 'Safe mode is now integerated into Auto-Sync. This setting will be removed in the next version', 'safeMode', true, safeModeTrigger, 'Beta', true);
-  // leftContent.appendChild(safeModeSwitch);
-
-  // copy mode
-  const copyModeSwitch = createSwitch('Copy mode', 'OFF: only copy response / ON: copy both request and response', 'copyMode', false);
-  leftContent.appendChild(copyModeSwitch);
-
-  // show word counter
-  const showWordCountSwitch = createSwitch('Word/Char Count', 'Show/hide word/char count on each message', 'showWordCount', true, reloadConversationList);
-  leftContent.appendChild(showWordCountSwitch);
-
-  // auto scroll
-  const autoScrollSwitch = createSwitch('Auto Scroll', 'Automatically scroll down while responding', 'autoScroll', true);
-  leftContent.appendChild(autoScrollSwitch);
-
-  // prompt template
-  const promptTemplateSwitch = createSwitch('Prompt Template', 'Enable/disable the doube {{curly}} brackets replacement (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#d744b8220a374af394b0bcf82274e290" target="blank">Learn More</a>)', 'promptTemplate', true);
-  leftContent.appendChild(promptTemplateSwitch);
-
-  // conversation width
-  const customConversationWidthSwitch = createSwitch('Custom Conversation Width', 'OFF: Use default / ON: Set Conversation Width (30%-90%)', 'customConversationWidth', false, toggleCustomWidthInput);
-  leftContent.appendChild(customConversationWidthSwitch);
-
-  const conversationWidthInput = document.createElement('input');
-  conversationWidthInput.id = 'conversation-width-input';
-  conversationWidthInput.type = 'number';
-  conversationWidthInput.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40 text-white';
-  chrome.storage.local.get(['settings'], (result) => {
-    conversationWidthInput.disabled = !result.settings.customConversationWidth;
-    conversationWidthInput.value = result.settings.conversationWidth;
-    conversationWidthInput.addEventListener('change', () => {
-      const curConversationWidthInput = document.querySelector('#conversation-width-input');
-      const newValue = Math.round(curConversationWidthInput.value);
-      curConversationWidthInput.value = newValue;
-      Array.from(document.querySelectorAll('[id^=message-wrapper]')).forEach((el) => {
-        el.querySelector('div').style.maxWidth = `${newValue}%`;
-      });
-      if (document.querySelector('#conversation-bottom')) {
-        document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
-      }
-      document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
-      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue, customConversationWidth: true } });
-    });
-    conversationWidthInput.addEventListener('input', () => {
-      const curConversationWidthInput = document.querySelector('#conversation-width-input');
-      const newValue = Math.round(curConversationWidthInput.value);
-      curConversationWidthInput.value = newValue;
-      Array.from(document.querySelectorAll('[id^=message-wrapper]')).forEach((el) => {
-        el.querySelector('div').style.maxWidth = `${newValue}%`;
-      });
-      if (document.querySelector('#conversation-bottom')) {
-        document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
-      }
-      document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
-      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue, customConversationWidth: true } });
-    });
-  });
-  leftContent.appendChild(conversationWidthInput);
+  // daily newsletter
+  const hideReleaseNoteSwitch = createSwitch('Hide Release Note', 'Don’t show release note when extension is updated', 'hideReleaseNote', false);
+  leftContent.appendChild(hideReleaseNoteSwitch);
 
   const importExportWrapper = document.createElement('div');
   importExportWrapper.style = 'display: flex; flex-direction: row; flex-wrap: wrap; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
@@ -186,7 +147,7 @@ function generalTabContent() {
   importExportButtonWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;';
 
   const importButton = document.createElement('button');
-  importButton.className = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
+  importButton.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
   importButton.textContent = 'Import';
   importButton.addEventListener('click', () => {
     // open file picker
@@ -218,27 +179,29 @@ function generalTabContent() {
   importExportButtonWrapper.appendChild(importButton);
 
   const exportButton = document.createElement('button');
-  exportButton.className = 'w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
+  exportButton.classList = 'w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
   exportButton.textContent = 'Export';
   exportButton.addEventListener('click', () => {
-    chrome.storage.local.get(['conversationsOrder', 'settings', 'customModels', 'customPrompts', 'customInstructionProfiles', 'promptChains'], (result) => {
-      const {
-        settings, customModels, customPrompts, customInstructionProfiles, promptChains, conversationsOrder,
-      } = result;
-      const data = {
-        settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles, promptChains,
-      };
-      const element = document.createElement('a');
-      element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`);
-      const todatDate = new Date();
-      const filePostfix = `${todatDate.getFullYear()}-${todatDate.getMonth() + 1}-${todatDate.getDate()}`;
+    chrome.storage.sync.get(['version'], ({ version }) => {
+      chrome.storage.local.get(['conversationsOrder', 'settings', 'customModels', 'customPrompts', 'customInstructionProfiles', 'promptChains'], (result) => {
+        const {
+          settings, customModels, customPrompts, customInstructionProfiles, promptChains, conversationsOrder,
+        } = result;
+        const data = {
+          version, settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles, promptChains,
+        };
+        const element = document.createElement('a');
+        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`);
+        const todatDate = new Date();
+        const filePostfix = `${todatDate.getFullYear()}-${todatDate.getMonth() + 1}-${todatDate.getDate()}`;
 
-      element.setAttribute('download', `superpower-chatgpt-settings-${filePostfix}.json`);
-      element.style.display = 'none';
-      document.body.appendChild(element);
-      element.click();
-      document.body.removeChild(element);
-      toast('Settings exported');
+        element.setAttribute('download', `superpower-chatgpt-settings-${filePostfix}.json`);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+        toast('Settings exported');
+      });
     });
   });
   importExportButtonWrapper.appendChild(exportButton);
@@ -255,109 +218,7 @@ function generalTabContent() {
   // extra links
   const linkWrapper = document.createElement('div');
   linkWrapper.style = 'display: flex; flex-direction: row; flex-wrap:wrap; justify-content: start; align-items: start; width: 100%; padding: 8px 16px; position:absolute; bottom:0; left:0;background-color:#0b0d0e;border-top:1px solid #565869;';
-  // upgrade plan
-  const originalUpgradePlanButton = document.querySelector('#upgrade-plan-button');
-  if (originalUpgradePlanButton) {
-    const upgradePlanButton = document.createElement('div');
-    upgradePlanButton.textContent = 'Upgrade plan ➜';
-    upgradePlanButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
-    upgradePlanButton.addEventListener('mouseover', () => {
-      upgradePlanButton.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
-    });
-    upgradePlanButton.addEventListener('mouseout', () => {
-      upgradePlanButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
-    });
-    upgradePlanButton.addEventListener('click', () => {
-      document.querySelector('button[id=modal-close-button-settings]')?.click();
-      originalUpgradePlanButton.click();
-    });
-    linkWrapper.appendChild(upgradePlanButton);
-  }
-  // upgrade plus
-  const originalUpgradePlusButton = document.querySelector('#upgrade-plus-button');
-  if (originalUpgradePlusButton) {
-    const upgradePlusButton = document.createElement('div');
-    upgradePlusButton.textContent = 'Upgrade to Plus ➜';
-    upgradePlusButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
-    upgradePlusButton.addEventListener('mouseover', () => {
-      upgradePlusButton.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
-    });
-    upgradePlusButton.addEventListener('mouseout', () => {
-      upgradePlusButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
-    });
-    upgradePlusButton.addEventListener('click', () => {
-      document.querySelector('button[id=modal-close-button-settings]')?.click();
-      originalUpgradePlusButton.click();
-    });
-    linkWrapper.appendChild(upgradePlusButton);
-  }
-  // My account
-  const originalMyAccountButton = document.querySelector('#my-account-button');
-  if (originalMyAccountButton) {
-    const myAccountButton = document.createElement('div');
-    myAccountButton.textContent = 'My account ➜';
-    myAccountButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
-    myAccountButton.addEventListener('mouseover', () => {
-      myAccountButton.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
-    });
-    myAccountButton.addEventListener('mouseout', () => {
-      myAccountButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
-    });
-    myAccountButton.addEventListener('click', () => {
-      document.querySelector('button[id=modal-close-button-settings]')?.click();
-      originalMyAccountButton.click();
-    });
-    linkWrapper.appendChild(myAccountButton);
-  }
-  // My plan
-  const originalMyPlanButton = document.querySelector('#my-plan-button');
-  if (originalMyPlanButton) {
-    const myPlanButton = document.createElement('div');
-    myPlanButton.textContent = 'My plan ➜';
-    myPlanButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
-    myPlanButton.addEventListener('mouseover', () => {
-      myPlanButton.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
-    });
-    myPlanButton.addEventListener('mouseout', () => {
-      myPlanButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
-    });
-    myPlanButton.addEventListener('click', () => {
-      document.querySelector('button[id=modal-close-button-settings]')?.click();
-      originalMyPlanButton.click();
-    });
-    linkWrapper.appendChild(myPlanButton);
-  }
-  // Improve ChatGPT
-  const originalImproveButton = document.querySelector('#improve-button');
-  if (originalImproveButton) {
-    const improveButton = document.createElement('div');
-    improveButton.textContent = 'Improve ChatGPT ➜';
-    improveButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
-    improveButton.addEventListener('mouseover', () => {
-      improveButton.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
-    });
-    improveButton.addEventListener('mouseout', () => {
-      improveButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
-    });
-    improveButton.addEventListener('click', () => {
-      document.querySelector('button[id=modal-close-button-settings]')?.click();
-      originalImproveButton.click();
-    });
-    linkWrapper.appendChild(improveButton);
-  }
-  // Add a link to openai discord
-  const discordLink = document.createElement('a');
-  discordLink.href = 'https://discord.com/channels/974519864045756446/1053182622626492466';
-  discordLink.target = '_blank';
-  discordLink.textContent = 'OpenAI Discord ➜';
-  discordLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
-  discordLink.addEventListener('mouseover', () => {
-    discordLink.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
-  });
-  discordLink.addEventListener('mouseout', () => {
-    discordLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
-  });
-  // linkWrapper.appendChild(discordLink);
+
   // add a link to Updates and FAQ
   const updatesLink = document.createElement('a');
   updatesLink.href = 'https://help.openai.com/en/collections/3742473-chatgpt';
@@ -371,19 +232,6 @@ function generalTabContent() {
     updatesLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   linkWrapper.appendChild(updatesLink);
-  // add link for feedback email
-  const feedbackLink = document.createElement('a');
-  feedbackLink.href = 'mailto:saeed@superpowerdaily.com?subject=Superpower ChatGPT Feature Request&body=Hi Marko,%0DReporting a bug? Any of the following information would help me figure it out faster: %0D- What version of the extension do you have? (You can find that at the bottom of the "settings" menu) %0D- What browser are you using? %0D- Do you see any errors in the console log? %0D- Do you have a plus account? %0D- How many conversations do you have approximately? %0D- Do you have the Auto Sync feature ON? %0D- Are all of your conversations synced? %0D- Do you see the "settings" menu on the sidebar? %0D- Does your issue go away if you turn the Auto Sync OFF in the settings menu? %0D- Does this issue happen to all prompts? Or only the first prompt? %0D- Are you using any other ChatGPT extensions at the same time? %0D- Can you email me a screenshot or video of the ChatGPT page when the bug happens? (with the extension installed)%0DThanks!';
-  feedbackLink.target = '_blank';
-  feedbackLink.textContent = 'Feature Request ➜';
-  feedbackLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
-  feedbackLink.addEventListener('mouseover', () => {
-    feedbackLink.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
-  });
-  feedbackLink.addEventListener('mouseout', () => {
-    feedbackLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
-  });
-  // linkWrapper.appendChild(feedbackLink);
 
   // add link for sponsorship
   const sponsorLink = document.createElement('a');
@@ -412,6 +260,20 @@ function generalTabContent() {
     faqLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   linkWrapper.appendChild(faqLink);
+
+  // add link for YouTube
+  const youtubeLink = document.createElement('a');
+  youtubeLink.href = 'https://www.youtube.com/@superpowerdaily';
+  youtubeLink.target = '_blank';
+  youtubeLink.textContent = 'YouTube ➜';
+  youtubeLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+  youtubeLink.addEventListener('mouseover', () => {
+    youtubeLink.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+  });
+  youtubeLink.addEventListener('mouseout', () => {
+    youtubeLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+  });
+  linkWrapper.appendChild(youtubeLink);
   content.appendChild(linkWrapper);
 
   return content;
@@ -440,52 +302,48 @@ function toggleCustomWidthInput(customConversationWidth) {
     }
   });
 }
-function autoSyncTabContent() {
+function autoSyncTabContent(hasSubscription = false) {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
   // Auto Sync
-  const autoSyncSwitch = createSwitch('Auto Sync', 'Automatically download and sync all your conversations to your computer. Auto Sync only works when ChatGPT is open. Disabling Auto Sync will also disable some of the existing features such as the ability to search for messages and many future features that rely on Auto Sync.(Requires Refresh)', 'autoSync', true, refreshPage);
+  const autoSyncSwitch = createSwitch('Auto Sync', 'Automatically download and sync all your conversations to your computer. Auto Sync only works when ChatGPT is open. Disabling Auto Sync will also disable some of the existing features such as the ability to search for messages and many future features that rely on Auto Sync.(Requires Refresh)', 'autoSync', true, refreshPage, ['Requires Refresh']);
   content.appendChild(autoSyncSwitch);
   chrome.storage.local.get(['settings'], (result) => {
     const { autoSync } = result.settings;
 
-    const autoRefreshAfterSyncSwitch = createSwitch('Auto Refresh After Sync', 'Automatically refresh the page after syncing conversations is completed', 'autoRefreshAfterSync', true, null, 'Requires Auto-Sync', !autoSync);
+    const autoRefreshAfterSyncSwitch = createSwitch('Auto Refresh After Sync', 'Automatically refresh the page after syncing conversations is completed', 'autoRefreshAfterSync', true, null, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(autoRefreshAfterSyncSwitch);
 
-    const quickSyncSwitch = createSwitch('Quick Sync', 'OFF: Sync All Conversations, ON: Sync only the last 100 conversations (Best performance)', 'quickSync', false, resetSync, 'Experimental - Requires Auto-Sync', !autoSync);
-    content.appendChild(quickSyncSwitch);
+    // add a title that says warning zone
+    const warningZoneTitle = document.createElement('div');
+    warningZoneTitle.style = 'width:100%;font-size:0.8em;color:lightslategray;margin-top:24px;';
+    warningZoneTitle.innerText = 'Warning Zone';
+    content.appendChild(warningZoneTitle);
+    // add a divider
+    const divider = document.createElement('div');
+    divider.style = 'width:100%;height:1px;background-color:lightslategray;margin:0 0 24px 0;';
+    content.appendChild(divider);
 
-    const showExamplePromptsSwitch = createSwitch('Show Example Prompts', 'Show the example prompts when starting a new chat', 'showExamplePrompts', false, null, 'Requires Auto-Sync', !autoSync);
-    content.appendChild(showExamplePromptsSwitch);
-
-    const keepFoldersAtTheTopSwitch = createSwitch('Keep folders at the top', 'Always show the folders at the top of the history', 'keepFoldersAtTheTop', false, toggleKeepFoldersAtTheTop, 'Requires Auto-Sync', !autoSync);
-    content.appendChild(keepFoldersAtTheTopSwitch);
-
-    const conversationTimestampSwitch = createSwitch('Conversation Order', 'OFF: Created time, ON: Last updated time', 'conversationTimestamp', false, toggleConversationTimestamp, 'Requires Auto-Sync', !autoSync);
-    content.appendChild(conversationTimestampSwitch);
-
-    const showMessageTimestampSwitch = createSwitch('Message Timestamp', 'Show/hide timestamps on each message', 'showMessageTimestamp', false, reloadConversationList, 'Requires Auto-Sync', !autoSync);
-    content.appendChild(showMessageTimestampSwitch);
-
-    const pinNavSwitch = createSwitch('Pin Navigation', 'Show/hide message pins for quick navigation(only when conversations are fully synced)', 'showPinNav', true, refreshPage, 'Requires Auto-Sync', !autoSync);
-    content.appendChild(pinNavSwitch);
-
-    const showGpt4Counter = createSwitch('Show GPT-4 Counter', 'Show the number of GPT-4 messages in the last 3 hours', 'showGpt4Counter', true, toggleGpt4Counter, 'Requires Auto-Sync', !autoSync);
-    content.appendChild(showGpt4Counter);
-
-    const autoHideTopNav = createSwitch('Auto Hide Top Navbar', 'Automatically hide the navbar at the top of the page when move the mouse out of it.', 'autoHideTopNav', true, toggleTopNav, 'Requires Auto-Sync', !autoSync);
-    content.appendChild(autoHideTopNav);
-
-    const autoResetTopNav = createSwitch('Auto Reset Top Navbar', 'Automatically reset the tone, writing style, and language to default when switching to new chats', 'autoResetTopNav', false, toggleTopNav, 'Requires Auto-Sync', !autoSync);
-    content.appendChild(autoResetTopNav);
-
-    const chatEndedSoundSwitch = createSwitch('Sound Alarm', 'Play a sound when the chat ends', 'chatEndedSound', false, null, 'Requires Auto-Sync', !autoSync);
-    content.appendChild(chatEndedSoundSwitch);
+    // Reset Auto Sync
+    const resetAutoSyncButton = document.createElement('button');
+    resetAutoSyncButton.textContent = 'Reset Auto Sync';
+    resetAutoSyncButton.disabled = !autoSync;
+    resetAutoSyncButton.style.pointerEvents = !autoSync ? 'none' : 'auto';
+    resetAutoSyncButton.classList = 'btn btn-warning flex justify-center gap-2 border-0 md:border';
+    resetAutoSyncButton.addEventListener('click', () => {
+      showActionConfirm('Reset Auto Sync', 'Clicking on Restart will refresh the page and attempt to re-sync all your conversations', 'Restart', null, resetAutoSync, 'orange');
+    });
+    content.appendChild(resetAutoSyncButton);
+    const resetAutoSyncDesc = document.createElement('div');
+    resetAutoSyncDesc.style = 'width:100%;font-size:0.8em;color:lightslategray;margin-top:8px;';
+    resetAutoSyncDesc.innerText = 'This will re-sync all the conversations from ChatGPT database. This is useful if you are having issues with Auto Sync.';
+    content.appendChild(resetAutoSyncDesc);
   });
+
   return content;
 }
-function resetSync() {
+function resetAutoSync() {
   chrome.storage.local.set({
     conversations: {},
     conversationsAreSynced: false,
@@ -504,47 +362,50 @@ function reloadConversationList() {
   });
 }
 
-function sortConversationsByTimestamp(conversationsOrder, conversations, byUpdateTime) {
-  const folders = conversationsOrder.filter((c) => typeof c !== 'string' && c.id !== 'trash');
+function sortConversationsByTimestamp(conversationsOrder, conversations) {
+  const folders = conversationsOrder.filter((c) => typeof c !== 'string' && c?.id !== 'trash');
   // close all folders
-  folders.forEach((f) => {
-    f.isOpen = false;
+  folders?.forEach((f) => {
+    if (f) f.isOpen = false;
+  });
+  folders.forEach((folder) => {
+    if (folder.conversationIds.length > 0) {
+      const folderConversations = Object.values(conversations).filter((c) => folder?.conversationIds?.includes(c?.id));
+      const sortedFolderConversations = folderConversations.sort((a, b) => b.update_time - a.update_time);
+      folder.conversationIds = sortedFolderConversations.map((c) => c.id);
+    }
   });
   const conversationIds = conversationsOrder.filter((c) => typeof c === 'string');
-  const trash = conversationsOrder.find((c) => c.id === 'trash');
+  const trash = conversationsOrder.find((c) => c?.id === 'trash');
   // close trash
   trash.isOpen = false;
 
-  if (byUpdateTime) {
-    // sort conversationIds by last updated time
-    conversationIds.sort((a, b) => {
-      const aLastUpdated = conversations[a].update_time;
-      const bLastUpdated = conversations[b].update_time;
-      return bLastUpdated - aLastUpdated;
-    });
-  } else {
-    // sort conversations by created time
-    conversationIds.sort((a, b) => {
-      const aCreated = conversations[a].create_time;
-      const bCreated = conversations[b].create_time;
-      return bCreated - aCreated;
-    });
-  }
+  // sort conversationIds by last updated time
+  conversationIds.sort((a, b) => {
+    const aLastUpdated = conversations[a]?.update_time || 0;
+    const bLastUpdated = conversations[b]?.update_time || 0;
+    return bLastUpdated - aLastUpdated;
+  });
+
   const newConversationsOrder = [...folders, ...conversationIds, trash];
   return newConversationsOrder;
 }
 // eslint-disable-next-line no-unused-vars
 function toggleKeepFoldersAtTheTop(isChecked) {
-  chrome.storage.local.get(['settings'], (result) => {
-    const { settings } = result;
-    toggleConversationTimestamp(settings.conversationTimestamp);
-  });
-}
-function toggleConversationTimestamp(isChecked) {
   chrome.storage.local.get(['conversationsOrder', 'conversations'], (result) => {
     const { conversationsOrder, conversations } = result;
-    const newConversationsOrder = sortConversationsByTimestamp(conversationsOrder, conversations, isChecked);
+    const newConversationsOrder = sortConversationsByTimestamp(conversationsOrder, conversations);
     chrome.storage.local.set({ conversationsOrder: newConversationsOrder }, () => reloadConversationList());
+  });
+}
+function toggleShowFolderCounts(isChecked) {
+  const allFolderTitleElements = document.querySelectorAll('[id^=title-folder-]');
+  allFolderTitleElements.forEach((el) => {
+    el.style.bottom = isChecked ? '5px' : '0px';
+  });
+  const allFolderCountElements = document.querySelectorAll('[id^=count-folder-]');
+  allFolderCountElements.forEach((el) => {
+    el.style.display = isChecked ? 'block' : 'none';
   });
 }
 function toggleGpt4Counter(show) {
@@ -563,7 +424,292 @@ function toggleTopNav(autohide) {
     navWrapperElement.style.height = '56px';
   }
 }
-function modelsTabContent() {
+function historyTabContent(hasSubscription = false) {
+  const content = document.createElement('div');
+  content.id = 'settings-modal-tab-content';
+  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+  chrome.storage.local.get(['settings'], (result) => {
+    const {
+      autoSync, autoDeleteOldChats, autoDeleteMode, autoDeleteThreshold,
+    } = result.settings;
+
+    const showFolderCountsSwitch = createSwitch('Show Folder Counts', 'Show the number of conversations in each folder', 'showFolderCounts', true, toggleShowFolderCounts, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(showFolderCountsSwitch);
+
+    const customGPTAutoFolderSwitch = createSwitch('Custom GPT Auto Folder', 'Automatically save Custom GPT Chats into separate folders', 'customGPTAutoFolder', false, toggleCustomGPTAutoFolder, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription || !autoSync);
+    content.appendChild(customGPTAutoFolderSwitch);
+
+    const autoColorFoldersSwitch = createSwitch('Auto Color Folders', 'Automatically select a random color when creating folders', 'autoColorFolders', false, null, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(autoColorFoldersSwitch);
+
+    // auto delete
+    const autoDeleteOldChatsSwitch = createSwitch('Auto Delete Old Chats', 'Automatically delete old chats (<a style="text-decoration:underline; color:gold;" href="https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24" target="blank">Learn More</a>)', 'autoDeleteOldChats', false, toggleAutoDeleteOldChats, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription || !autoSync);
+    content.appendChild(autoDeleteOldChatsSwitch);
+
+    const autoDeleteModesWrapper = document.createElement('div');
+    autoDeleteModesWrapper.id = 'autoDeleteModesWrapper';
+    autoDeleteModesWrapper.style = 'position:relative;min-width:240px;max-width:200px;z-index:1000;display:flex;';
+    autoDeleteModesWrapper.innerHTML = dropdown('Auto-Delete-Mode', autoDeleteModes, autoDeleteMode, 'left', true);
+    if (!hasSubscription || !autoSync || !autoDeleteOldChats) {
+      autoDeleteModesWrapper.style.opacity = 0.5;
+      autoDeleteModesWrapper.style.pointerEvents = 'none';
+    }
+    // input for number of days
+    const autoDeleteThresholdInput = document.createElement('input');
+    autoDeleteThresholdInput.id = 'auto-delete-threshold-input';
+    autoDeleteThresholdInput.type = 'number';
+    autoDeleteThresholdInput.classList = 'w-20 px-4 py-2 ml-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40 text-white';
+    autoDeleteThresholdInput.value = autoDeleteThreshold;
+    autoDeleteThresholdInput.addEventListener('change', () => {
+      const curAutoDeleteThresholdInput = document.querySelector('#auto-delete-threshold-input');
+      const newValue = Math.round(curAutoDeleteThresholdInput.value);
+      curAutoDeleteThresholdInput.value = newValue;
+      chrome.storage.local.set({ settings: { ...result.settings, autoDeleteThreshold: newValue } });
+    });
+    autoDeleteThresholdInput.addEventListener('input', () => {
+      const curAutoDeleteThresholdInput = document.querySelector('#auto-delete-threshold-input');
+      const newValue = Math.round(curAutoDeleteThresholdInput.value);
+      curAutoDeleteThresholdInput.value = newValue;
+      chrome.storage.local.set({ settings: { ...result.settings, autoDeleteThreshold: newValue } });
+    });
+
+    autoDeleteModesWrapper.appendChild(autoDeleteThresholdInput);
+
+    const autoDeleteThresholdLabel = document.createElement('label');
+    autoDeleteThresholdLabel.id = 'auto-delete-threshold-label';
+    autoDeleteThresholdLabel.classList = 'ml-2 text-sm text-gray-300 flex items-center';
+    autoDeleteThresholdLabel.textContent = autoDeleteMode.code === 'days' ? 'days' : 'chats';
+    autoDeleteModesWrapper.appendChild(autoDeleteThresholdLabel);
+
+    content.appendChild(autoDeleteModesWrapper);
+    addDropdownEventListener('Auto-Delete-Mode', autoDeleteModes, toggleAutoDeleteOldChatMode);
+
+    // add a title that says warning zone
+    const warningZoneTitle = document.createElement('div');
+    warningZoneTitle.style = 'width:100%;font-size:0.8em;color:lightslategray;margin-top:24px;';
+    warningZoneTitle.innerText = 'Warning Zone';
+    content.appendChild(warningZoneTitle);
+    // add a divider
+    const divider = document.createElement('div');
+    divider.style = 'width:100%;height:1px;background-color:lightslategray;margin:0 0 24px 0;';
+    content.appendChild(divider);
+
+    // Reset Folders
+    const resetFoldersButton = document.createElement('button');
+    resetFoldersButton.textContent = 'Reset Folders';
+    resetFoldersButton.disabled = !autoSync;
+    resetFoldersButton.style.pointerEvents = !autoSync ? 'none' : 'auto';
+    resetFoldersButton.classList = 'btn btn-warning flex justify-center gap-2 border-0 md:border';
+    resetFoldersButton.addEventListener('click', () => {
+      showActionConfirm('Reset Folders', 'Clicking on Restart will remove all folders and allow you to recreate them again.', 'Restart', null, resetFolders, 'orange');
+    });
+    content.appendChild(resetFoldersButton);
+    const resetFoldersDesc = document.createElement('div');
+    resetFoldersDesc.style = 'width:100%;font-size:0.8em;color:lightslategray;margin-top:8px;';
+    resetFoldersDesc.innerText = 'This will remove all folders. The conversations inside folders will not be deleted, but your trash folder will get emptied.';
+    content.appendChild(resetFoldersDesc);
+  });
+  return content;
+}
+function resetFolders() {
+  chrome.storage.local.remove('conversationsOrder', () => {
+    window.location.reload();
+  });
+}
+function toggleCustomGPTAutoFolder(isChecked) {
+  if (isChecked) {
+    chrome.runtime.sendMessage({
+      checkHasSubscription: true,
+      detail: {
+        forceRefresh: true,
+      },
+    }, (hasSubscription) => {
+      if (!hasSubscription) {
+        toast('This action requires a Pro account', 'error');
+        return;
+      }
+      chrome.storage.local.get(['conversations', 'conversationsOrder', 'settings'], (result) => {
+        const { conversations, conversationsOrder, settings } = result;
+        // find custom gpt conversations
+        const conversationIds = conversationsOrder.filter((c) => typeof c === 'string');
+        const customGPTConversations = conversationIds.map((c) => conversations[c]).filter((c) => c?.gizmo_id);
+        const customGPTConversationIds = customGPTConversations.map((c) => c.id);
+
+        // get unique gizmo_ids
+        const uniqueGizmoIds = [...new Set(customGPTConversations.map((c) => c.gizmo_id))];
+        if (uniqueGizmoIds.length === 0) return;
+
+        // for each id in customGPTConversations,
+        const newConversationOrder = conversationsOrder.filter((c) => typeof c !== 'string' || !customGPTConversationIds.includes(c));
+
+        // get gizmo_name for each gizmo_id
+        const processedGizmoIds = [];
+        // add an overlay to the full page with wpinner and text that says auto folder is being created
+        const overlay = document.createElement('div');
+        overlay.id = 'loading-overlay';
+        overlay.style = 'position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.5); z-index:100000; display:flex; justify-content:center; align-items:center;';
+        overlay.innerHTML = '<div class="w-full flex-wrap inset-0 flex items-center justify-center text-white"><svg x="0" y="0" viewbox="0 0 40 40" class="spinner"><circle fill="transparent" stroke="#ffffff50" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.6" cx="20" cy="20" r="18"></circle></svg><div style="font-size: 1.5em;font-weight: 600;color: lightslategray;width: 100%;display: flex;align-items: center;justify-content: center;margin-top:16px;">Creating Custom GPT Folders</div></div>';
+        document.body.appendChild(overlay);
+        // for each gizmo_id, get gizmo_name and create a folder with that name
+        uniqueGizmoIds.forEach((gid) => getGizmoById(gid).then((gizmoData) => {
+          const existingFolder = newConversationOrder.find((f) => f?.id === gid);
+          if (existingFolder) {
+            newConversationOrder.find((f) => f?.id === gid).conversationIds = [...new Set([...existingFolder.conversationIds, ...customGPTConversations.filter((c) => c.gizmo_id === gid).map((c) => c.id)])];
+          } else {
+            newConversationOrder.unshift({
+              id: gid,
+              color: settings.autoColorFolders ? generateRandomDarkColor() : '#40414f',
+              name: gizmoData?.resource?.gizmo?.display?.name,
+              conversationIds: [...new Set(customGPTConversations.filter((c) => c.gizmo_id === gid).map((c) => c.id))],
+            });
+          }
+          processedGizmoIds.push(gid);
+          if (processedGizmoIds.length === uniqueGizmoIds.length) {
+            chrome.storage.local.set({ conversationsOrder: newConversationOrder }, () => {
+              reloadConversationList();
+              // remove the overlay
+              document.querySelector('#loading-overlay').remove();
+            });
+          }
+        }));
+      });
+    });
+  }
+}
+function toggleAutoDeleteOldChats(isChecked) {
+  const autoDeleteModesWrapper = document.querySelector('#autoDeleteModesWrapper');
+  if (isChecked) {
+    autoDeleteModesWrapper.style.opacity = 1;
+    autoDeleteModesWrapper.style.pointerEvents = 'auto';
+    toast('Auto Delete Old Chats Enabled', 'warning');
+  } else {
+    autoDeleteModesWrapper.style.opacity = 0.5;
+    autoDeleteModesWrapper.style.pointerEvents = 'none';
+  }
+}
+function toggleAutoDeleteOldChatMode(mode) {
+  chrome.storage.local.get(['settings'], (result) => {
+    chrome.storage.local.set({ settings: { ...result.settings, autoDeleteMode: mode } }, () => {
+      const autoDeleteThresholdLabel = document.querySelector('#auto-delete-threshold-label');
+      autoDeleteThresholdLabel.textContent = mode.code === 'days' ? 'days' : 'chats';
+    });
+  });
+}
+function conversationTabContent(hasSubscription = false) {
+  const content = document.createElement('div');
+  content.id = 'settings-modal-tab-content';
+  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+  chrome.storage.local.get(['settings'], (result) => {
+    const { autoSync, customConversationWidth, conversationWidth } = result.settings;
+
+    // conversation width
+    const customConversationWidthSwitch = createSwitch('Custom Conversation Width', 'OFF: Use default / ON: Set Conversation Width (30%-90%)', 'customConversationWidth', false, toggleCustomWidthInput);
+    content.appendChild(customConversationWidthSwitch);
+
+    const conversationWidthInput = document.createElement('input');
+    conversationWidthInput.id = 'conversation-width-input';
+    conversationWidthInput.type = 'number';
+    conversationWidthInput.classList = 'max-w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40 text-white';
+    conversationWidthInput.disabled = !customConversationWidth;
+    conversationWidthInput.value = conversationWidth;
+    conversationWidthInput.addEventListener('change', () => {
+      const curConversationWidthInput = document.querySelector('#conversation-width-input');
+      const newValue = Math.round(curConversationWidthInput.value);
+      curConversationWidthInput.value = newValue;
+      Array.from(document.querySelectorAll('[id^=message-wrapper]')).forEach((el) => {
+        el.querySelector('div').style.maxWidth = `${newValue}%`;
+      });
+      if (document.querySelector('#conversation-bottom')) {
+        document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
+      }
+      document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
+      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue, customConversationWidth: true } });
+    });
+    conversationWidthInput.addEventListener('input', () => {
+      const curConversationWidthInput = document.querySelector('#conversation-width-input');
+      const newValue = Math.round(curConversationWidthInput.value);
+      curConversationWidthInput.value = newValue;
+      Array.from(document.querySelectorAll('[id^=message-wrapper]')).forEach((el) => {
+        el.querySelector('div').style.maxWidth = `${newValue}%`;
+      });
+      if (document.querySelector('#conversation-bottom')) {
+        document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
+      }
+      document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
+      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue, customConversationWidth: true } });
+    });
+    content.appendChild(conversationWidthInput);
+
+    const pluginDefaultOpenSwitch = createSwitch('Open Plugin Detail by Default', 'Show Plugin detail by default', 'pluginDefaultOpen', false, null, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(pluginDefaultOpenSwitch);
+
+    const showMessageTimestampSwitch = createSwitch('Message Timestamp', 'Show/hide timestamps on each message', 'showMessageTimestamp', false, reloadConversationList, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(showMessageTimestampSwitch);
+
+    const pinNavSwitch = createSwitch('Pin Navigation', 'Show/hide message pins for quick navigation(only when conversations are fully synced)', 'showPinNav', true, reloadConversationList, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(pinNavSwitch);
+
+    const autoHideThreadCountSwitch = createSwitch('Auto Hide Thread Count', 'Hide the thread count (<1/2>) unless you hover over the message', 'autoHideThreadCount', true, toggleAutoHideThreadCount, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(autoHideThreadCountSwitch);
+
+    const autoHideTopNav = createSwitch('Auto Hide Top Navbar', 'Automatically hide the navbar at the top of the page when move the mouse out of it.', 'autoHideTopNav', true, toggleTopNav, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(autoHideTopNav);
+
+    const autoResetTopNav = createSwitch('Auto Reset Top Navbar', 'Automatically reset the tone, writing style, and language to default when switching to new chats', 'autoResetTopNav', false, null, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(autoResetTopNav);
+
+    const chatEndedSoundSwitch = createSwitch('Sound Alarm', 'Play a sound when the chat ends', 'chatEndedSound', false, null, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(chatEndedSoundSwitch);
+
+    // copy mode
+    const copyModeSwitch = createSwitch('Copy mode', 'OFF: only copy response / ON: copy both request and response', 'copyMode', false);
+    content.appendChild(copyModeSwitch);
+
+    // show word counter
+    const showWordCountSwitch = createSwitch('Word/Char Count', 'Show/hide word/char count on each message', 'showWordCount', true, reloadConversationList);
+    content.appendChild(showWordCountSwitch);
+
+    // auto scroll
+    const autoScrollSwitch = createSwitch('Auto Scroll', 'Automatically scroll down while responding', 'autoScroll', true);
+    content.appendChild(autoScrollSwitch);
+  });
+  return content;
+}
+function toggleAutoHideThreadCount(isChecked) {
+  const allThreadButtonsWrapper = document.querySelectorAll('[id^=thread-buttons-wrapper-]');
+  allThreadButtonsWrapper.forEach((el) => {
+    if (el.textContent !== '1 / 1') {
+      if (isChecked) {
+        el.classList.add('invisible');
+      } else {
+        el.classList.remove('invisible');
+      }
+    }
+  });
+}
+function promptInputTabContent(hasSubscription = false) {
+  const content = document.createElement('div');
+  content.id = 'settings-modal-tab-content';
+  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+  chrome.storage.local.get(['settings'], (result) => {
+    const { autoSync } = result.settings;
+    // input history
+    const promptHistorySwitch = createSwitch('Input History Shortkey', 'Enable/disable the up and down arrow to cycle through input history.', 'promptHistory', true);
+    content.appendChild(promptHistorySwitch);
+
+    const showGpt4Counter = createSwitch('Show GPT-4 Counter', 'Show the number of GPT-4 messages in the last 3 hours', 'showGpt4Counter', true, toggleGpt4Counter, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(showGpt4Counter);
+
+    const showExamplePromptsSwitch = createSwitch('Show Example Prompts', 'Show the example prompts when starting a new chat', 'showExamplePrompts', true, null, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(showExamplePromptsSwitch);
+
+    // prompt template
+    const promptTemplateSwitch = createSwitch('Prompt Template', 'Enable/disable the doube {{curly}} brackets replacement (<a style="text-decoration:underline; color:gold;" href="https://www.youtube.com/watch?v=JMBjq0XtutA&ab_channel=Superpower" target="blank">Learn More</a>)', 'promptTemplate', true, null, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(promptTemplateSwitch);
+  });
+  return content;
+}
+function modelsTabContent(hasSubscription = false) {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
@@ -596,7 +742,7 @@ function modelsTabContent() {
     }
     const unofficialNote = document.createElement('div');
     unofficialNote.style = 'color: #eee; font-size: 0.8em; margin-left:8px';
-    unofficialNote.textContent = 'Unofficial and custom models are experimental. They may or may not work. This feature was implemented to make it easy to test other models.';
+    unofficialNote.innerHTML = 'Unofficial and custom models are experimental. They may or may not work. This feature was implemented to make it easy to test other models. <a href="https://www.youtube.com/watch?v=laRDIUkedz8&ab_channel=Superpower" target="_blank" class="underline text-gold" rel="noreferrer">Learn more</a>';
     modelSwitcherRow.appendChild(unofficialNote);
   });
   const newCustomModelWrapper = document.createElement('div');
@@ -711,7 +857,7 @@ function toggleCustomPromptsButtonVisibility(isChecked) {
     customPromptsButton.style.display = 'none';
   }
 }
-function customPromptTabContent() {
+function customPromptTabContent(hasSubscription = false) {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
@@ -724,7 +870,7 @@ function customPromptTabContent() {
     customPromptSection.style = 'color: lightslategray; font-size: 16px; margin: 12px 0;';
     // customPromptSection.textContent = 'Custom Prompts';
 
-    const showCustomPromptsButtonSwitch = createSwitch('Show Custom Prompts Button', 'Show/hide the button to use custom prompts', 'showCustomPromptsButton', true, toggleCustomPromptsButtonVisibility);
+    const showCustomPromptsButtonSwitch = createSwitch('Show Custom Prompts Button', 'Show/hide the button to use custom prompts. <a href="https://www.youtube.com/watch?v=FBgR7YmrxUk&ab_channel=Superpower" target="_blank" class="underline text-gold" rel="noreferrer">Learn more</a>', 'showCustomPromptsButton', true, toggleCustomPromptsButtonVisibility);
     customPromptSection.appendChild(showCustomPromptsButtonSwitch);
 
     const newCustomPromptButton = document.createElement('button');
@@ -799,7 +945,9 @@ function customPromptTabContent() {
             // add new custom prompt right after curNewCustomPromptWrapper
             const curNewCustomPromptWrapper = document.getElementById('new-custom-prompt-wrapper');
             const newCustomPromptRow = createPromptRow(newCustomPromptTitle.value.trim(), newCustomPromptText.value.trim(), false, 'customPrompts');
-            curNewCustomPromptWrapper.parentNode.insertBefore(newCustomPromptRow, curNewCustomPromptWrapper.nextSibling);
+            const customPromptsList = document.getElementById('custom-prompt-list');
+            // add to the beginning of the list
+            customPromptsList.insertBefore(newCustomPromptRow, customPromptsList.firstChild);
             curNewCustomPromptWrapper.remove();
           });
         });
@@ -818,6 +966,9 @@ function customPromptTabContent() {
     customPromptSectionWrapper.appendChild(customPromptSection);
     customPromptSectionWrapper.appendChild(newCustomPromptButton);
     content.appendChild(customPromptSectionWrapper);
+    const customPromptsList = document.createElement('div');
+    customPromptsList.id = 'custom-prompt-list';
+    customPromptsList.classList = 'flex flex-col w-full';
     const { customPrompts, settings } = result;
     const { autoSync, customInstruction } = settings;
     if (customPrompts) {
@@ -826,14 +977,37 @@ function customPromptTabContent() {
         const promptText = customPrompts[i].text;
         const { isDefault } = customPrompts[i];
         const promptRow = createPromptRow(promptTitle, promptText, isDefault, 'customPrompts');
-        content.appendChild(promptRow);
+        customPromptsList.appendChild(promptRow);
       }
     }
+    Sortable.create(customPromptsList, {
+      group: {
+        name: 'custom-prompts-list',
+        pull: true,
+        // eslint-disable-next-line func-names, object-shorthand, no-unused-vars
+        put: function (to, from, dragged) {
+          return from.el.id !== 'folder-content-trash';
+        },
+      },
+      direction: 'vertical',
+      invertSwap: true,
+      draggable: '#custom-prompt-row',
+      onEnd: (event) => {
+        const { oldIndex, newIndex } = event;
+        chrome.storage.local.get(['customPrompts'], (res) => {
+          const newPrompts = res.customPrompts;
+          const [removed] = newPrompts.splice(oldIndex, 1);
+          newPrompts.splice(newIndex, 0, removed);
+          chrome.storage.local.set({ customPrompts: newPrompts });
+        });
+      },
+    });
+    content.appendChild(customPromptsList);
     // custom inststruction section
     const customInstructionSection = document.createElement('div');
     customInstructionSection.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 16px 0;';
 
-    const customInstructionSwitch = createSwitch('Custom Instruction', 'Custom instruction will be added to the end of each promps. You can use it to add instructions that you like to include in every prompt. For example, you can add "Please repeat the prompt after me.", or "Please refrain from writing warnings about your knowledge cutoff" to the custom instruction, and it will be added to the end of every prompt.(Make sure to add a space or new-line in the beggining!)', 'useCustomInstruction', false, toggleCustomInstructionInput, 'Requires Auto-Sync', !autoSync);
+    const customInstructionSwitch = createSwitch('Custom Instruction', 'Custom instruction will be added to the end of each promps. You can use it to add instructions that you like to include in every prompt. For example, you can add "Please repeat the prompt after me.", or "Please refrain from writing warnings about your knowledge cutoff" to the custom instruction, and it will be added to the end of every prompt.(Make sure to add a space or new-line in the beggining!)', 'useCustomInstruction', false, toggleCustomInstructionInput, ['Requires Auto-Sync'], !autoSync);
 
     const customInstructionInputWrapper = document.createElement('div');
     customInstructionInputWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-bottom: 8px;';
@@ -873,11 +1047,18 @@ function toggleCustomInstructionInput(isChecked) {
   }
 }
 function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
-  const promptWrapper = document.createElement('div');
-  promptWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;';
+  const promptRow = document.createElement('div');
+  promptRow.id = 'custom-prompt-row';
+  promptRow.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;';
+  const dragPromptButton = document.createElement('div');
+  dragPromptButton.style = 'width: 48px; display:flex;align-items:center;justify-content:start; color: #eee;cursor:grab;';
+  dragPromptButton.title = 'Drag to reorder';
+  dragPromptButton.id = 'custom-prompt-drag-handle';
+  dragPromptButton.innerHTML = '<svg stroke="currentColor" fill="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="2em" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><path d="M32 288c-17.7 0-32 14.3-32 32s14.3 32 32 32l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 288zm0-128c-17.7 0-32 14.3-32 32s14.3 32 32 32l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 160z"/></svg>';
+  promptRow.appendChild(dragPromptButton);
   const promptLabel = document.createElement('div');
   promptLabel.style = 'min-width: 100px; max-width:100px; margin-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;color:white;text-transform: capitalize;';
-  promptLabel.innerText = `@${promptTitle}`;
+  promptLabel.innerHTML = `<div style="display:flex;"><b style="position:relative;margin-right:4px;bottom:2px;">@</b>${promptTitle}</div>`;
   promptLabel.title = promptTitle;
   promptLabel.dir = 'auto';
   const promptInput = document.createElement('textarea');
@@ -892,8 +1073,8 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
       chrome.storage.local.set({ [promptObjectName]: newPrompts });
     });
   });
-  promptWrapper.appendChild(promptLabel);
-  promptWrapper.appendChild(promptInput);
+  promptRow.appendChild(promptLabel);
+  promptRow.appendChild(promptInput);
   if (promptObjectName === 'customPrompts') {
     const deleteButton = document.createElement('button');
     deleteButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border mr-2';
@@ -911,7 +1092,7 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
           } else {
             newPrompts = newPrompts.filter((p) => p.title !== promptTitle);
             chrome.storage.local.set({ [promptObjectName]: newPrompts }, () => {
-              promptWrapper.remove();
+              promptRow.remove();
             });
           }
         });
@@ -926,7 +1107,7 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
         }, 1500);
       }
     });
-    promptWrapper.appendChild(deleteButton);
+    promptRow.appendChild(deleteButton);
 
     const defaultButton = document.createElement('button');
     defaultButton.classList = `btn flex justify-center gap-2 ${isDefault ? 'btn-primary' : 'btn-dark'} border-0 md:border`;
@@ -948,32 +1129,21 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
           defaultButton.textContent = 'Default';
           defaultButton.setAttribute('data-default', 'true');
           defaultButton.style = 'min-width:72px;height:34px;';
-          const newDeleteButton = [...promptWrapper.querySelectorAll('button')].find((b) => b.textContent === 'Delete');
+          const newDeleteButton = [...promptRow.querySelectorAll('button')].find((b) => b.textContent === 'Delete');
           newDeleteButton.disabled = true;
         });
       });
     });
-    promptWrapper.appendChild(defaultButton);
+    promptRow.appendChild(defaultButton);
   }
-  return promptWrapper;
+  return promptRow;
 }
-function toggleExportButtonVisibility(isChecked) {
-  const exportButton = document.querySelector('#export-conversation-button');
-  if (!exportButton) return;
-  if (isChecked) {
-    exportButton.style.display = 'flex';
-  } else {
-    exportButton.style.display = 'none';
-  }
-}
-function exportTabContent() {
+
+function exportTabContent(hasSubscription = false) {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
 
-  // showExportButton
-  const showExportButtonSwitch = createSwitch('Show Export Button', 'Show/hide the button to export the conversation', 'showExportButton', true, toggleExportButtonVisibility);
-  content.appendChild(showExportButtonSwitch);
   // Export Mode
   const exportModeSwitchWrapper = document.createElement('div');
   exportModeSwitchWrapper.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
@@ -983,7 +1153,7 @@ function exportTabContent() {
   const exportModeHelper = document.createElement('div');
   exportModeHelper.style = 'font-size: 12px; color: #999;';
   const exportModeLabel = document.createElement('label');
-  exportModeLabel.className = 'switch';
+  exportModeLabel.classList = 'switch';
   const exportModeInput = document.createElement('input');
   exportModeInput.type = 'checkbox';
   chrome.storage.local.get('settings', ({ settings }) => {
@@ -998,7 +1168,7 @@ function exportTabContent() {
     });
   });
   const exportModeSlider = document.createElement('span');
-  exportModeSlider.className = 'slider round';
+  exportModeSlider.classList = 'slider round';
 
   exportModeLabel.appendChild(exportModeInput);
   exportModeLabel.appendChild(exportModeSlider);
@@ -1018,7 +1188,7 @@ function exportTabContent() {
   exportNamingFormatLabel.appendChild(betaTag);
   return content;
 }
-function splitterTabContent() {
+function splitterTabContent(hasSubscription = false) {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
@@ -1028,12 +1198,12 @@ function splitterTabContent() {
     const { autoSync } = result.settings;
     const splitterSwitchWrapper = document.createElement('div');
     splitterSwitchWrapper.style = 'display: flex; gap:16px; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
-    const autoSplitSwitch = createSwitch('Auto Split', 'Automatically split long prompts into smaller chunks (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#4fe6dfb33eea451d92ed4d8c240bac1e" target="blank">Learn More</a>)', 'autoSplit', true, toggleAutoSummarizerSwitch, 'Requires Auto-Sync', !autoSync);
-    const autoSummarizeSwitch = createSwitch('Auto Summarize', 'Automatically summarize each chunk after auto split (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#edb708ffea3647509d4957765ab0529c" target="blank">Learn More</a>)', 'autoSummarize', false, updateAutoSplitPrompt, 'Requires Auto-Sync', !autoSync);
+    const autoSplitSwitch = createSwitch('Auto Split', 'Automatically split long prompts into smaller chunks (<a style="text-decoration:underline; color:gold;" href="https://www.youtube.com/watch?v=IhRbmIhAm3I&ab_channel=Superpower" target="blank">Learn More</a>)', 'autoSplit', true, toggleAutoSummarizerSwitch, ['Requires Auto-Sync'], !autoSync);
+    const autoSummarizeSwitch = createSwitch('Auto Summarize', 'Automatically summarize each chunk after auto split (<a style="text-decoration:underline; color:gold;" href="https://www.youtube.com/watch?v=IhRbmIhAm3I&ab_channel=Superpower" target="blank">Learn More</a>)', 'autoSummarize', false, updateAutoSplitPrompt, ['Requires Auto-Sync'], !autoSync);
 
     const autoSplitChunkSizeLabel = document.createElement('div');
     autoSplitChunkSizeLabel.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
-    autoSplitChunkSizeLabel.textContent = 'Auto Split Chunk Size (1000-16000)';
+    autoSplitChunkSizeLabel.textContent = 'Auto Split Chunk Size (GPT-3.5: <28,000 - GPT-4: <120,000)';
 
     const autoSplitChunkSizeInput = document.createElement('input');
     autoSplitChunkSizeInput.id = 'split-prompt-limit-input';
@@ -1062,12 +1232,12 @@ function splitterTabContent() {
 
     const autoSplitInitialPromptHelper = document.createElement('div');
     autoSplitInitialPromptHelper.style = 'font-size: 12px; color: #999;margin-bottom: 8px;';
-    autoSplitInitialPromptHelper.textContent = 'Splitter prompt is a text that will be used when the user prompt in divided into chunkc due to the character limit.';
+    autoSplitInitialPromptHelper.textContent = 'Auto Split Prompt is a instruction that will be used to split long user inputs into multiple chunks.';
 
     const autoSplitInitialPromptText = document.createElement('textarea');
     autoSplitInitialPromptText.id = 'split-initial-prompt-textarea';
     autoSplitInitialPromptText.style = 'width: 100%; height: 200px; min-height: 200px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
-    autoSplitInitialPromptText.placeholder = 'Enter splitter prompt here...';
+    autoSplitInitialPromptText.placeholder = 'Enter Auto Split Prompt here...';
     chrome.storage.local.get('settings', ({ settings }) => {
       autoSplitInitialPromptText.value = settings.autoSplitInitialPrompt;
     });
@@ -1086,7 +1256,7 @@ function splitterTabContent() {
 
     const autoSplitChunkPromptHelper = document.createElement('div');
     autoSplitChunkPromptHelper.style = 'font-size: 12px; color: #999;margin-bottom: 8px;';
-    autoSplitChunkPromptHelper.textContent = 'Chunk prompt is a text that will be added to the end of each chunk. It can be used to summarize the previous chunk or do other things.';
+    autoSplitChunkPromptHelper.textContent = 'Auto Split Chunk Prompt is the instruction used to process each chunk. For instance, it can be used to summarize the chunk.';
 
     const autoSplitChunkPromptText = document.createElement('textarea');
     autoSplitChunkPromptText.id = 'split-chunk-prompt-textarea';
@@ -1141,94 +1311,47 @@ Summary: A short summary of the last chunk. Keep important facts and names in th
     });
   });
 }
-function newsletterTabContent() {
+function newsletterTabContent(hasSubscription = false) {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
   // daily newsletter
-  const dailyNewsletterSwitch = createSwitch('Hide daily newsletter', 'Automatically hide the daily newsletter popup.', 'hideNewsletter', false);
+  const dailyNewsletterSwitch = createSwitch('Hide Daily Newsletter', 'Do not show the daily newsletter popup inside ChatGPT.', 'hideNewsletter', false);
   content.appendChild(dailyNewsletterSwitch);
 
-  // content.appendChild(sendNewsletterToEmailSwitch);
+  // daily newsletter
+  const showNewsletterOnUpdateSwitch = createSwitch('Show Newsletter on Update', 'Open Superpower Daily newsletter when extension updates', 'showNewsletterOnUpdate', !hasSubscription, null, ['⚡️ Requires Pro Account'], !hasSubscription);
+  content.appendChild(showNewsletterOnUpdateSwitch);
+
   return content;
 }
-function supportersTabContent() {
-  const content = document.createElement('div');
-  content.id = 'settings-modal-tab-content';
-  content.style = 'display: flex; flex-direction:column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;gap:16px;';
 
-  const goldSupporter = document.createElement('a');
-  goldSupporter.href = 'https://buy.stripe.com/dR6g2A7subOigE09AF';
-  goldSupporter.target = '_blank';
-  goldSupporter.classList = 'h-64 w-full rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-4xl';
-  goldSupporter.textContent = 'Gold';
-
-  const silverSupporterwrapper = document.createElement('div');
-  silverSupporterwrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;gap:16px;';
-
-  const silverSupporter1 = document.createElement('a');
-  silverSupporter1.href = 'https://buy.stripe.com/dR6bMk5km5pU87u5ko';
-  silverSupporter1.target = '_blank';
-  silverSupporter1.classList = 'h-32 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-2xl';
-  silverSupporter1.style = 'width: 50%;';
-  silverSupporter1.textContent = 'Silver';
-  silverSupporterwrapper.appendChild(silverSupporter1);
-
-  const silverSupporter2 = document.createElement('a');
-  silverSupporter2.href = 'https://buy.stripe.com/dR6bMk5km5pU87u5ko';
-  silverSupporter2.target = '_blank';
-  silverSupporter2.classList = 'h-32 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-2xl';
-  silverSupporter2.style = 'width: 50%;';
-  silverSupporter2.textContent = 'Silver';
-  silverSupporterwrapper.appendChild(silverSupporter2);
-
-  const bronzeSupporterwrapper = document.createElement('div');
-  bronzeSupporterwrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;gap:16px;';
-
-  const bronzeSupporter1 = document.createElement('a');
-  bronzeSupporter1.href = 'https://buy.stripe.com/6oE17G4gibOifzW5kn';
-  bronzeSupporter1.target = '_blank';
-  bronzeSupporter1.classList = 'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
-  bronzeSupporter1.style = 'width: 33.33%;';
-  bronzeSupporter1.textContent = 'Bronze';
-  bronzeSupporterwrapper.appendChild(bronzeSupporter1);
-
-  const bronzeSupporter2 = document.createElement('a');
-  bronzeSupporter2.href = 'https://buy.stripe.com/6oE17G4gibOifzW5kn';
-  bronzeSupporter2.target = '_blank';
-  bronzeSupporter2.classList = 'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
-  bronzeSupporter2.style = 'width: 33.33%;';
-  bronzeSupporter2.textContent = 'Bronze';
-  bronzeSupporterwrapper.appendChild(bronzeSupporter2);
-
-  const bronzeSupporter3 = document.createElement('a');
-  bronzeSupporter3.href = 'https://buy.stripe.com/6oE17G4gibOifzW5kn';
-  bronzeSupporter3.target = '_blank';
-  bronzeSupporter3.classList = 'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
-  bronzeSupporter3.style = 'width: 33.33%;';
-  bronzeSupporter3.textContent = 'Bronze';
-  bronzeSupporterwrapper.appendChild(bronzeSupporter3);
-
-  content.appendChild(goldSupporter);
-  content.appendChild(silverSupporterwrapper);
-  content.appendChild(bronzeSupporterwrapper);
-  return content;
-}
-function createSwitch(title, subtitle, settingsKey, defaultValue, callback = null, tag = '', disabled = false) {
+function createSwitch(title, subtitle, settingsKey, defaultValue, callback = null, tags = [], disabled = false) {
   const switchWrapper = document.createElement('div');
   switchWrapper.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
   const switchElement = document.createElement('div');
-  switchElement.style = `display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;color:white; ${disabled ? 'opacity: 0.5;' : ''}`;
+  switchElement.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;color:white;';
   switchElement.innerHTML = title;
   const label = document.createElement('label');
-  label.className = 'switch';
+  label.classList = 'switch';
+  label.style.opacity = disabled ? '0.5' : '1';
   const input = document.createElement('input');
   input.id = `switch-${title.toLowerCase().replaceAll(' ', '-')}`;
   input.type = 'checkbox';
   input.disabled = disabled;
-  const betaTag = document.createElement('span');
-  betaTag.style = 'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; font-size: 0.7em;border:';
-  betaTag.textContent = tag;
+  const betaTagWrapper = document.createElement('div');
+  tags.forEach((tag) => {
+    const betaTag = document.createElement('span');
+    betaTag.style = `${tag === '⚡️ Requires Pro Account' ? 'background-color: #19c37d; color: black;' : 'background-color: #ff9800; color: black;'}  padding: 2px 4px; border-radius: 8px; font-size: 0.7em;margin-right:8px;`;
+    betaTag.textContent = tag;
+    if (tag === '⚡️ Requires Pro Account') {
+      betaTag.role = 'button';
+      betaTag.addEventListener('click', () => {
+        document.querySelector('#upgrade-to-pro-button-settings').click();
+      });
+    }
+    betaTagWrapper.appendChild(betaTag);
+  });
   const helper = document.createElement('div');
   helper.style = 'font-size: 12px; color: #999;';
   helper.innerHTML = subtitle;
@@ -1261,12 +1384,12 @@ function createSwitch(title, subtitle, settingsKey, defaultValue, callback = nul
     });
   }
   const slider = document.createElement('span');
-  slider.className = 'slider round';
+  slider.classList = 'slider round';
 
   label.appendChild(input);
   label.appendChild(slider);
   switchElement.appendChild(label);
-  if (tag) switchElement.appendChild(betaTag);
+  if (tags.length > 0) switchElement.appendChild(betaTagWrapper);
   switchWrapper.appendChild(switchElement);
   switchWrapper.appendChild(helper);
   return switchWrapper;
@@ -1345,9 +1468,9 @@ function settingsModalActions() {
   support.textContent = ' - ';
   support.style = 'color: #999; font-size: 12px;';
   const supportLink = document.createElement('a');
-  supportLink.href = 'https://buy.stripe.com/6oE6s0dQS7y2bjG9AA';
+  supportLink.href = 'https://www.buymeacoffee.com/ezii';
   supportLink.target = '_blank';
-  supportLink.textContent = 'Support this extension ➜';
+  supportLink.textContent = '🍕 Buy me a pizza ➜';
   supportLink.style = 'color: #999; font-size: 12px; margin-left: 4px; text-decoration: underline;';
   supportLink.addEventListener('mouseover', () => {
     supportLink.style = 'color: gold; font-size: 12px; margin-left: 4px;text-decoration: underline;';
@@ -1362,22 +1485,36 @@ function settingsModalActions() {
 
   textWrapper.appendChild(madeBy);
   actionBar.appendChild(textWrapper);
-
-  const buyMeAPizza = document.createElement('a');
-  buyMeAPizza.classList = 'flex py-3 px-3 items-center gap-3 rounded-md bg-gold hover:bg-gold-dark transition-colors duration-200 text-black cursor-pointer text-sm ml-auto font-bold';
-  buyMeAPizza.textContent = '🍕 Buy me a pizza';
+  const upgradeToPro = document.createElement('button');
+  upgradeToPro.id = 'upgrade-to-pro-button-settings';
+  upgradeToPro.classList = 'flex flex-wrap px-3 py-1 items-center rounded-md bg-gold hover:bg-gold-dark transition-colors duration-200 text-black cursor-pointer text-sm ml-auto font-bold';
+  upgradeToPro.style.width = '230px';
+  upgradeToPro.innerHTML = '<div class="flex w-full"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="width:20px; height:20px; margin-right:6px;position:relative; top:10px;" stroke="purple" fill="purple"><path d="M240.5 224H352C365.3 224 377.3 232.3 381.1 244.7C386.6 257.2 383.1 271.3 373.1 280.1L117.1 504.1C105.8 513.9 89.27 514.7 77.19 505.9C65.1 497.1 60.7 481.1 66.59 467.4L143.5 288H31.1C18.67 288 6.733 279.7 2.044 267.3C-2.645 254.8 .8944 240.7 10.93 231.9L266.9 7.918C278.2-1.92 294.7-2.669 306.8 6.114C318.9 14.9 323.3 30.87 317.4 44.61L240.5 224z"/></svg> Upgrade to Pro</div><div style="font-size:10px;font-weight:400;margin-left:28px;" class="flex w-full">Get GPT Store, Image Gallery, and more</div>';
   // make the button shake every 5 seconds
-  setInterval(() => {
-    buyMeAPizza.classList.add('animate-shake');
-    setTimeout(() => {
-      buyMeAPizza.classList.remove('animate-shake');
-    }, 1000);
-  }, 7000);
 
-  buyMeAPizza.href = 'https://www.buymeacoffee.com/ezii';
-  buyMeAPizza.target = '_blank';
-
-  actionBar.appendChild(buyMeAPizza);
+  chrome.runtime.sendMessage({
+    checkHasSubscription: true,
+    detail: {
+      forceRefresh: false,
+    },
+  }, (hasSubscription) => {
+    if (hasSubscription) {
+      upgradeToPro.classList = 'flex px-3 py-3 items-center rounded-md bg-gold hover:bg-gold-dark transition-colors duration-200 text-black cursor-pointer text-sm ml-auto font-bold';
+      upgradeToPro.style.width = 'auto';
+      upgradeToPro.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="width:20px; height:20px;margin-right:6px;" stroke="purple" fill="purple"><path d="M240.5 224H352C365.3 224 377.3 232.3 381.1 244.7C386.6 257.2 383.1 271.3 373.1 280.1L117.1 504.1C105.8 513.9 89.27 514.7 77.19 505.9C65.1 497.1 60.7 481.1 66.59 467.4L143.5 288H31.1C18.67 288 6.733 279.7 2.044 267.3C-2.645 254.8 .8944 240.7 10.93 231.9L266.9 7.918C278.2-1.92 294.7-2.669 306.8 6.114C318.9 14.9 323.3 30.87 317.4 44.61L240.5 224z"/></svg> Pro account';
+    } else {
+      setInterval(() => {
+        upgradeToPro.classList.add('animate-shake');
+        setTimeout(() => {
+          upgradeToPro.classList.remove('animate-shake');
+        }, 1000);
+      }, 7000);
+    }
+    upgradeToPro.addEventListener('click', () => {
+      openUpgradeModal(hasSubscription);
+    });
+    actionBar.appendChild(upgradeToPro);
+  });
   return actionBar;
 }
 function addSettingsButton() {
@@ -1410,79 +1547,93 @@ function addSettingsButton() {
 function initializeSettings() {
   // get dark mode from html tag class="dark"
   // create setting storage
-  chrome.storage.local.get(['settings', 'presetPrompts', 'selectedConversations', 'customPrompts', 'customInstructionProfiles'], (result) => {
-    let newCustomPrompts = Array.isArray(result.customPrompts)
-      ? result.customPrompts
-      : [
-        ...(result.presetPrompts ? Object.keys(result.presetPrompts).map((key) => ({ title: key, text: result.presetPrompts[key], isDefault: false })) : []),
-        ...(result.customPrompts ? Object.keys(result.customPrompts).map((key) => ({ title: key, text: result.customPrompts[key], isDefault: false })) : []),
-      ];
-    if (newCustomPrompts.length === 0) {
-      newCustomPrompts = defaultPrompts;
-    }
-    const hasDefault = newCustomPrompts.find((prompt) => prompt.isDefault);
-    if (!hasDefault) {
-      newCustomPrompts[0].isDefault = true;
-    }
-    chrome.storage.local.set({
-      settings: {
-        ...result.settings,
-        autoScroll: result.settings?.autoScroll !== undefined ? result.settings.autoScroll : true,
-        autoSync: result.settings?.autoSync !== undefined ? result.settings.autoSync : true,
-        autoRefreshAfterSync: result.settings?.autoRefreshAfterSync !== undefined ? result.settings.autoRefreshAfterSync : true,
-        quickSync: result.settings?.quickSync !== undefined ? result.settings.quickSync : false,
-        quickSyncCount: result.settings?.quickSyncCount !== undefined ? result.settings.quickSyncCount : 100,
-        safeMode: result.settings?.safeMode !== undefined ? result.settings.safeMode : true,
-        promptHistory: result.settings?.promptHistory !== undefined ? result.settings.promptHistory : true,
-        copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
-        autoResetTopNav: result.settings?.autoResetTopNav !== undefined ? result.settings.hideBottomSidebar : false,
-        hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
-        showExamplePrompts: result.settings?.showExamplePrompts !== undefined ? result.settings.showExamplePrompts : false,
-        showMessageTimestamp: result.settings?.showMessageTimestamp !== undefined ? result.settings.showMessageTimestamp : false,
-        showCustomPromptsButton: result.settings?.showCustomPromptsButton !== undefined ? result.settings.showCustomPromptsButton : true,
-        showExportButton: result.settings?.showExportButton !== undefined ? result.settings.showExportButton : true,
-        showWordCount: result.settings?.showWordCount !== undefined ? result.settings.showWordCount : true,
-        hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
-        chatEndedSound: result.settings?.chatEndedSound !== undefined ? result.settings.chatEndedSound : false,
-        customInstruction: result.settings?.customInstruction !== undefined ? result.settings.customInstruction : '',
-        useCustomInstruction: result.settings?.useCustomInstruction !== undefined ? result.settings.useCustomInstruction : false,
-        customConversationWidth: result.settings?.customConversationWidth !== undefined ? result.settings.customConversationWidth : false,
-        conversationWidth: result.settings?.conversationWidth !== undefined ? result.settings.conversationWidth : 50,
-        saveHistory: result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
-        promptTemplate: result.settings?.promptTemplate !== undefined ? result.settings.promptTemplate : true,
-        emailNewsletter: result.settings?.emailNewsletter !== undefined ? result.settings.emailNewsletter : false,
-        autoClick: result.settings?.autoClick !== undefined ? result.settings.autoClick : false,
-        showGpt4Counter: result.settings?.showGpt4Counter !== undefined ? result.settings.showGpt4Counter : true,
-        autoSummarize: result.settings?.autoSummarize !== undefined ? result.settings.autoSummarize : false,
-        autoSplit: result.settings?.autoSplit !== undefined ? result.settings.autoSplit : true,
-        autoSplitLimit: result.settings?.autoSplitLimit !== undefined ? result.settings.autoSplitLimit : 8000,
-        autoSplitInitialPrompt: result.settings?.autoSplitInitialPrompt !== undefined ? result.settings?.autoSplitInitialPrompt : `Act like a document/text loader until you load and remember the content of the next text/s or document/s.
+  chrome.runtime.sendMessage({
+    checkHasSubscription: true,
+    detail: {
+      forceRefresh: true,
+    },
+  }, (hasSubscription) => {
+    initializeUpgradeButton(hasSubscription);
+
+    chrome.storage.local.get(['settings', 'presetPrompts', 'selectedConversations', 'customPrompts', 'customInstructionProfiles'], (result) => {
+      let newCustomPrompts = Array.isArray(result.customPrompts)
+        ? result.customPrompts
+        : [
+          ...(result.presetPrompts ? Object.keys(result.presetPrompts).map((key) => ({ title: key, text: result.presetPrompts[key], isDefault: false })) : []),
+          ...(result.customPrompts ? Object.keys(result.customPrompts).map((key) => ({ title: key, text: result.customPrompts[key], isDefault: false })) : []),
+        ];
+      if (newCustomPrompts.length === 0) {
+        newCustomPrompts = defaultPrompts;
+      }
+      const hasDefault = newCustomPrompts.find((prompt) => prompt.isDefault);
+      if (!hasDefault) {
+        newCustomPrompts[0].isDefault = true;
+      }
+      chrome.storage.local.set({
+        settings: {
+          ...result.settings,
+          autoScroll: result.settings?.autoScroll !== undefined ? result.settings.autoScroll : true,
+          autoSync: result.settings?.autoSync !== undefined ? result.settings.autoSync : true,
+          autoRefreshAfterSync: result.settings?.autoRefreshAfterSync !== undefined ? result.settings.autoRefreshAfterSync : true,
+          safeMode: result.settings?.safeMode !== undefined ? result.settings.safeMode : true,
+          promptHistory: result.settings?.promptHistory !== undefined ? result.settings.promptHistory : true,
+          copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
+          autoResetTopNav: result.settings?.autoResetTopNav !== undefined ? result.settings.autoResetTopNav : false,
+          hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
+          showExamplePrompts: result.settings?.showExamplePrompts !== undefined ? result.settings.showExamplePrompts : true,
+          showMessageTimestamp: result.settings?.showMessageTimestamp !== undefined ? result.settings.showMessageTimestamp : false,
+          showCustomPromptsButton: result.settings?.showCustomPromptsButton !== undefined ? result.settings.showCustomPromptsButton : true,
+          pluginDefaultOpen: result.settings?.pluginDefaultOpen !== undefined ? result.settings.pluginDefaultOpen : false,
+          showWordCount: result.settings?.showWordCount !== undefined ? result.settings.showWordCount : true,
+          hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
+          hideReleaseNote: result.settings?.hideReleaseNote !== undefined ? result.settings.hideReleaseNote : false,
+          showNewsletterOnUpdate: result.settings?.showNewsletterOnUpdate !== undefined ? result.settings.showNewsletterOnUpdate : !hasSubscription,
+          chatEndedSound: result.settings?.chatEndedSound !== undefined ? result.settings.chatEndedSound : false,
+          autoColorFolders: result.settings?.autoColorFolders !== undefined ? result.settings.autoColorFolders : false,
+          customGPTAutoFolder: result.settings?.customGPTAutoFolder !== undefined ? result.settings.customGPTAutoFolder : false,
+          customInstruction: result.settings?.customInstruction !== undefined ? result.settings.customInstruction : '',
+          useCustomInstruction: result.settings?.useCustomInstruction !== undefined ? result.settings.useCustomInstruction : false,
+          customConversationWidth: result.settings?.customConversationWidth !== undefined ? result.settings.customConversationWidth : false,
+          conversationWidth: result.settings?.conversationWidth !== undefined ? result.settings.conversationWidth : 50,
+          autoHideThreadCount: result.settings?.autoHideThreadCount !== undefined ? result.settings.autoHideThreadCount : true,
+          autoDeleteOldChats: result.settings?.autoDeleteOldChats !== undefined ? result.settings.autoDeleteOldChats : false,
+          autoDeleteMode: result.settings?.autoDeleteMode !== undefined ? result.settings.autoDeleteMode : autoDeleteModes[0],
+          autoDeleteThreshold: result.settings?.autoDeleteThreshold !== undefined ? result.settings.autoDeleteThreshold : 7,
+          saveHistory: result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
+          promptTemplate: result.settings?.promptTemplate !== undefined ? result.settings.promptTemplate : true,
+          emailNewsletter: result.settings?.emailNewsletter !== undefined ? result.settings.emailNewsletter : false,
+          autoClick: result.settings?.autoClick !== undefined ? result.settings.autoClick : false,
+          showGpt4Counter: result.settings?.showGpt4Counter !== undefined ? result.settings.showGpt4Counter : true,
+          autoSummarize: result.settings?.autoSummarize !== undefined ? result.settings.autoSummarize : false,
+          autoSplit: result.settings?.autoSplit !== undefined ? result.settings.autoSplit : true,
+          autoSplitLimit: result.settings?.autoSplitLimit !== undefined ? result.settings.autoSplitLimit : 24000,
+          autoSplitInitialPrompt: result.settings?.autoSplitInitialPrompt !== undefined ? result.settings?.autoSplitInitialPrompt : `Act like a document/text loader until you load and remember the content of the next text/s or document/s.
 There might be multiple files, each file is marked by name in the format ### DOCUMENT NAME.
 I will send them to you in chunks. Each chunk starts will be noted as [START CHUNK x/TOTAL], and the end of this chunk will be noted as [END CHUNK x/TOTAL], where x is the number of current chunks, and TOTAL is the number of all chunks I will send you.
 I will split the message in chunks, and send them to you one by one. For each message follow the instructions at the end of the message.
 Let's begin:
 
 `,
-        autoSplitChunkPrompt: result.settings?.autoSplitChunkPrompt !== undefined ? result.settings?.autoSplitChunkPrompt : `Reply with OK: [CHUNK x/TOTAL]
+          autoSplitChunkPrompt: result.settings?.autoSplitChunkPrompt !== undefined ? result.settings?.autoSplitChunkPrompt : `Reply with OK: [CHUNK x/TOTAL]
 Don't reply with anything else!`,
-        keepFoldersAtTheTop: result.settings?.keepFoldersAtTheTop !== undefined ? result.settings.keepFoldersAtTheTop : false,
-        conversationTimestamp: result.settings?.conversationTimestamp !== undefined ? result.settings.conversationTimestamp : true,
-        autoHideTopNav: result.settings?.autoHideTopNav !== undefined ? result.settings.autoHideTopNav : false,
-        navOpen: result.settings?.navOpen !== undefined ? result.settings.navOpen : true,
-        showPinNav: result.settings?.showPinNav !== undefined ? result.settings.showPinNav : true,
-        selectedLanguage: result.settings?.selectedLanguage || languageList.find((language) => language.code === 'default'),
-        selectedTone: result.settings?.selectedTone || toneList.find((tone) => tone.code === 'default'),
-        selectedWritingStyle: result.settings?.selectedWritingStyle || writingStyleList.find((writingStyle) => writingStyle.code === 'default'),
-        exportMode: result.settings?.exportMode || 'both',
-        historyFilter: result.settings?.historyFilter || 'favorites',
-        selectedLibrarySortBy: result.settings?.selectedLibrarySortBy || { name: 'New', code: 'recent' },
-        selectedLibraryCategory: result.settings?.selectedLibraryCategory || { name: 'All', code: 'all' },
-        selectedLibraryLanguage: result.settings?.selectedLibraryLanguage || { name: 'All', code: 'all' },
-        selectedPromptLanguage: result.settings?.selectedPromptLanguage || { name: 'Select', code: 'select' },
-      },
-      presetPrompts: {},
-      customInstructionProfiles: result.customInstructionProfiles !== undefined ? result.customInstructionProfiles : [],
-      customPrompts: newCustomPrompts,
-    }, () => addSettingsButton());
+          showFolderCounts: result.settings?.showFolderCounts !== undefined ? result.settings.showFolderCounts : true,
+          autoHideTopNav: result.settings?.autoHideTopNav !== undefined ? result.settings.autoHideTopNav : false,
+          navOpen: result.settings?.navOpen !== undefined ? result.settings.navOpen : true,
+          showPinNav: result.settings?.showPinNav !== undefined ? result.settings.showPinNav : true,
+          selectedLanguage: result.settings?.selectedLanguage || languageList.find((language) => language.code === 'default'),
+          selectedTone: result.settings?.selectedTone || toneList.find((tone) => tone.code === 'default'),
+          selectedWritingStyle: result.settings?.selectedWritingStyle || writingStyleList.find((writingStyle) => writingStyle.code === 'default'),
+          exportMode: result.settings?.exportMode || 'both',
+          historyFilter: result.settings?.historyFilter || 'favorites',
+          selectedLibrarySortBy: result.settings?.selectedLibrarySortBy || { name: 'New', code: 'recent' },
+          selectedLibraryCategory: result.settings?.selectedLibraryCategory || { name: 'All', code: 'all' },
+          selectedLibraryLanguage: result.settings?.selectedLibraryLanguage || { name: 'All', code: 'all' },
+          selectedPromptLanguage: result.settings?.selectedPromptLanguage || { name: 'Select', code: 'select' },
+        },
+        presetPrompts: {},
+        customInstructionProfiles: result.customInstructionProfiles !== undefined ? result.customInstructionProfiles : [],
+        customPrompts: newCustomPrompts,
+      }, () => addSettingsButton());
+    });
   });
 }

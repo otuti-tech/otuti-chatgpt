@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * Copyright (C) 2016 Maxime Petazzoni <maxime.petazzoni@bulix.org>.
  * All rights reserved.

@@ -1,4 +1,4 @@
-/* global createModal */
+/* global createModal, highlightBracket */
 // eslint-disable-next-line no-unused-vars
 function createTemplateWordsModal(templateWords) {
   const uniqueTemplateWords = [...new Set(templateWords)];
@@ -11,7 +11,19 @@ function templateWordsModalContent(templateWords) {
   // create releaseNote modal content
   const content = document.createElement('div');
   content.id = 'modal-content-template-words';
-  content.style = 'position: relative;height:100%; margin: 16px';
+  content.style = 'position:relative;margin: 16px';
+  const textAreaElement = document.querySelector('main form textarea');
+
+  const promptPreviewTitle = document.createElement('div');
+  promptPreviewTitle.style = 'width: 100%;color:white;text-transform: capitalize;margin-bottom: 8px; font-size: 20px; font-weight: bold; color: #bbb;';
+  promptPreviewTitle.innerHTML = 'Prompt preview';
+  content.appendChild(promptPreviewTitle);
+
+  const promptPreview = document.createElement('div');
+  promptPreview.style = 'width: 100%; margin-bottom: 16px; padding: 0 8px;';
+  promptPreview.innerHTML = highlightBracket(textAreaElement.value);
+
+  content.appendChild(promptPreview);
 
   templateWords.forEach((templateWord) => {
     const templateWordDiv = document.createElement('div');
@@ -50,8 +62,9 @@ function templateWordsModalActions(templateWords) {
       newValue = newValue.replace(templateWord, templateWordInputValue);
     });
     textAreaElement.value = newValue;
-    if (document.querySelector('[id*=close-button]')) {
-      document.querySelector('[id*=close-button]').click();
+    const closeButton = document.querySelector('[id*=close-button]');
+    if (closeButton) {
+      closeButton.click();
     }
     if (!e.shiftKey) {
       const chatSubmitButton = document.querySelector('main form textarea ~ button');

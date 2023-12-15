@@ -1,16 +1,16 @@
-/* eslint-disable no-unused-vars */
 /* eslint-disable no-restricted-globals */
-/* global formatDate, showAllCheckboxes, hideAllButLastCheckboxes, deleteConversation, renameConversation, loadConversation, highlight, showNewChatPage, emptyFolderElement, shiftKeyPressed:true, isWindows, createShare, shareModal, addShareModalEventListener */
+/* global ChatGPTIcon, formatDate, showAllCheckboxes, hideAllButLastCheckboxes, deleteConversation, renameConversation, loadConversation, showNewChatPage, emptyFolderElement, shiftKeyPressed:true, isWindows, createShare, shareModal, addShareModalEventListener, arkoseWasInitialized, updateOutOfDateConversation, defaultFolderActions, addToFolderAction, hideAllEditIcons, formatTime */
 
 const notSelectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-20 group';
 const selectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md cursor-pointer break-all hover:pr-20 bg-gray-800 hover:bg-gray-800 group selected border-l border-gold';
 
 function getConversationElementClassList(conversation) {
   const { pathname } = new URL(window.location.toString());
-  const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+  const conversationId = pathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
   return conversationId === conversation.id ? selectedClassList : notSelectedClassList;
 }
-function createConversation(conversation, conversationTimestamp = false, searchValue = '') {
+// eslint-disable-next-line no-unused-vars
+function createConversation(conversation, searchValue = '') {
   const conversationElement = document.createElement('a');
   // conversationElement.href = 'javascript:';
   conversationElement.id = `conversation-button-${conversation.id}`;
@@ -24,30 +24,35 @@ function createConversation(conversation, conversationTimestamp = false, searchV
   conversationElement.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-
+    const gizmoPath = conversation.gizmo_id ? `g/${conversation.gizmo_id}/` : '';
     const { pathname } = new URL(window.location.toString());
-    const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
     if (e.metaKey || (isWindows() && e.ctrlKey)) {
-      window.open(`https://chat.openai.com/c/${conversation.id}`, '_blank');
+      window.open(`https://chat.openai.com/${gizmoPath}c/${conversation.id}`, '_blank');
       return;
     }
-    if (searchValue || conversationId !== conversation.id) {
-      window.history.pushState({}, '', `https://chat.openai.com/c/${conversation.id}`);
-      // set conversations with class selected to not selected
-      const focusedConversations = document.querySelectorAll('.selected');
-      focusedConversations.forEach((c) => {
-        c.classList = notSelectedClassList;
-        c.style.backgroundColor = '';
-      });
-      // set selected conversation
-      conversationElement.classList = selectedClassList;
-      if (conversation.archived) {
-        conversationElement.classList.remove('hover:pr-20');
+    if (arkoseWasInitialized()) {
+      const conversationId = pathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
+      if (searchValue || conversationId !== conversation.id) {
+        window.history.pushState({}, '', `https://chat.openai.com/${gizmoPath}c/${conversation.id}`);
+        // set conversations with class selected to not selected
+        const focusedConversations = document.querySelectorAll('.selected');
+        focusedConversations.forEach((c) => {
+          c.classList = notSelectedClassList;
+          c.style.backgroundColor = '';
+        });
+        // set selected conversation
+        conversationElement.classList = selectedClassList;
+        if (conversation.archived) {
+          conversationElement.classList.remove('hover:pr-20');
+        }
+        loadConversation(conversation.id, searchValue);
       }
-      loadConversation(conversation.id, searchValue);
+    } else {
+      window.location.href = `https://chat.openai.com/${gizmoPath}c/${conversation.id}`;
     }
+    hideAllEditIcons();
+    updateOutOfDateConversation();
   });
-
   const conversationElementIcon = document.createElement('img');
   conversationElementIcon.classList = 'w-4 h-4';
   if (conversation.archived) {
@@ -60,21 +65,21 @@ function createConversation(conversation, conversationTimestamp = false, searchV
   conversationElement.appendChild(conversationElementIcon);
   const conversationTitle = document.createElement('div');
   conversationTitle.id = `conversation-title-${conversation.id}`;
-  conversationTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative';
+  conversationTitle.classList = 'flex-1 overflow-hidden text-ellipsis whitespace-nowrap max-h-5 break-all relative';
   conversationTitle.style = 'position: relative; bottom: 5px;';
-  conversationTitle.innerHTML = highlight(conversation.title, searchValue);
+  conversationTitle.innerHTML = conversation.title;
   conversationElement.title = conversation.title;
   conversationElement.appendChild(conversationTitle);
   // add timestamp
   const timestampElement = document.createElement('div');
   timestampElement.id = 'timestamp';
-  timestampElement.style = 'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
-  const timestamp = conversationTimestamp
-    ? new Date(conversation.update_time * 1000)
-    : new Date(conversation.create_time * 1000);
+  timestampElement.style = 'display:flex; align-items:center;font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
+  const timestamp = conversation.update_time !== 'force_copy'
+    ? new Date(formatTime(conversation.update_time))
+    : new Date(formatTime(conversation.create_time));
   const conversationLastTimestamp = formatDate(new Date(timestamp));
 
-  timestampElement.innerHTML = conversationLastTimestamp;
+  timestampElement.innerHTML = `${conversation.autoDeleteLock && !conversation.archived ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" stroke="#ef4146" fill="#ef4146" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-1 h-2 w-2" height="1em" width="1em"><path d="M80 192V144C80 64.47 144.5 0 224 0C303.5 0 368 64.47 368 144V192H384C419.3 192 448 220.7 448 256V448C448 483.3 419.3 512 384 512H64C28.65 512 0 483.3 0 448V256C0 220.7 28.65 192 64 192H80zM144 192H304V144C304 99.82 268.2 64 224 64C179.8 64 144 99.82 144 144V192z"/></svg>' : ''}${conversationLastTimestamp}`;
 
   conversationElement.appendChild(timestampElement);
   // action icons
@@ -88,7 +93,7 @@ function createConversation(conversation, conversationTimestamp = false, searchV
 function conversationActions(conversationId) {
   const actionsWrapper = document.createElement('div');
   actionsWrapper.id = `actions-wrapper-${conversationId}`;
-  actionsWrapper.classList = 'absolute flex right-1 z-10 text-gray-300 invisible group-hover:visible';
+  actionsWrapper.classList = 'absolute flex right-3 z-10 text-gray-300 invisible group-hover:visible';
   const editConversationNameButton = document.createElement('button');
   editConversationNameButton.title = 'Rename conversation';
   editConversationNameButton.classList = 'p-1 hover:text-white';
@@ -131,27 +136,7 @@ function conversationActions(conversationId) {
       button.disabled = true;
     });
     shareConversationButton.innerHTML = '<button type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:r5k:" data-state="closed" class="p-1 hover:text-white"><svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg></button>';
-
-    // make API call
-    chrome.storage.sync.get(['name'], (syncResult) => {
-      chrome.storage.local.get(['conversations'], (result) => {
-        const { conversations } = result;
-        const currentNodeId = conversations[conversationId].current_node;
-        createShare(conversationId, currentNodeId).then((res) => {
-          const curShareButtons = document.querySelectorAll('[id^="share-conversation-"]');
-          curShareButtons.forEach((button) => {
-            button.disabled = false;
-          });
-          shareConversationButton.innerHTML = '<button type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:r5k:" data-state="closed" class="p-1 hover:text-white"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg></button>';
-          const shareModalWrapper = document.createElement('div');
-          shareModalWrapper.id = 'share-modal-wrapper';
-          shareModalWrapper.classList = 'absolute inset-0 z-10';
-          shareModalWrapper.innerHTML = shareModal(conversations[conversationId], res, syncResult.name);
-          document.body.appendChild(shareModalWrapper);
-          addShareModalEventListener(res, syncResult.name);
-        });
-      });
-    });
+    shareConversation(conversationId, shareConversationButton);
   });
 
   const deleteConversationButton = document.createElement('button');
@@ -183,13 +168,37 @@ function conversationActions(conversationId) {
   actionsWrapper.appendChild(deleteConversationButton);
   return actionsWrapper;
 }
+function shareConversation(conversationId, shareConversationButton = null) {
+  // make API call
+  chrome.storage.sync.get(['name'], (syncResult) => {
+    chrome.storage.local.get(['conversations'], (result) => {
+      const { conversations } = result;
+      const currentNodeId = conversations[conversationId].current_node;
+      createShare(conversationId, currentNodeId).then((res) => {
+        if (shareConversationButton) {
+          const curShareButtons = document.querySelectorAll('[id^="share-conversation-"]');
+          curShareButtons.forEach((button) => {
+            button.disabled = false;
+          });
+          shareConversationButton.innerHTML = '<button type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:r5k:" data-state="closed" class="p-1 hover:text-white"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg></button>';
+        }
+        const shareModalWrapper = document.createElement('div');
+        shareModalWrapper.id = 'share-modal-wrapper';
+        shareModalWrapper.classList = 'absolute inset-0 z-10';
+        shareModalWrapper.innerHTML = shareModal(conversations[conversationId], res, syncResult.name);
+        document.body.appendChild(shareModalWrapper);
+        addShareModalEventListener(res, syncResult.name);
+      });
+    });
+  });
+}
 function confirmActions(conversation, action) {
   let skipBlur = false;
   const conversationElement = document.querySelector(`#conversation-button-${conversation.id}`);
   conversationElement.classList.replace('pr-3', 'pr-14');
   const actionsWrapper = document.createElement('div');
   actionsWrapper.id = `actions-wrapper-${conversation.id}`;
-  actionsWrapper.classList = 'absolute flex right-1 z-10 text-gray-300';
+  actionsWrapper.classList = 'absolute flex right-3 z-10 text-gray-300';
   const confirmButton = document.createElement('button');
   confirmButton.id = `confirm-${conversation.id}`;
   confirmButton.classList = 'p-1 hover:text-white';
@@ -202,7 +211,7 @@ function confirmActions(conversation, action) {
       const conversationTitle = document.createElement('div');
       const newValue = textInput.value || conversation.title;
       conversationTitle.id = `conversation-title-${conversation.id}`;
-      conversationTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative';
+      conversationTitle.classList = 'flex-1 overflow-hidden text-ellipsis whitespace-nowrap max-h-5 break-all relative';
       conversationTitle.style = 'position: relative; bottom: 5px;';
       conversationTitle.innerText = newValue;
       textInput.parentElement.replaceChild(conversationTitle, textInput);
@@ -212,32 +221,34 @@ function confirmActions(conversation, action) {
       renameConversation(conversation.id, newValue);
       syncLocalConversation(conversation.id, 'title', newValue);
     } else if (action === 'delete') {
+      // move conv html element to trash folder
+      actionsWrapper.remove();
+      conversationElement.querySelector('[id^=checkbox-wrapper-]').remove();
+      if (conversationElement.classList.contains('selected')) {
+        showNewChatPage();
+      }
+      conversationElement.classList = notSelectedClassList;
+      conversationElement.style.opacity = 0.7;
+      conversationElement.classList.remove('hover:pr-20');
+      // replace bubble icon with trash
+      const conversationElementIcon = conversationElement.querySelector('img');
+      conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
+      // move conversation to trash
+      const trashFolderContent = document.querySelector('#folder-content-trash');
+      if (trashFolderContent) {
+        const emptyFolderElement = trashFolderContent.querySelector('#empty-folder-trash');
+        if (emptyFolderElement) emptyFolderElement.remove();
+        // prepend conversation to trash folder
+        trashFolderContent.prepend(conversationElement);
+      }
       deleteConversation(conversation.id).then((data) => {
         if (data.success) {
           syncLocalConversation(conversation.id, 'archived', true);
+
+          // update conversationsOrder
           chrome.storage.local.get(['conversationsOrder'], (res) => {
             const { conversationsOrder } = res;
             const trashFolder = conversationsOrder.find((folder) => folder.id === 'trash');
-
-            actionsWrapper.remove();
-            conversationElement.querySelector('[id^=checkbox-wrapper-]').remove();
-            if (conversationElement.classList.contains('selected')) {
-              showNewChatPage();
-            }
-            conversationElement.classList = notSelectedClassList;
-            conversationElement.style.opacity = 0.7;
-            conversationElement.classList.remove('hover:pr-20');
-            // replace bubble icon with trash
-            const conversationElementIcon = conversationElement.querySelector('img');
-            conversationElementIcon.src = chrome.runtime.getURL('icons/trash.png');
-            // move conversation to trash
-            const trashFolderContent = document.querySelector('#folder-content-trash');
-            if (trashFolderContent) {
-              const emptyFolderElement = trashFolderContent.querySelector('#empty-folder-trash');
-              if (emptyFolderElement) emptyFolderElement.remove();
-              // prepend conversation to trash folder
-              trashFolderContent.prepend(conversationElement);
-            }
 
             // remove conversationId from conversationsOrder
             let conversationOrderIndex = conversationsOrder.findIndex((id) => id === conversation.id);
@@ -280,7 +291,7 @@ function confirmActions(conversation, action) {
       const textInput = document.querySelector(`#conversation-rename-${conversation.id}`);
       const conversationTitle = document.createElement('div');
       conversationTitle.id = `conversation-title-${conversation.id}`;
-      conversationTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative';
+      conversationTitle.classList = 'flex-1 overflow-hidden text-ellipsis whitespace-nowrap max-h-5 break-all relative';
       conversationTitle.style = 'position: relative; bottom: 5px;';
       conversationTitle.innerText = conversation.title;
       textInput.parentElement.replaceChild(conversationTitle, textInput);
@@ -337,7 +348,7 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
     if (selectedConvs?.length > 0) {
       checkboxWrapper.style.display = 'block';
       checkboxWrapper.style.width = '100%';
-      if (selectedConvs.map((c) => c.id).includes(conversation.id)) {
+      if (selectedConvs.map((c) => c?.id).includes(conversation.id)) {
         checkbox.checked = true;
       }
     }
@@ -350,7 +361,7 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
         } = res;
         // uncheck
         if (!event.target.checked) {
-          const newSelectedConversations = selectedConversations.filter((conv) => conv.id !== conversation.id);
+          const newSelectedConversations = selectedConversations.filter((conv) => conv?.id !== conversation.id);
           chrome.storage.local.set({ selectedConversations: newSelectedConversations }, () => {
             if (newSelectedConversations.length === 0) {
               hideAllButLastCheckboxes(conversation.id);
@@ -394,11 +405,10 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
 
                 // click on the new conversation to select it
                 conversationsToSelect.forEach((cid) => {
-                  const conv = Object.values(conversations).find((c) => c.id === cid);
-                  if (!selectedConversations.map((c) => c.id).includes(conv.id)) {
-                    newSelectedConversations.push(conv);
+                  if (!selectedConversations.map((c) => c?.id).includes(cid)) {
+                    newSelectedConversations.push(conversations[cid]);
                   }
-                  const convElement = document.querySelector(`#checkbox-wrapper-${conv.id}`);
+                  const convElement = document.querySelector(`#checkbox-wrapper-${cid}`);
 
                   if (convElement && !convElement.querySelector('#checkbox').checked) {
                     convElement.querySelector('#checkbox').checked = true;
@@ -411,11 +421,10 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
 
               // click on the new conversation to select it
               conversationsToSelect.forEach((cid) => {
-                const conv = Object.values(conversations).find((c) => c.id === cid);
-                if (!selectedConversations.map((c) => c.id).includes(conv.id)) {
-                  newSelectedConversations.push(conv);
+                if (!selectedConversations.map((c) => c?.id).includes(cid)) {
+                  newSelectedConversations.push(conversations[cid]);
                 }
-                const convElement = document.querySelector(`#checkbox-wrapper-${conv.id}`);
+                const convElement = document.querySelector(`#checkbox-wrapper-${cid}`);
 
                 if (convElement && !convElement.querySelector('#checkbox').checked) {
                   convElement.querySelector('#checkbox').checked = true;
@@ -445,8 +454,8 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
 function updateButtonsAfterSelection(previousSelectedConversations, newSelectedConversations) {
   const previousText = previousSelectedConversations.length === 0 ? 'All' : `${previousSelectedConversations.length} Selected`;
   const newText = newSelectedConversations.length === 0 ? 'All' : `${newSelectedConversations.length} Selected`;
-  const nav = document.querySelector('nav');
-  const newChatButton = nav?.querySelector('a');
+  //  nav second child first a element
+  const newChatButton = document.querySelector('nav > :nth-child(2)').querySelector('a');
   // chenge export all to export selected
   const exportAllButton = document.querySelector('#export-all-button');
   if (exportAllButton) {
@@ -456,13 +465,32 @@ function updateButtonsAfterSelection(previousSelectedConversations, newSelectedC
   if (deleteConversationsButton) {
     deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace(`Delete ${previousText}`, `Delete ${newText}`);
   }
+  if (!newChatButton) return;
   if (newSelectedConversations.length > 0) {
     // show an x svg followed by clear selection
-    newChatButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Clear selection';
+    newChatButton.innerHTML = '<div class="h-7 w-7 flex-shrink-0"><div class="gizmo-shadow-stroke relative flex h-full items-center justify-center rounded-full bg-white text-black"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div></div>Clear selection';
+    showAddToFolderButton();
   } else {
     // show a plus svg followed by new chat
-    newChatButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New chat';
+    newChatButton.innerHTML = ChatGPTIcon();
+    showDefaultFolderActions();
   }
+}
+function showAddToFolderButton() {
+  const allFolderActionWrappers = document.querySelectorAll('[id^="folder-actions-wrapper-"]:not(#folder-actions-wrapper-trash)');
+  if (allFolderActionWrappers.length === 0) return;
+  allFolderActionWrappers.forEach((wrapper) => {
+    const folderId = wrapper.id.split('folder-actions-wrapper-').pop();
+    wrapper.replaceWith(addToFolderAction(folderId));
+  });
+}
+function showDefaultFolderActions() {
+  const allFolderActionWrappers = document.querySelectorAll('[id^="folder-actions-wrapper-"]:not(#folder-actions-wrapper-trash)');
+  if (allFolderActionWrappers.length === 0) return;
+  allFolderActionWrappers.forEach((wrapper) => {
+    const folderId = wrapper.id.split('folder-actions-wrapper-').pop();
+    wrapper.replaceWith(defaultFolderActions(folderId));
+  });
 }
 function syncLocalConversation(conversationId, key, value) {
   chrome.storage.local.get(['conversations'], (result) => {

@@ -1,4 +1,4 @@
-/* global highlight,openSubmitPromptModal, updateInputCounter, addButtonToNavFooter,createModal, disableTextInput:true, isGenerating, addInputCounter, toast, quickAccessMenu , updateQuickAccessMenuItems */
+/* global highlightSearch, openSubmitPromptModal, updateInputCounter, addButtonToNavFooter,createModal, isGenerating, addInputCounter, toast, quickAccessMenu , updateQuickAccessMenuItems, curFileAttachments */
 function createPromptHistoryModal() {
   chrome.storage.local.get(['userInputValueHistory', 'settings'], (result) => {
     const { userInputValueHistory, settings } = result;
@@ -8,10 +8,10 @@ function createPromptHistoryModal() {
     createModal('My Prompt History', 'All your personal and favorite prompts are saved here.', bodyContent, actionsBarContent);
     const historySearchInput = document.getElementById('history-search-input');
     historySearchInput.focus();
-    updateHisotryList();
+    updateHistoryList();
   });
 }
-function updateHisotryList() {
+function updateHistoryList() {
   const existingEmptyHistoryList = document.getElementById('history-list-empty');
   if (existingEmptyHistoryList) existingEmptyHistoryList.remove();
   const historyList = document.querySelector('#prompt-history-list');
@@ -21,6 +21,8 @@ function updateHisotryList() {
     historyList.appendChild(emptyHistory());
   }
   addReadMoreButtonsToHistory();
+  const searchTerm = document.querySelector('input[id="history-search-input"]').value;
+  highlightSearch([historyList], searchTerm);
 }
 function emptyHistory() {
   const historyListEmpty = document.createElement('div');
@@ -52,7 +54,7 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
   const historyList = document.createElement('div');
   historyList.id = 'prompt-history-list';
   historyList.style = 'display: flex; flex-direction: column; justify-content: start; align-items: center; height: 100%; width:100%;padding: 16px;overflow-y: scroll;';
-
+  const searchTerm = document.querySelector('input[id="history-search-input"]')?.value;
   if (userInputValueHistory && userInputValueHistory.length > 0) {
     userInputValueHistory.sort((a, b) => b.timestamp - a.timestamp).forEach((userInputValue, index) => {
       const historyItem = document.createElement('div');
@@ -67,7 +69,7 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
       });
       const historyItemText = document.createElement('pre');
       historyItemText.id = `text-history-item-${index}`;
-      historyItemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;';
+      historyItemText.style = searchTerm ? 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;' : 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;';
       historyItemText.dir = 'auto';
       historyItemText.textContent = userInputValue.inputValue;
       historyItem.appendChild(historyItemText);
@@ -97,7 +99,7 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
             const newHistory = res.userInputValueHistory.filter((item) => item.inputValue !== userInputValue.inputValue);
             chrome.storage.local.set({ userInputValueHistory: newHistory }, () => {
               historyItem.remove();
-              updateHisotryList();
+              updateHistoryList();
             });
           });
         } else {
@@ -183,7 +185,7 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
               }
             }
             // check if history list has any children with display flex
-            updateHisotryList();
+            updateHistoryList();
           });
         });
       });
@@ -230,7 +232,7 @@ function historyFilterButtonsContent(historyFilter) {
         exportHistoryButton.textContent = 'Export Favorites';
         historyItems.forEach((historyItem) => {
           const historyItemText = historyItem.querySelector('pre[id^=text-history-item-]');
-          historyItemText.innerHTML = highlight(historyItemText.textContent, searchValue);
+          historyItemText.innerHTML = historyItemText.textContent;
           if (searchValue.trim().length === 0 || historyItemText.textContent.toLowerCase().includes(searchValue.toLowerCase())) {
             const historyItemDataFavorite = historyItem.getAttribute('data-favorite') === 'true';
             if (historyItemDataFavorite) {
@@ -247,7 +249,7 @@ function historyFilterButtonsContent(historyFilter) {
 
         historyFilterAllButton.style.backgroundColor = 'rgb(31, 33, 35)';
         historyFilterAllButton.style.color = 'lightslategray';
-        updateHisotryList();
+        updateHistoryList();
       });
     });
   });
@@ -266,7 +268,6 @@ function historyFilterButtonsContent(historyFilter) {
         exportHistoryButton.textContent = 'Export All';
         historyItems.forEach((historyItem) => {
           const historyItemText = historyItem.querySelector('pre[id^=text-history-item-]');
-          historyItemText.innerHTML = highlight(historyItemText.textContent, searchValue);
 
           if (searchValue.trim().length === 0 || historyItemText.textContent.toLowerCase().includes(searchValue.toLowerCase())) {
             historyItem.style.display = 'flex';
@@ -279,7 +280,7 @@ function historyFilterButtonsContent(historyFilter) {
 
         historyFilterFavoritesButton.style.backgroundColor = 'rgb(31, 33, 35)';
         historyFilterFavoritesButton.style.color = 'lightslategray';
-        updateHisotryList();
+        updateHistoryList();
       });
     });
   });
@@ -302,20 +303,18 @@ function historyFilterButtonsContent(historyFilter) {
 
       historyItems.forEach((item) => {
         const itemText = item.querySelector('pre[id^=text-history-item-]');
+        const readMoreButton = item.querySelector(`div[id="read-more-history-item-${item.id.split('history-item-')[1]}"]`);
         if (itemText.textContent.toLowerCase().includes(value.toLowerCase()) || value.trim().length === 0) {
+          itemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;';
+          if (readMoreButton) readMoreButton.textContent = 'Show less';
           item.style.display = 'flex';
-          itemText.innerHTML = highlight(itemText.textContent, value);
         } else {
+          itemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;';
+          if (readMoreButton) readMoreButton.textContent = 'Show more';
           item.style.display = 'none';
         }
       });
-      updateHisotryList();
-
-      // // clear all existing highlights first since history doesn't rerender
-      // const historyItemsTexts = document.querySelectorAll('pre[id^=text-history-item-]');
-      // historyItemsTexts.forEach((itemText) => {
-      //   itemText.innerHTML = highlight(itemText.textContent, value);
-      // });
+      updateHistoryList();
     });
   });
   historyFilterElement.appendChild(historySearchInput);
@@ -324,29 +323,28 @@ function historyFilterButtonsContent(historyFilter) {
 function addReadMoreButtonsToHistory() {
   const historyItemTexts = document.querySelectorAll('pre[id^="text-history-item-"]');
   historyItemTexts.forEach((historyItemText) => {
-    const searchValue = document.querySelector('input[id="history-search-input"]').value;
-    if (!searchValue) {
-      const id = historyItemText.id.split('text-history-item-')[1];
-      if (historyItemText.offsetHeight < historyItemText.scrollHeight) {
-        const historyList = document.querySelector('div[id="prompt-history-list"]');
-        const existingReadMoreButton = historyList?.querySelector(`div[id="read-more-history-item-${id}"]`);
-        if (existingReadMoreButton) existingReadMoreButton.remove();
-        const historyItemReadMore = document.createElement('div');
-        historyItemReadMore.id = `read-more-history-item-${id}`;
-        historyItemReadMore.style = 'color: lightslategray; font-size:0.8em; width: 100%; margin-top: 8px; cursor: pointer;';
+    const searchValue = document.querySelector('input[id="history-search-input"]')?.value;
 
-        historyItemReadMore.textContent = 'Show more';
-        historyItemReadMore.addEventListener('click', () => {
-          if (historyItemReadMore.textContent === 'Show less') {
-            historyItemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;';
-            historyItemReadMore.textContent = 'Show more';
-          } else {
-            historyItemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;';
-            historyItemReadMore.textContent = 'Show less';
-          }
-        });
-        historyItemText.insertAdjacentElement('afterend', historyItemReadMore);
-      }
+    const id = historyItemText.id.split('text-history-item-')[1];
+    if (historyItemText.offsetHeight < historyItemText.scrollHeight) {
+      const historyList = document.querySelector('div[id="prompt-history-list"]');
+      const existingReadMoreButton = historyList?.querySelector(`div[id="read-more-history-item-${id}"]`);
+      if (existingReadMoreButton) existingReadMoreButton.remove();
+      const historyItemReadMore = document.createElement('div');
+      historyItemReadMore.id = `read-more-history-item-${id}`;
+      historyItemReadMore.style = 'color: lightslategray; font-size:0.8em; width: 100%; margin-top: 8px; cursor: pointer;';
+
+      historyItemReadMore.textContent = searchValue ? 'Show less' : 'Show more';
+      historyItemReadMore.addEventListener('click', () => {
+        if (historyItemReadMore.textContent === 'Show less') {
+          historyItemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;';
+          historyItemReadMore.textContent = 'Show more';
+        } else {
+          historyItemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;';
+          historyItemReadMore.textContent = 'Show less';
+        }
+      });
+      historyItemText.insertAdjacentElement('afterend', historyItemReadMore);
     }
   });
 }
@@ -448,7 +446,7 @@ function historyModalActions() {
               item.remove();
             }
           });
-          updateHisotryList();
+          updateHistoryList();
           e.target.textContent = 'Delete non favorites';
           e.target.style.backgroundColor = '#343541';
           e.target.style.color = 'lightgray';
@@ -474,6 +472,7 @@ function historyModalActions() {
 
 function addUserPromptToHistory(inputValue) {
   // Add new value to the value history
+  if (!inputValue) return;
   chrome.storage.local.get(['userInputValueHistory', 'settings'], (result) => {
     const userInputValueHistory = result.userInputValueHistory || [];
     // if inputValue already exists in history, remove it first
@@ -502,20 +501,12 @@ function textAreaElementInputEventListener(event) {
   if (!inputForm) return;
   const submitButton = inputForm.querySelector('textarea ~ button');
   if (submitButton) {
-    if (event.target.value.trim().length > 0) {
-      chrome.storage.local.get(['settings'], (result) => {
-        const { settings } = result;
-        const { selectedModel } = settings;
-        submitButton.disabled = false;
-        if (selectedModel.tags.includes('gpt4')) {
-          submitButton.style.backgroundColor = '#AB68FF';
-        } else {
-          submitButton.style.backgroundColor = '#19C37D';
-        }
-      });
+    const spinners = document.querySelectorAll('[id^=file-upload-spinner-]');
+
+    if ((event.target.value.trim().length > 0 || curFileAttachments?.length > 0) && spinners.length === 0) {
+      submitButton.disabled = false;
     } else {
       submitButton.disabled = true;
-      submitButton.style.backgroundColor = 'transparent';
     }
   }
   updateInputCounter(event.target.value);
@@ -525,13 +516,6 @@ function textAreaElementInputEventListener(event) {
   if (event.target.scrollHeight > 200) {
     event.target.style.overflowY = 'scroll';
     event.target.scrollTop = event.target.scrollHeight;
-  }
-
-  // input size
-  if (disableTextInput && !isGenerating) {
-    event.preventDefault();
-    disableTextInput = false;
-    return;
   }
 
   // history
@@ -556,10 +540,10 @@ function textAreaElementKeydownEventListenerAsync(event) {
     updateInputCounter('');
     chrome.storage.local.get(['textInputValue'], (result) => {
       const textInputValue = result.textInputValue || '';
-      if (textInputValue === '') return;
+      if (textInputValue === '' && curFileAttachments?.length === 0) return;
       const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
       if (!templateWords) {
-        textAreaElement.style.height = '56px';
+        textAreaElement.style.height = '52px';
       }
       addUserPromptToHistory(textInputValue);
     });
@@ -643,10 +627,10 @@ function textAreaElementKeydownEventListenerSync(event) {
     updateInputCounter('');
     chrome.storage.local.get(['textInputValue'], (result) => {
       const textInputValue = result.textInputValue || '';
-      if (textInputValue === '') return;
+      if (textInputValue === '' && curFileAttachments?.length === 0) return;
       const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
       if (!templateWords) {
-        textAreaElement.style.height = '56px';
+        textAreaElement.style.height = '52px';
       }
       addUserPromptToHistory(textInputValue);
     });
@@ -724,7 +708,7 @@ function textAreaElementKeydownEventListenerSync(event) {
       const textAreaValue = textAreaElement.value;
       const words = textAreaValue.split(/[\s\n]+/);
       const lastWord = words[words.length - 2];
-      if (lastWord.startsWith('@')) {
+      if (lastWord?.startsWith('@')) {
         const prompt = customPrompts.find((p) => p.title.toLowerCase() === lastWord.substring(1).toLowerCase());
         if (prompt) {
           textAreaElement.value = textAreaValue.substring(0, textAreaValue.length - (lastWord.length + 1)) + prompt.text;
@@ -738,12 +722,12 @@ function textAreaElementKeydownEventListenerSync(event) {
     updateQuickAccessMenuItems();
   }, 100);
   // @
-  if (event.keyCode === 50) {
+  if (event.shiftKey && event.keyCode === 50) {
     // open the dropdown with custom prompts
     quickAccessMenu('@');
   }
   // #
-  if (event.keyCode === 51) {
+  if (event.shiftKey && event.keyCode === 51) {
     // open the dropdown with prompt chains
     quickAccessMenu('#');
   }
@@ -799,7 +783,7 @@ function addAsyncInputEvents() {
       const textInputValue = curTextAreaElement.value;
       // add text input value to local storage history
       if (textInputValue === '') return;
-      textAreaElement.style.height = '56px';
+      textAreaElement.style.height = '52px';
       addUserPromptToHistory(textInputValue);
     });
   }

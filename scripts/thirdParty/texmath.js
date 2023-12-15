@@ -1,3 +1,4 @@
+/* eslint-disable */
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Stefan Goessner - 2017-22. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.

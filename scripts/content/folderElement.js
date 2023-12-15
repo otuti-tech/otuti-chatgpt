@@ -1,10 +1,15 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-restricted-globals */
-/* global createConversation, Sortable, deleteConversation, showNewChatPage, notSelectedClassList, deleteConversationOnDragToTrash */
+/* global createConversation, Sortable, generateRandomDarkColor, deleteConversation, showNewChatPage, notSelectedClassList, deleteConversationOnDragToTrash, showDefaultFolderActions, toggleKeepFoldersAtTheTop, resetSelection, showActionConfirm, confirmDeleteSelectedConversations,  */
 
-function createFolder(folder, conversationTimestamp, conversations = [], isNewFolder = false) {
+// eslint-disable-next-line no-unused-vars
+function createFolder(folder, conversations = [], isNewFolder = false) {
   // generate random uuid
   const folderId = folder.id;
+  // if current conversation is in this folder, open the folder
+  const { pathname } = new URL(window.location.toString());
+  const convId = pathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
+  if (folder.conversationIds.includes(convId)) {
+    folder.isOpen = true;
+  }
 
   const folderElementWrapper = document.createElement('div');
   folderElementWrapper.id = `wrapper-folder-${folderId}`;
@@ -22,7 +27,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   const folderElement = document.createElement('div');
   folderElement.id = `folder-${folderId}`;
   folderElement.classList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-[#2A2B32] cursor-pointer break-all hover:pr-20 group';
-  folderElement.style.backgroundColor = folder.color || 'transparent';
+  folderElement.style.backgroundColor = folder.color || '#40414f';
   folderElement.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -35,7 +40,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
       curFolderIcon.dataset.isOpen = curFolderIcon.dataset.isOpen === 'false' ? 'true' : 'false';
       const curFolderContent = document.querySelector(`#folder-content-${folderElementId}`);
       curFolderContent.style.display = folderContent.style.display === 'none' ? 'block' : 'none';
-      conversationsOrder.find((c) => c.id === folderElementId).isOpen = curFolderIcon.dataset.isOpen === 'true';
+      conversationsOrder.find((c) => c?.id === folderElementId).isOpen = curFolderIcon.dataset.isOpen === 'true';
       chrome.storage.local.set({ conversationsOrder });
     });
   });
@@ -49,7 +54,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
 
   const folderTitle = document.createElement('div');
   folderTitle.id = `title-folder-${folderId}`;
-  folderTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative text-white';
+  folderTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden whitespace-nowrap break-all relative text-white relative';
   folderTitle.innerHTML = folder.name;
   folderElement.title = folder.name;
   folderElement.appendChild(folderTitle);
@@ -58,47 +63,64 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   const folderContent = document.createElement('div');
   folderContent.id = `folder-content-${folderId}`;
   folderContent.classList = 'w-full border-l border-gray-500';
-  folderContent.style.borderColor = folder.color || '#8e8ea0';
+  folderContent.style.borderColor = folder.color || '#40414f';
+  folderContent.style.borderLeftWidth = '2px';
   folderContent.style.borderBottomLeftRadius = '6px';
   folderContent.style.marginLeft = '16px';
+  folderContent.style.paddingTop = '2px';
   folderContent.style.display = folder.isOpen ? 'block' : 'none';
+  folderContent.style.borderColor = folder.color || '#40414f';
 
-  let shouldUpdateConversationOrder = false;
-  if (folder.conversationIds.length > 0) {
-    folder.conversationIds.forEach((conversationId, index) => {
-      if (typeof conversationId === 'string') {
-        const conversation = Object.values(conversations).find((c) => c.id === conversationId);
-        if (conversation && !conversation.skipped) {
-          const conversationElement = createConversation(conversation, conversationTimestamp);
-          folderContent.appendChild(conversationElement);
-        }
-      } else {
-        shouldUpdateConversationOrder = true;
-        // if there a wrong type data in folder, remove conversationId from folder.conversationIds
-        folder.conversationIds.splice(index, 1);
+  // folder count
+  chrome.storage.local.get(['settings'], (result) => {
+    const { settings } = result;
+    const folderCount = document.createElement('div');
+    folderCount.id = `count-folder-${folderId}`;
+    folderCount.style = `font-size:10px;position:absolute;left:40px;bottom:0px;display:${settings.showFolderCounts ? 'block' : 'none'}`;
+    if (settings.showFolderCounts) folderElement.querySelector('[id^="title-folder-"]').style.bottom = '5px';
+    folderCount.innerHTML = `${folder?.conversationIds?.length} chats`;
+    folderElement.appendChild(folderCount);
+  });
+  // add an observer to folderContent to update folder count
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'childList') {
+        const folderCountElement = document.querySelector(`#count-folder-${folderId}`);
+        if (!folderCountElement) return;
+        folderCountElement.innerHTML = `${folderContent.querySelectorAll('[id^="conversation-button-"]')?.length || 0} chats`;
       }
     });
-    if (shouldUpdateConversationOrder) {
-      shouldUpdateConversationOrder = false;
-      // update conversationsOrder
-      chrome.storage.local.get(['conversationsOrder'], (result) => {
-        const { conversationsOrder } = result;
-        const folderIndex = conversationsOrder.findIndex((f) => f?.id === folderId);
-        conversationsOrder[folderIndex].conversationIds = folder.conversationIds;
-        chrome.storage.local.set({ conversationsOrder });
-      });
-    }
+  });
+  observer.observe(folderContent, { childList: true, subtree: true });
+
+  if (folder.conversationIds.length > 0) {
+    folder.conversationIds.forEach((conversationId) => {
+      if (typeof conversationId === 'string') {
+        const conversation = conversations[conversationId];
+        if (conversation) {
+          const conversationElement = createConversation(conversation);
+          folderContent.appendChild(conversationElement);
+        }
+      }
+    });
   } else {
     folderContent.appendChild(emptyFolderElement(folderId));
   }
 
   // action icons
-  folderElement.appendChild(folderActions(folderId));
+  const allSelectedCheckbox = document.querySelectorAll('[id^="conversation-button"] input[type="checkbox"]:checked');
+  if (allSelectedCheckbox?.length > 0 && folderId !== 'trash') {
+    folderElement.appendChild(addToFolderAction(folderId));
+  } else {
+    folderElement.appendChild(defaultFolderActions(folderId));
+  }
 
   // add checkbox
   // addCheckboxToConversationElement(conversationElement, conversation);
+  const isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+  // eslint-disable-next-line no-unused-vars
   const sortable = Sortable.create(folderContent, {
-    draggable: '[id^="conversation-button-"]:not(:has([id^=conversation-rename-]))',
+    draggable: isFirefox ? '[id^="conversation-button-"]' : '[id^="conversation-button-"]:not(:has([id^=conversation-rename-]))',
     direction: 'vertical',
     invertSwap: true,
     disabled: false,
@@ -107,7 +129,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
     // handle: '[id^="checkbox-wrapper-"], [id^="conversation-button-"]',
     group: {
       name: folderId,
-      // eslint-disable-next-line func-names, object-shorthand
+      // eslint-disable-next-line func-names, object-shorthand, no-unused-vars
       pull: function (to, from, dragged) {
         return from.el.id !== 'folder-content-trash';
       },
@@ -118,7 +140,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
     },
     onEnd: (event) => {
       const {
-        item, to, from, oldIndex, newIndex, oldDraggableIndex, newDraggableIndex,
+        item, to, from, newIndex, oldDraggableIndex, newDraggableIndex,
       } = event;
       const itemId = item.id.split('conversation-button-')[1];
       const isFolder = item.id.startsWith('wrapper-folder-');
@@ -129,7 +151,7 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
 
       chrome.storage.local.get(['conversationsOrder'], (result) => {
         const { conversationsOrder } = result;
-        const fromFolderIndex = conversationsOrder.findIndex((c) => c.id === fromId);
+        const fromFolderIndex = conversationsOrder.findIndex((c) => c?.id === fromId);
         const fromFolder = conversationsOrder[fromFolderIndex];
         fromFolder.conversationIds.splice(oldDraggableIndex, 1);
         if (fromFolder.conversationIds.length === 0) {
@@ -138,18 +160,23 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
         if (isToFolder) {
           const curEmptyFolder = document.querySelector(`#empty-folder-${toId}`);
           if (curEmptyFolder) curEmptyFolder.remove();
-          const toFolderIndex = conversationsOrder.findIndex((c) => c.id === toId);
+          const toFolderIndex = conversationsOrder.findIndex((c) => c?.id === toId);
           const toFolder = conversationsOrder[toFolderIndex];
           toFolder.conversationIds.splice(newDraggableIndex, 0, itemId);
           conversationsOrder.splice(toFolderIndex, 1, toFolder);
           if (!isFolder && toId === 'trash' && fromId !== 'trash') {
             deleteConversationOnDragToTrash(itemId);
           }
+          chrome.storage.local.set({ conversationsOrder });
         } else {
           conversationsOrder.splice(newIndex - 1, 0, itemId); // if adding to conversation list use index-1(for search box)
+          chrome.storage.local.set({ conversationsOrder }, () => {
+            const folderCount = Array.from(document.querySelectorAll('#conversation-list > [id^=wrapper-folder-]:not(#wrapper-folder-trash)')).length;
+            if (newIndex <= folderCount) {
+              toggleKeepFoldersAtTheTop(true);
+            }
+          });
         }
-
-        chrome.storage.local.set({ conversationsOrder });
       });
     },
   });
@@ -157,7 +184,12 @@ function createFolder(folder, conversationTimestamp, conversations = [], isNewFo
   folderElementWrapper.appendChild(folderContent);
   if (isNewFolder) {
     const editFolderNameButton = folderElementWrapper.querySelector(`#edit-folder-name-${folderId}`);
-    editFolderNameButton.click();
+    editFolderNameButton?.click();
+    // select the text
+    setTimeout(() => {
+      const textInput = document.querySelector(`#rename-folder-${folderId}`);
+      textInput.select();
+    }, 50);
   }
   return folderElementWrapper;
 }
@@ -171,8 +203,15 @@ function emptyFolderElement(folderId) {
   return emptyFolder;
 }
 function folderActions(folderId) {
+  const allSelectedCheckbox = document.querySelectorAll('[id^="conversation-button"] input[type="checkbox"]:checked');
+  if (allSelectedCheckbox?.length > 0) {
+    return addToFolderAction(folderId);
+  }
+  return defaultFolderActions(folderId);
+}
+function defaultFolderActions(folderId) {
   const actionsWrapper = document.createElement('div');
-  actionsWrapper.id = `actions-wrapper-${folderId}`;
+  actionsWrapper.id = `folder-actions-wrapper-${folderId}`;
   actionsWrapper.classList = 'absolute flex right-1 z-10 text-gray-300 invisible group-hover:visible';
   const changeColorButton = document.createElement('button');
   changeColorButton.id = `change-color-${folderId}`;
@@ -183,7 +222,7 @@ function folderActions(folderId) {
     event.stopPropagation();
     chrome.storage.local.get(['conversationsOrder'], (result) => {
       const { conversationsOrder } = result;
-      actionsWrapper.replaceWith(colorPicker(conversationsOrder.find((conv) => conv.id === folderId)));
+      actionsWrapper.replaceWith(colorPicker(conversationsOrder.find((conv) => conv?.id === folderId)));
       const colorPickerElement = document.getElementById(`color-picker-${folderId}`);
       colorPickerElement.focus();
     });
@@ -196,23 +235,25 @@ function folderActions(folderId) {
   editFolderNameButton.addEventListener('click', (event) => {
     event.preventDefault();
     event.stopPropagation();
-    chrome.storage.local.get(['conversationsOrder'], (result) => {
-      const { conversationsOrder } = result;
+    chrome.storage.local.get(['conversationsOrder', 'settings'], (result) => {
+      const { conversationsOrder, settings } = result;
       const textInput = document.createElement('input');
       const folderTitle = document.querySelector(`#title-folder-${folderId}`);
       textInput.id = `rename-folder-${folderId}`;
-      textInput.classList = 'border-0 bg-transparent p-0 focus:ring-0 focus-visible:ring-0';
-      textInput.style = 'max-width:140px;';
-      textInput.value = conversationsOrder.find((conv) => conv.id === folderId).name;
+      textInput.classList = 'border-0 bg-transparent p-0 focus:ring-0 focus-visible:ring-0 relative';
+      textInput.style = `max-width:140px;bottom:${settings.showFolderCounts ? '5px' : '0px'};`;
+      textInput.value = conversationsOrder.find((conv) => conv?.id === folderId).name;
       folderTitle.parentElement.replaceChild(textInput, folderTitle);
-      textInput.focus();
+      setTimeout(() => {
+        textInput.select();
+      }, 50);
       textInput.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         textInput.focus();
       });
       // replace action buttons with save and cancel buttons
-      actionsWrapper.replaceWith(folderConfirmActions(conversationsOrder.find((conv) => conv.id === folderId), 'edit'));
+      actionsWrapper.replaceWith(folderConfirmActions(conversationsOrder.find((conv) => conv?.id === folderId), 'edit'));
     });
   });
   const deleteFolderButton = document.createElement('button');
@@ -221,10 +262,7 @@ function folderActions(folderId) {
   deleteFolderButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    chrome.storage.local.get(['conversationsOrder'], (result) => {
-      const { conversationsOrder } = result;
-      actionsWrapper.replaceWith(folderConfirmActions(conversationsOrder.find((conv) => conv.id === folderId), 'delete'));
-    });
+    deleteFolder(folderId);
     // remove all other visible cancel buttons
     // get all cancel buttons with last part of id not equal to this conversation id and click on them
     const cancelButtons = document.querySelectorAll(`button[id^="cancel-"]:not(#cancel-${folderId})`);
@@ -239,12 +277,124 @@ function folderActions(folderId) {
   actionsWrapper.appendChild(deleteFolderButton);
   return actionsWrapper;
 }
+function addToFolderAction(folderId) {
+  const actionsWrapper = document.createElement('div');
+  actionsWrapper.id = `folder-actions-wrapper-${folderId}`;
+  actionsWrapper.classList = 'absolute flex right-1 z-10 text-gray-300';
+  const moveToFolderButton = document.createElement('button');
+  moveToFolderButton.id = `move-to-folder-${folderId}`;
+  moveToFolderButton.classList = 'p-1 hover:text-white';
+  moveToFolderButton.title = 'Move to folder';
+  moveToFolderButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="currentColor" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" stroke-width="2" viewBox="0 0 512 512"><path d="M464 96h-192l-64-64h-160C21.5 32 0 53.5 0 80v352C0 458.5 21.5 480 48 480h416c26.5 0 48-21.5 48-48v-288C512 117.5 490.5 96 464 96zM336 311.1h-56v56C279.1 381.3 269.3 392 256 392c-13.27 0-23.1-10.74-23.1-23.1V311.1H175.1C162.7 311.1 152 301.3 152 288c0-13.26 10.74-23.1 23.1-23.1h56V207.1C232 194.7 242.7 184 256 184s23.1 10.74 23.1 23.1V264h56C349.3 264 360 274.7 360 288S349.3 311.1 336 311.1z"/></svg>';
+  moveToFolderButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    // if shift click
+    if (event.shiftKey) { // remove from folder
+      const sourceFolderId = folderId;
+      // get all the selected conversations inside the folder and move them out of the folder
+      chrome.storage.local.get(['selectedConversations', 'conversationsOrder'], (result) => {
+        const { selectedConversations, conversationsOrder } = result;
+        const sourceFolder = conversationsOrder.find((f) => f.id === sourceFolderId);
+        const selectedConversationsIds = selectedConversations.map((c) => c?.id);
+        const selectedConversationsIdsInSourceFolder = selectedConversationsIds.filter((id) => sourceFolder.conversationIds.includes(id));
+        if (selectedConversationsIdsInSourceFolder.length === 0) return;
+        const folderCount = Array.from(document.querySelectorAll('#conversation-list > [id^=wrapper-folder-]:not(#wrapper-folder-trash)')).length;
+        // remove selected conversations from source folder
+        for (let i = 0; i < selectedConversationsIdsInSourceFolder.length; i += 1) {
+          const conversationIndex = sourceFolder.conversationIds.findIndex((c) => c === selectedConversationsIdsInSourceFolder[i]);
+          // remove from source folder
+          sourceFolder.conversationIds.splice(conversationIndex, 1);
+          // add to conversationsOrder
+          conversationsOrder.splice(folderCount, 0, selectedConversationsIdsInSourceFolder[i]);
+          // move the conversation element out of the folder
+          const conversationElement = document.querySelector(`#conversation-button-${selectedConversationsIdsInSourceFolder[i]}`);
+          // add conversation element to conversation list at index folderCount+1(searchbox)
+          const conversationList = document.querySelector('#conversation-list');
+          conversationList.insertBefore(conversationElement, conversationList.children[folderCount + 1]);
+        }
+        // update conversationsOrder with updated source folder
+        const sourceFolderIndex = conversationsOrder.findIndex((f) => f.id === sourceFolder.id);
+        conversationsOrder.splice(sourceFolderIndex, 1, sourceFolder);
+
+        // if source folder is empty now, add empty folder element
+        if (sourceFolder.conversationIds.length === 0) {
+          const sourceFolderContent = document.querySelector(`#folder-content-${sourceFolder.id}`);
+          sourceFolderContent.appendChild(emptyFolderElement(sourceFolder.id));
+        }
+        chrome.storage.local.set({ conversationsOrder, selectedConversations: [] }, () => {
+          showDefaultFolderActions();
+          resetSelection();
+        });
+      });
+    } else { // add to folder
+      const targetFolderId = folderId;
+      chrome.storage.local.get(['selectedConversations', 'conversationsOrder'], (result) => {
+        const { selectedConversations, conversationsOrder } = result;
+        const targetFolderIndex = conversationsOrder.findIndex((f) => f.id === targetFolderId);
+        const targetFolder = conversationsOrder[targetFolderIndex];
+        // if target folder is empty now, remove empty folder element
+        if (targetFolder.conversationIds.length === 0) {
+          const emptyFolder = document.querySelector(`#empty-folder-${targetFolderId}`);
+          if (emptyFolder) emptyFolder.remove();
+        }
+        const selectedConversationsIds = selectedConversations.map((c) => c?.id);
+        // remove selected conversations from conversationsOrder
+        for (let i = 0; i < selectedConversationsIds.length; i += 1) {
+          const conversationIndex = conversationsOrder.findIndex((c) => c === selectedConversationsIds[i]);
+          if (conversationIndex !== -1) {
+            // remove id from conversationsOrder
+            conversationsOrder.splice(conversationIndex, 1);
+            // move element to folder
+            const conversationElement = document.querySelector(`#conversation-button-${selectedConversationsIds[i]}`);
+            const targetFolderContentElement = document.querySelector(`#folder-content-${targetFolderId}`);
+            targetFolderContentElement.appendChild(conversationElement);
+          } else {
+            // look inside folders
+            const sourceFolder = conversationsOrder.find((f) => f.conversationIds.includes(selectedConversationsIds[i]));
+            if (sourceFolder) {
+              // remove id from source folder
+              const sourceFolderConversationIndex = sourceFolder.conversationIds.findIndex((c) => c === selectedConversationsIds[i]);
+              const sourceFolderIndex = conversationsOrder.findIndex((f) => f.id === sourceFolder.id);
+              sourceFolder.conversationIds.splice(sourceFolderConversationIndex, 1);
+              // update conversationsOrder with updated source folder
+              conversationsOrder.splice(sourceFolderIndex, 1, sourceFolder);
+              // move element to target folder
+              const conversationElement = document.querySelector(`#conversation-button-${selectedConversationsIds[i]}`);
+              const targetFolderContent = document.querySelector(`#folder-content-${targetFolderId}`);
+              targetFolderContent.appendChild(conversationElement);
+              // if source folder is empty now, add empty folder element
+              if (sourceFolder.conversationIds.length === 0) {
+                const folderContent = document.querySelector(`#folder-content-${sourceFolder.id}`);
+                folderContent.appendChild(emptyFolderElement(sourceFolder.id));
+              }
+            }
+          }
+        }
+        // add all selected conversations to folder
+        const newConversationIds = targetFolder.conversationIds.concat(selectedConversationsIds);
+        conversationsOrder.splice(targetFolderIndex, 1, { ...targetFolder, conversationIds: newConversationIds });
+        if (newConversationIds.length > 0) {
+          const emptyFolder = document.querySelector(`#empty-folder-${targetFolderId}`);
+          if (emptyFolder) emptyFolder.remove();
+        }
+
+        chrome.storage.local.set({ conversationsOrder, selectedConversations: [] }, () => {
+          showDefaultFolderActions();
+          resetSelection();
+        });
+      });
+    }
+  });
+  actionsWrapper.appendChild(moveToFolderButton);
+  return actionsWrapper;
+}
 function colorPicker(folder) {
   const folderElement = document.querySelector(`#folder-${folder.id}`);
   folderElement.classList.replace('pr-3', 'pr-20');
   folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
   const colorPickerElement = document.createElement('div');
-  colorPickerElement.id = `actions-wrapper-${folder.id}`;
+  colorPickerElement.id = `folder-actions-wrapper-${folder.id}`;
   colorPickerElement.tabIndex = 0;
   colorPickerElement.contentEditable = true;
   colorPickerElement.classList = 'absolute flex right-1 z-10 cursor-pointer flex items-center';
@@ -272,22 +422,21 @@ function colorPicker(folder) {
   colorPickerElement.firstChild.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    chrome.storage.local.get(['conversationsOrder'], (result) => {
-      const { conversationsOrder } = result;
+    chrome.storage.local.get(['conversationsOrder', 'settings'], (result) => {
+      const { conversationsOrder, settings } = result;
       const curFolderElement = document.querySelector(`#folder-${folder.id}`);
       const folderContentElement = document.querySelector(`#folder-content-${folder.id}`);
       const folderIndex = conversationsOrder.findIndex((f) => f.id === folder.id);
-      conversationsOrder[folderIndex].color = undefined;
-      chrome.storage.local.set({ conversationsOrder }, () => {
-        curFolderElement.style.backgroundColor = 'transparent';
-        folderContentElement.style.borderColor = '#8e8ea0';
-      });
+      const darkColor = settings.autoColorFolders ? generateRandomDarkColor() : '#40414f';
+      conversationsOrder[folderIndex].color = darkColor;
+      curFolderElement.style.backgroundColor = darkColor;
+      folderContentElement.style.borderColor = darkColor;
+      chrome.storage.local.set({ conversationsOrder });
     });
   });
   colorPickerElement.addEventListener('focusout', (e) => {
     if (colorPickerElement.contains(e.relatedTarget)) return;
     const curFolderElement = document.querySelector(`#folder-${folder.id}`);
-    const folderContentElement = document.querySelector(`#folder-content-${folder.id}`);
     colorPickerElement.replaceWith(folderActions(folder.id));
     curFolderElement.classList.replace('pr-20', 'pr-3');
     folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
@@ -301,7 +450,7 @@ function folderConfirmActions(folder, action) {
   folderElement.classList.replace('pr-3', 'pr-20');
   folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
   const actionsWrapper = document.createElement('div');
-  actionsWrapper.id = `actions-wrapper-${folder.id}`;
+  actionsWrapper.id = `folder-actions-wrapper-${folder.id}`;
   actionsWrapper.classList = 'absolute flex right-1 z-10 text-gray-300';
   const confirmButton = document.createElement('button');
   confirmButton.id = `confirm-${folder.id}`;
@@ -311,29 +460,22 @@ function folderConfirmActions(folder, action) {
     e.preventDefault();
     e.stopPropagation();
     if (action === 'edit') {
-      const textInput = document.querySelector(`#rename-folder-${folder.id}`);
-      const folderTitle = document.createElement('div');
-      folderTitle.id = `title-folder-${folder.id}`;
-      folderTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative  text-white';
-      folderTitle.innerText = textInput.value;
-      textInput.parentElement.replaceChild(folderTitle, textInput);
-      actionsWrapper.replaceWith(folderActions(folder.id));
-      skipBlur = false;
-
-      chrome.storage.local.get(['conversationsOrder'], (result) => {
-        const { conversationsOrder } = result;
+      chrome.storage.local.get(['conversationsOrder', 'settings'], (result) => {
+        const { conversationsOrder, settings } = result;
+        const textInput = document.querySelector(`#rename-folder-${folder.id}`);
+        const folderTitle = document.createElement('div');
+        folderTitle.id = `title-folder-${folder.id}`;
+        folderTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden whitespace-nowrap break-all relative text-white relative';
+        folderTitle.style.bottom = settings.showFolderCounts ? '5px' : '0px';
+        folderTitle.innerText = textInput.value;
+        textInput.parentElement.replaceChild(folderTitle, textInput);
+        actionsWrapper.replaceWith(folderActions(folder.id));
+        skipBlur = false;
         conversationsOrder.find((f) => f.id === folder.id).name = textInput.value;
         chrome.storage.local.set({ conversationsOrder });
+        folderElement.classList.replace('pr-20', 'pr-3');
+        folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
       });
-      folderElement.classList.replace('pr-20', 'pr-3');
-      folderElement.classList.replace('hover:pr-20', 'hover:pr-20');
-    } else if (action === 'delete') {
-      if (folder.id === 'trash') {
-        emptyTrash();
-        actionsWrapper.replaceWith(folderActions(folder.id));
-      } else {
-        deleteFolder(folder);
-      }
     }
   });
   const cancelButton = document.createElement('button');
@@ -344,12 +486,16 @@ function folderConfirmActions(folder, action) {
     e.preventDefault();
     e.stopPropagation();
     if (action === 'edit') {
-      const textInput = document.querySelector(`#rename-folder-${folder.id}`);
-      const folderTitle = document.createElement('div');
-      folderTitle.id = `title-folder-${folder.id}`;
-      folderTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden break-all relative';
-      folderTitle.innerText = folder.name;
-      textInput.parentElement.replaceChild(folderTitle, textInput);
+      chrome.storage.local.get(['settings'], (result) => {
+        const { settings } = result;
+        const textInput = document.querySelector(`#rename-folder-${folder.id}`);
+        const folderTitle = document.createElement('div');
+        folderTitle.id = `title-folder-${folder.id}`;
+        folderTitle.classList = 'flex-1 text-ellipsis max-h-5 overflow-hidden whitespace-nowrap break-all relative';
+        folderTitle.innerText = folder.name;
+        folderTitle.style.bottom = settings.showFolderCounts ? '5px' : '0px';
+        textInput.parentElement.replaceChild(folderTitle, textInput);
+      });
     }
     actionsWrapper.replaceWith(folderActions(folder.id));
     folderElement.classList.replace('pr-20', 'pr-3');
@@ -414,7 +560,23 @@ function emptyTrash() {
     });
   });
 }
-function deleteFolder(folder) {
+function deleteFolder(folderId) {
+  chrome.storage.local.get(['conversationsOrder'], (result) => {
+    const { conversationsOrder } = result;
+    const folder = conversationsOrder.find((conv) => conv?.id === folderId);
+    showActionConfirm('Delete Folder', 'Are you sure you want to delete this folder? All conversations inside the folder will be deleted too.', 'Delete Folder', cancelDeleteFolder, () => confirmDeleteFolder(folder));
+  });
+}
+function cancelDeleteFolder() {
+  chrome.storage.local.set({
+    selectedConversations: [],
+  });
+}
+function confirmDeleteFolder(folder) {
+  if (folder.id === 'trash') {
+    emptyTrash();
+    return;
+  }
   chrome.storage.local.get(['conversations', 'conversationsOrder'], (result) => {
     const { conversations, conversationsOrder } = result;
     let newConversationsOrder = conversationsOrder;
@@ -427,7 +589,7 @@ function deleteFolder(folder) {
     const promises = [];
 
     for (let i = 0; i < selectedConversationIds.length; i += 1) {
-      const conv = Object.values(conversations).find((c) => c.id === selectedConversationIds[i]);
+      const conv = conversations[selectedConversationIds[i]];
       if (!conv) continue;
       promises.push(deleteConversation(conv.id).then((data) => {
         if (data.success) {

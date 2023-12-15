@@ -230,6 +230,22 @@ function renderPluginList(plugins) {
     >
       ${plugin.manifest.description_for_human}
     </div>
+    <div class="h-[14px] text-xs text-black/60 dark:text-white/60">
+    <div class="flex items-center gap-1.5">Developer info<a href="${plugin.manifest.legal_info_url}" target="_blank"
+        rel="noreferrer"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+          stroke-linecap="round" stroke-linejoin="round" class="icon-xs" height="1em" width="1em"
+          xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="2" y1="12" x2="22" y2="12"></line>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+          </path>
+        </svg></a><a href="mailto:${plugin.manifest.contact_email}"><svg stroke="currentColor" fill="none" stroke-width="2"
+          viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-xs" height="1em"
+          width="1em" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg></a></div>
+  </div>
   </div>`).join('')}`;
 }
 function renderPageNumbers(plugins) {
@@ -331,7 +347,7 @@ function addPluginStoreEventListener(plugins) {
         const pluginStorePaginationWrapper = document.getElementById('plugin-store-pagination-wrapper');
         let filteredPlugins = allPlugins;
         if (filterType === 'popular') {
-          filteredPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c.id).includes('most_popular'));
+          filteredPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c?.id).includes('most_popular'));
           if (searchValue.trim() !== '') {
             filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
           }
@@ -340,7 +356,7 @@ function addPluginStoreEventListener(plugins) {
           addInstallButtonEventListener(filteredPlugins);
           addPaginationEventListener(filteredPlugins);
         } else if (filterType === 'new') {
-          filteredPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c.id).includes('newly_added'));
+          filteredPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c?.id).includes('newly_added'));
           if (searchValue.trim() !== '') {
             filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
           }

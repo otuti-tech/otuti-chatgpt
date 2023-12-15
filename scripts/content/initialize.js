@@ -1,57 +1,77 @@
-/* global navigation, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, addExpandButton, openLinksInNewTab, initializeKeyboardShortcuts, addArkoseCallback, addQuickAccessMenuEventListener, upgradeCustomInstructions, addAutoSyncToggleButton, addSounds */
-
+/* global navigation, initializeStorage, initializeSidebar, initializeInput, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, openLinksInNewTab, initializeKeyboardShortcuts, addQuickAccessMenuEventListener, upgradeCustomInstructions, addAutoSyncToggleButton, addSounds, initializeAutoRefreshAccount, observeOriginalExplore, removeGrammerly */
+// let initialized = false;
+function observeNav() {
+  // wathc document and once it has nav and nav has 3 childnodes initialize
+  // const bodyObserverCallback = function (mutationsList, observer) {
+  //   mutationsList.forEach((mutation) => {
+  //     if (mutation.type === 'childList') {
+  //       if (document.querySelector('nav')?.childNodes.length === 3 && !initialized) {
+  //         initialized = true;
+  //         observer.disconnect();
+  //         initialize();
+  //       }
+  //     }
+  //   });
+  // };
+  const mainObserverCallback = function (mutationsList, observer) {
+    mutationsList.forEach((mutation) => {
+      if (mutation.type === 'childList') {
+        if (document.querySelector('grammarly-extension')) {
+          removeGrammerly();
+        }
+      }
+    });
+  };
+  const targetNode = document.querySelector('body');
+  const config = { childList: true };
+  // const bodyObserver = new MutationObserver(bodyObserverCallback);
+  // bodyObserver.observe(targetNode, config);
+  const mainObserver = new MutationObserver(mainObserverCallback);
+  mainObserver.observe(targetNode, config);
+}
 // eslint-disable-next-line no-unused-vars
 function initialize() {
-  const historyButton = document.querySelector('a[id="my-prompt-history-button"]');
-  if (window.location.pathname.startsWith('/share/') && !window.location.pathname.endsWith('/continue')) return;
-
-  if (!historyButton) {
+  observeOriginalExplore();
+  initializeStorage().then(() => {
     setTimeout(() => {
-      initializeStorage().then(() => {
-        // watchError();
-        openLinksInNewTab();
-        addNavToggleButton();
-        addQuickAccessMenuEventListener();
-        cleanNav();
-        upgradeCustomInstructions();
-        initializeExport();
-        initializeContinue();
-        initializeNewsletter();
-        initializeSettings();
-        initializeAnnouncement();
-        initializeReleaseNote();
-        initializePromptLibrary();
-        initializePromptHistory();
-        addExpandButton();
-        addDevIndicator();
-        initializeKeyboardShortcuts();
-        addSounds();
-        // showAutoSyncToast();
-        setTimeout(() => {
-          chrome.storage.local.get(['settings'], (result) => {
-            const { settings } = result;
-            if ((typeof settings?.autoSync === 'undefined' || settings?.autoSync) && !window.location.pathname.startsWith('/share/')) {
-              // if (typeof settings?.autoSync === 'undefined' || settings?.autoSync) {
-              initializeAutoSave();
-              addArkoseCallback();
-            } else {
-              addAutoSyncToggleButton();
-              initializeCopyAndCounter();
-              initializeAddToPromptLibrary();
-              initializeTimestamp();
-              updateNewChatButtonNotSynced();
-              addAsyncInputEvents();
-              navigation.addEventListener('navigate', () => {
-                setTimeout(() => {
-                  addAsyncInputEvents();
-                }, 500);
-              });
-            }
-            initializeReplaceDeleteConversationButton();
-          });
+      initializeSettings();
+      initializeAutoRefreshAccount();
+      initializeSidebar();
+      initializeInput();
+      openLinksInNewTab();
+      addQuickAccessMenuEventListener();
+      upgradeCustomInstructions();
+      initializeExport();
+      initializeContinue();
+      initializeNewsletter();
+      initializeAnnouncement();
+      initializeReleaseNote();
+      initializePromptLibrary();
+      initializePromptHistory();
+      addDevIndicator();
+      initializeKeyboardShortcuts();
+      addSounds();
+      setTimeout(() => {
+        chrome.storage.local.get(['settings'], (result) => {
+          const { settings } = result;
+          if (typeof settings?.autoSync === 'undefined' || settings?.autoSync) {
+            initializeAutoSave();
+          } else {
+            addAutoSyncToggleButton();
+            initializeTimestamp();
+            updateNewChatButtonNotSynced();
+            addAsyncInputEvents();
+            navigation.addEventListener('navigate', () => {
+              setTimeout(() => {
+                addAsyncInputEvents();
+              }, 500);
+            });
+          }
+          removeGrammerly();
+          initializeReplaceDeleteConversationButton();
         });
-      }, 100);
+      });
     }, 100);
-  }
+  });
 }
-initialize();
+observeNav();

@@ -3,7 +3,7 @@
 function dropdown(title, options, selectedOption, side = 'right', forceDark = false) {
   let menuTitle = title.replace('-', ' ');
   if (menuTitle.startsWith('Library ')) menuTitle = menuTitle.replace('Library ', '');
-  return `<button id="${title.toLowerCase()}-selector-button" title="Change the ${title.toLowerCase()} of the ChatGPT response" class="relative w-full cursor-pointer rounded-md border ${forceDark ? 'bg-gray-800 border-white/20' : 'bg-white border-gray-300'} pt-1 pl-3 pr-10 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 dark:border-white/20 dark:bg-gray-800 sm:text-sm" type="button">
+  return `<button id="${title.toLowerCase()}-selector-button" class="relative w-full cursor-pointer rounded-md border ${forceDark ? 'bg-gray-800 border-white/20' : 'bg-white border-gray-300'} pt-1 pl-3 pr-10 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 dark:border-white/20 dark:bg-gray-800 sm:text-sm" type="button">
   <label class="block text-xs ${forceDark ? 'text-gray-500' : 'text-gray-700'} dark:text-gray-500">${menuTitle}</label>
   <span class="inline-flex w-full truncate font-semibold  ${forceDark ? 'text-gray-100' : 'text-gray-800'} dark:text-gray-100">
     <span class="flex h-6 items-center gap-1 truncate"><span id="selected-${title.toLowerCase()}-title">${selectedOption.name}</span>
@@ -31,7 +31,7 @@ function dropdown(title, options, selectedOption, side = 'right', forceDark = fa
 
 function addDropdownEventListener(title, options, callback = null, forceDark = false) {
   const optionSelectorButton = document.querySelector(`#${title.toLowerCase()}-selector-button`);
-  optionSelectorButton.addEventListener('click', () => {
+  optionSelectorButton?.addEventListener('click', () => {
     const optionListDropdown = document.querySelector(`#${title.toLowerCase()}-list-dropdown`);
     const cl = optionListDropdown.classList;
     if (cl.contains('block')) {

@@ -16,6 +16,10 @@ window.fetch = async function (...args) {
 
   const response = await originalFetch(...args);
 
+  if (response && url.includes('backend-api/prompt_library')) {
+    // do nothing
+    return '';
+  }
   if (response && url.includes('api/auth/session')) {
     const responseData = await response.clone().json();
 
@@ -26,6 +30,9 @@ window.fetch = async function (...args) {
       window.dispatchEvent(authReceivedEvent);
     }
   }
+  // if (response && url === 'https://chat.openai.com/backend-api/gizmos/discovery') {
+  //   return '';
+  // }
   if (response && url.includes('backend-api/accounts/check')) {
     const responseData = await response.clone().json();
     if (responseData.accounts) {
@@ -35,6 +42,16 @@ window.fetch = async function (...args) {
       window.dispatchEvent(accountReceivedEvent);
     }
   }
+  if (response && url.includes('backend-api/conversations?offset=0') && !url.includes('limit=100')) {
+    const responseData = await response.clone().json();
+    if (responseData.items) {
+      const historyLoadedReceivedEvent = new CustomEvent('historyLoadedReceived', {
+        detail: responseData,
+      });
+      window.dispatchEvent(historyLoadedReceivedEvent);
+    }
+  }
+
   if (response && url.includes('public-api/conversation_limit')) {
     const responseData = await response.clone().json();
     if (responseData.message_cap) {
@@ -44,6 +61,20 @@ window.fetch = async function (...args) {
       window.dispatchEvent(conversationLimitReceivedEvent);
     }
   }
+  if (response && url.includes('backend-api/gizmos/bootstrap')) {
+    const responseData = await response.clone().json();
+    const gizmosBootstrapReceivedEvent = new CustomEvent('gizmosBootstrapReceived', {
+      detail: responseData,
+    });
+    window.dispatchEvent(gizmosBootstrapReceivedEvent);
+  }
+  // if (response && url.includes('backend-api/gizmos/discovery')) {
+  //   const responseData = await response.clone().json();
+  //   const gizmoDiscoveryReceivedEvent = new CustomEvent('gizmoDiscoveryReceived', {
+  //     detail: responseData,
+  //   });
+  //   window.dispatchEvent(gizmoDiscoveryReceivedEvent);
+  // }
   if (response && url.includes('backend-api/models')) {
     const responseData = await response.clone().json();
     if (responseData.models) {
