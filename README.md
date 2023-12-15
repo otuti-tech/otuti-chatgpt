@@ -1,33 +1,45 @@
----
-title: Superpower ChatGPT ⚡️
-creation date: 2023-10-06-Friday 16:18
-modification date: 2023-11-02-Thursday 12:13
----
+<img width="100%" alt="Superpower ChatGPT" src="https://user-images.githubusercontent.com/574142/232174790-a91d7d76-ec48-40ef-97ce-76edaa52053a.png">
 
-A browser extension to add the missing features like
-**Folders**, **Search**, and **Community Prompts** to ChatGPT
+[link-chrome]: https://chrome.google.com/webstore/detail/superpower-chatgpt/amhmeenmapldpjdedekalnfifgnpfnkc "Chrome Web Store"
+[link-firefox]: https://addons.mozilla.org/en-US/firefox/addon/superpower-chatgpt "Firefox Addons"
 
-<!-- markdownlint-disable MD013-->
+<div align="center">
+<a href="https://www.buymeacoffee.com/ezii"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a pizza&emoji=🍕&slug=ezii&button_colour=FFDD00&font_colour=000000&font_family=Poppins&outline_colour=000000&coffee_colour=ffffff" /></a>
+</div>
 
-**Table of Contents:**
 
-- [Features](#features)
-	- [Chat Management for ChatGPT](#chat-management-for-chatgpt)
-	- [Prompt Management for ChatGPT](#prompt-management-for-chatgpt)
-	- [Language and Style for ChatGPT](#language-and-style-for-chatgpt)
-	- [Utilities for ChatGPT](#utilities-for-chatgpt)
-	- [Installation from source](#installation-from-source)
-		- [Chrome, Microsoft Edge, Brave, etc.](#chrome-microsoft-edge-brave-etc)
-		- [Firefox](#firefox)
-				- [For persistent installation](#for-persistent-installation)
-	- [FAQ](#faq)
-	- [Feature Requests, Bugs, and Support](#feature-requests-bugs-and-support)
-	- [Privacy](#privacy)
-	- [Copyright](#copyright)
+# Superpower ChatGPT ⚡️
 
-## Features
+A browser extension to add the missing features like **Folders**, **Search**, and **Community Prompts** to ChatGPT
 
-### Chat Management for ChatGPT
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/v/amhmeenmapldpjdedekalnfifgnpfnkc.svg)]([link-chrome])
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/users/amhmeenmapldpjdedekalnfifgnpfnkc.svg)]([link-chrome])
+[![Chrome Web Store](https://img.shields.io/chrome-web-store/rating/amhmeenmapldpjdedekalnfifgnpfnkc.svg)]([link-chrome])
+
+[![Mozilla Add-on](https://img.shields.io/amo/v/superpower-chatgpt.svg)]([link-firefox])
+[![Mozilla Add-on](https://img.shields.io/amo/users/superpower-chatgpt.svg)]([link-firefox])
+[![Mozilla Add-on](https://img.shields.io/amo/rating/superpower-chatgpt.svg)]([link-firefox])
+
+
+[![Twitter Follow](https://img.shields.io/twitter/follow/eeeziii?label=follow%20me&style=social)](https://twitter.com/intent/user?screen_name=eeeziii)
+
+#### To **report a bug** or make a **feature request** please join our Discord
+
+[![Discord](https://img.shields.io/discord/1060110102188797992?color=green&label=Discord&logo=discord)](https://discord.gg/superpower-chatgpt-1083455984489476220) 
+
+#### Please get the latest and most up to date version of the extension with all the new features from below links
+<div align="center">
+
+[<img src="https://user-images.githubusercontent.com/574142/232173820-eea32262-2b0f-4ec6-8a38-b1c872981d75.png" height="67" alt="Chrome" valign="middle">][link-chrome]
+[<img src="https://user-images.githubusercontent.com/574142/232173822-af2e660f-11df-4d6c-a71b-0e92e9be543f.png" height="67" alt="Firefox" valign="middle">][link-firefox]
+
+</div>
+
+https://user-images.githubusercontent.com/574142/232172841-50f1b114-ef47-4533-a6e6-fd630e7b30a2.mov
+
+# Features
+
+## Chat Management for ChatGPT
 
 🗂 Folders and reordering for your chats: Create folders easily and organize your chats in folders. Assign a different color to each folder. Drag and drop files to reorder them or add/remove them to folders. Drop a file in the Trash to automatically delete it.
 
@@ -51,7 +63,7 @@ A browser extension to add the missing features like
 
 🕵️‍♀️ Incognito Mode: Chat with History Off and continue it later
 
-### Prompt Management for ChatGPT
+## Prompt Management for ChatGPT
 
 ⛓️ Prompt Chains: Save a series of prompts as a prompt chain. Then run each prompt in the prompt chain one by one with a single click
 
@@ -73,13 +85,13 @@ A browser extension to add the missing features like
 
 🔗 Prompt Sharing: Easily share a direct link to the community prompt with a single click
 
-### Language and Style for ChatGPT
+## Language and Style for ChatGPT
 
 🌍 Language Selection: Change ChatGPT response language with one click (Supports over 190 different languages)
 
 🎭 Tone and Style: Change the Tone and the Writing style of ChatGPT Response
 
-### Utilities for ChatGPT
+## Utilities for ChatGPT
 
 👥 Custom Instruction Profiles: Easily create and save multiple custom instruction profiles and quickly access them with a click of a button
 
@@ -89,11 +101,11 @@ A browser extension to add the missing features like
 
 📏 Custom Conversation Width: Adjust the width of the conversation to your liking
 
-🔄 Smart Replace: Automatically replace pre-defined phrases with longer text as you type prompts
+🔄  Smart Replace: Automatically replace pre-defined phrases with longer text as you type prompts
 
 🖱️ Auto Click: Automatically click on the default custom prompt button at the end of each response
 
-👉 Custom Instruction: Don't repeat yourself. Automatically add a custom instruction to the end of each prompt
+👉 Custom Instruction: Don't repeat yourself. Automatically  add a custom instruction to the end of each prompt
 
 📊 Word and Character Count: Add the word and character counters to both the user input and the ChatGPT responses
 
@@ -113,11 +125,27 @@ A browser extension to add the missing features like
 
 🆕 GPT4 Support: Support GPT4 and shows the number GPT4 requests made based on latest limit from OpenAI
 
+## Newsletter inside ChatGPT
+
+📰 AI Newsletter: Read our popular daily AI newsletter right inside ChatGPT
+
+🗄️ Newsletter Archive: Access the newsletter archive and read all the previous versions
+
 ---
 
-### Installation from source
+## Superpower Daily Newsletter
 
-#### Chrome, Microsoft Edge, Brave, etc.
+We have a popular newsletter that covers the latest AI news, research, and products. There are two ways to read the newsletter:
+
+1. You can read the newsletter right inside ChatGPT. You can also access the newsletter archive and read all the previous versions.
+
+2. You can read the newsletter, see the full archive, and share it with your friends all from our website: https://superpowerdaily.com
+
+---
+
+## Installation from source
+
+### Chrome, Microsoft Edge, Brave, etc.
 
 1. Clone the repository: `git clone https://github.com/USERNAME/EXTENSION-NAME.git`
 2. Open Chrome and go to `chrome://extensions/` (`edge://extensions` in Microsoft Edge.)
@@ -125,7 +153,7 @@ A browser extension to add the missing features like
 4. Click on the "Load unpacked" button in the upper-left corner
 5. Select the cloned repository folder
 
-#### Firefox
+### Firefox
 
 1. Clone or download the extension's source code from GitHub.
 2. Extract the downloaded ZIP file to a local folder.
@@ -133,7 +161,7 @@ A browser extension to add the missing features like
 
 ```
 "background": {
-	"service_worker": "src/background/background.js"
+	"service_worker": "scripts/background/background.js"
 },
 ```
 
@@ -148,8 +176,7 @@ with
 
 "background": {
 	"scripts": [
-		"src/background/initialize.js",
-		"src/background/login.js"
+		"scripts/background/initialize.js"
 	]
 },
 ```
@@ -158,7 +185,7 @@ with
 4. Click `This Firefox` in the left sidebar, then click the `Load Temporary Add-on` button.
 5. Navigate to the local folder where you extracted the extension's source code, and select the `manifest.json` file.
 
-###### For persistent installation
+#### For persistent installation
 
 1. Open Firefox, go to `about:config` and set `xpinstall.signatures.required` to `false`.
 2. Go to `about:addons`
@@ -167,25 +194,41 @@ with
 5. Firefox will prompt you to confirm the installation of the addon. Click Install.
 6. The addon will be installed and will appear in the list of installed addons on the Add-ons page.
 
-### FAQ
+## Star History
+
+<a href="https://star-history.com/#saeedezzati/superpower-chatgpt&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=saeedezzati/superpower-chatgpt&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=saeedezzati/superpower-chatgpt&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=saeedezzati/superpower-chatgpt&type=Date" />
+  </picture>
+</a>
+
+
+## FAQ
 
 Read our [FAQ document](https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24) for more information about Superpower ChatGPT
 
-### Feature Requests, Bugs, and Support
+## Feature Requests, Bugs, and Support
 
 Join our [Discord channel](https://discord.gg/superpower-chatgpt-1083455984489476220) to stay up to date, submit feature requests, report bugs, and get faster support
 
-### Privacy
+## Privacy
 
-The only data from the users that are saved on the server are the public prompt shared by the community. The user name and email are also saved.
+The only data from the users that are saved on the server are the public prompt shared by the community. The user name and email are also saved. By using this extension, you agree to join our daily AI newsletter. You can opt out of the newsletter at any time. You can see the newsletter here (https://www.superpowerdaily.com/) before you agree to this. Everything else, including your prompt history, your conversation history, etc., is saved locally on your computer, and you have full control over it. The Auto Sync feature basically download a copy of all your conversation on your own computer to allow more features, such as searching conversations. This extension does not save any of your conversations on our database, and I have no visibility into your conversations history.
 
-By using this extension, you agree to join our daily AI newsletter. You can opt out of the newsletter at any time. You can see the newsletter here (<https://www.superpowerdaily.com/>) before you agree to this.
+## How can I support the development of Superpower ChatGPT?
 
-Everything else, including your prompt history, your conversation history, etc., is saved locally on your computer, and you have full control over it.
+I appreciate your interest in supporting this extension. Here are some ways you can support the development of Superpower ChatGPT.
 
-The Auto Sync feature basically download a copy of all your conversation on your own computer to allow more features, such as searching conversations. This extension does not save any of your conversations on our database, and I have no visibility into your conversations history.
+[![Donate with PayPal](https://img.shields.io/badge/paypal-donate-yellow.svg)](https://www.paypal.com/donate/?business=TAF9NBUWQQQ7J&no_recurring=0&item_name=Thank+you+for+supporting+Superpower+ChatGPT+%F0%9F%99%87%F0%9F%8F%BB%E2%80%8D%E2%99%82%EF%B8%8F&currency_code=USD)
+[![Donate with Stripe](https://img.shields.io/badge/stripe-donate-blue.svg)](https://buy.stripe.com/6oE6s0dQS7y2bjG9AA)
 
-### Copyright
+[![visitors](https://visitor-badge.glitch.me/badge?page_id=saeedezzati/superpower-chatgpt)](https://visitor-badge.glitch.me)
+[![Discord](https://img.shields.io/discord/1060110102188797992?color=green&label=Discord&logo=discord)](https://discord.gg/superpower-chatgpt-1083455984489476220)
+[![Twitter Follow](https://img.shields.io/twitter/follow/eeeziii?label=follow%20me&style=social)](https://twitter.com/intent/user?screen_name=eeeziii)
+
+## Copyright
 
 Superpower ChatGPT
 
