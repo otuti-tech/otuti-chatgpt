@@ -17,8 +17,6 @@ let disableTextInput = false;// to prevent input from showing extra line right b
 let chatStreamIsClosed = false; // to force close the chat stream
 // eslint-disable-next-line prefer-const
 let shiftKeyPressed = false;
-// eslint-disable-next-line prefer-const
-let textAreaElementOldValue = '';
 // chrome.storage.local.get(['environment'], (result) => {
 //   if (result.environment === 'development') {
 //     chrome.storage.onChanged.addListener((changes, namespace) => {
@@ -58,83 +56,39 @@ function initializeStorage() {
   //   const allKeys = Object.keys(items);
   //   console.log('local', items);
   // });
-  chrome.storage.onChanged.addListener((e) => {
-    if (e.conversationsOrder) {
-      // get all folders
-      const folders = e.conversationsOrder.newValue.filter((conversationOrder) => typeof conversationOrder !== 'string');
-      // for each folder get the conversationIds
-      const conversationIds = folders.map((folder) => folder.conversationIds);
-      // flatten the conversationIds
-      const flattenedConversationIds = conversationIds.flat();
-      // if conversationIds are not strings (they are objects), get the id property
-      flattenedConversationIds.forEach((conversationId, index) => {
-        if (typeof conversationId !== 'string') {
-          // eslint-disable-next-line no-console
-          console.warn('Bad type. Please contact the developer!');
-        }
-      });
-
-      // if there are duplicates, remove them
-      const uniqueConversationIds = [...new Set(flattenedConversationIds)];
-      if (uniqueConversationIds.length !== flattenedConversationIds.length) {
-        // eslint-disable-next-line no-console
-        console.warn('Not unique. Please contact the developer!');
-      }
-    }
-  });
-  return chrome.storage.local.get(['selectedConversations', 'conversationsOrder', 'customModels', 'conversations']).then((result) => {
-    const localConversationsOrder = (result.conversationsOrder || []).filter((conversationOrder) => typeof conversationOrder !== 'string' || conversationOrder.length > 6);
-    const allConversationKeys = Object.keys(result.conversations || []);
-    return chrome.storage.sync.get(['conversationsOrder']).then((res) => {
-      const syncConversationsOrder = res.conversationsOrder || [];
-      // for each sync conversation order, if it's type=string, find a key in allConversationKeys that starts with that string
-      // if found, replace the string with the key
-      syncConversationsOrder.forEach((conversationOrder, index) => {
-        if (typeof conversationOrder === 'string') {
-          const foundKey = allConversationKeys.find((key) => key.startsWith(conversationOrder));
-          if (foundKey) {
-            syncConversationsOrder[index] = foundKey;
-          }
-        } else {
-          const { conversationIds } = conversationOrder;
-          conversationIds.forEach((conversationId, i) => {
-            if (typeof conversationId === 'string') {
-              const foundKey = allConversationKeys.find((key) => key.startsWith(conversationId));
-              if (foundKey) {
-                conversationIds[i] = foundKey;
-              }
-            }
-          });
-          syncConversationsOrder[index] = { ...syncConversationsOrder[index], conversationIds };
-        }
-      });
-
-      return chrome.storage.local.set({
-        conversationsOrder: [...new Set([...localConversationsOrder, ...syncConversationsOrder])],
-        selectedConversations: result.selectedConversations || [],
-        lastSelectedConversation: null,
-        customModels: result.customModels || [],
-        unofficialModels: [
-          {
-            title: 'gpt-4-0314',
-            description: 'Previous snapshot of the GPT-4. The March 14th snapshot will be available until June 14th.',
-            slug: 'gpt-4-0314',
-            tags: ['Unofficial'],
-          },
-          {
-            title: 'gpt-4-32k',
-            description: 'GPT-4 with 32k token limit.',
-            slug: 'gpt-4-32k',
-            tags: ['Unofficial'],
-          },
-          {
-            title: 'gpt-4-32k-0314',
-            description: 'Previous snapshot of the GPT-4-32k. The March 14th snapshot will be available until June 14th.',
-            slug: 'gpt-4-32k-0314',
-            tags: ['Unofficial'],
-          },
-        ],
-      }, () => { chrome.storage.sync.remove(['conversationsOrder']); });
+  return chrome.storage.sync.get(['conversationsOrder']).then((res) => {
+    const syncConversationsOrder = res.conversationsOrder || [];
+    return chrome.storage.local.get(['selectedConversations', 'conversationsOrder', 'customModels']).then((result) => {
+      const localConversationsOrder = result.conversationsOrder || [];
+      return chrome.storage.sync.set({
+        conversationsOrder: [...new Set([...syncConversationsOrder, ...localConversationsOrder])],
+      }).then(() => chrome.storage.local.remove(['conversationsOrder']).then(() => {
+        chrome.storage.local.set({
+          selectedConversations: result.selectedConversations || [],
+          lastSelectedConversation: null,
+          customModels: result.customModels || [],
+          unofficialModels: [
+            {
+              title: 'gpt-4-0314',
+              description: 'Previous snapshot of the GPT-4. The March 14th snapshot will be available until June 14th.',
+              slug: 'gpt-4-0314',
+              tags: ['Unofficial'],
+            },
+            {
+              title: 'gpt-4-32k',
+              description: 'GPT-4 with 32k token limit.',
+              slug: 'gpt-4-32k',
+              tags: ['Unofficial'],
+            },
+            {
+              title: 'gpt-4-32k-0314',
+              description: 'Previous snapshot of the GPT-4-32k. The March 14th snapshot will be available until June 14th.',
+              slug: 'gpt-4-32k-0314',
+              tags: ['Unofficial'],
+            },
+          ],
+        });
+      }));
     });
   });
 }
@@ -147,16 +101,6 @@ const markdown = (role, searchValue = '') => new markdownit({
     return `<pre dir="ltr" class="w-full"><div class="bg-black mb-4 rounded-md"><div id='code-header' class="flex items-center relative text-gray-200 ${role === 'user' ? 'bg-gray-900' : 'bg-gray-800'} px-4 py-2 text-xs font-sans rounded-t-md" style='border-top-left-radius:6px;border-top-right-radius:6px;'><span class="">${language}</span><button id='copy-code' data-initialized="false" class="flex ml-auto gap-2"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>Copy code</button></div><div class="p-4 overflow-y-auto"><code class="!whitespace-pre hljs language-${language}">${value}</code></div></div></pre>`;
   },
 });
-function addSounds() {
-  const audio = document.createElement('audio');
-  audio.id = 'beep-sound';
-  audio.src = chrome.runtime.getURL('sounds/beep.mp3');
-  document.body.appendChild(audio);
-}
-function playSound(sound) {
-  const audio = document.getElementById(`${sound}-sound`);
-  audio.play();
-}
 function watchError() {
   const targetNode = document.body;
   const config = { childList: true, subtree: true };
@@ -202,8 +146,8 @@ function escapeHtml(html) {
     .replace(/'/g, '&#039;');
 }
 function addDevIndicator() {
-  chrome.storage.local.get('API_URL', ({ API_URL }) => {
-    if (API_URL?.includes('dev')) {
+  chrome.storage.local.get('environment', ({ environment }) => {
+    if (environment === 'development') {
       const devIndicator = document.createElement('div');
       devIndicator.style = 'position:fixed;bottom:16px;right:16px;z-index:9000;background-color:#19c37d;width:4px;height:4px;border-radius:100%;';
       document.body.appendChild(devIndicator);
@@ -258,7 +202,7 @@ function addScrollButtons() {
   scrollUpButton.addEventListener('click', () => {
     const conversationTop = document.querySelector('[id^=message-wrapper-]');
     if (!conversationTop) return;
-    conversationTop.parentElement.scrollIntoView({ behavior: 'smooth' });
+    conversationTop.scrollIntoView({ behavior: 'smooth' });
   });
 
   const scrollDownButton = document.createElement('button');
@@ -336,26 +280,24 @@ function addNavToggleButton() {
   });
 }
 function showHideTextAreaElement(forceShow = false) {
-  chrome.storage.local.get('settings', ({ settings }) => {
-    const textAreaElement = document.querySelector('main form textarea');
-    if (!textAreaElement) return;
-    const textAreaParent = textAreaElement.parentElement;
-    const allMessageWrapper = document.querySelectorAll('[id^="message-wrapper-"]');
-    const continueButton = document.querySelector('#continue-conversation-button-wrapper');
-    if (allMessageWrapper.length > 0) {
-      const lastMessageWrapperElement = allMessageWrapper[allMessageWrapper.length - 1];
+  const textAreaElement = document.querySelector('main form textarea');
+  if (!textAreaElement) return;
+  const textAreaParent = textAreaElement.parentElement;
+  const allMessageWrapper = document.querySelectorAll('[id^="message-wrapper-"]');
+  const continueButton = document.querySelector('#continue-conversation-button-wrapper');
+  if (allMessageWrapper.length > 0) {
+    const lastMessageWrapperElement = allMessageWrapper[allMessageWrapper.length - 1];
 
-      if (!forceShow && lastMessageWrapperElement && lastMessageWrapperElement.dataset.role === 'user') {
-        textAreaParent.style.display = 'none';
-        if (continueButton) continueButton.style.display = 'none';
-      } else {
-        textAreaParent.style = '';
-        if (continueButton && settings.showCustomPromptsButton) continueButton.style.display = 'flex';
-      }
+    if (!forceShow && lastMessageWrapperElement && lastMessageWrapperElement.dataset.role === 'user') {
+      textAreaParent.style.display = 'none';
+      if (continueButton) continueButton.style.display = 'none';
     } else {
       textAreaParent.style = '';
+      if (continueButton) continueButton.style.display = 'flex';
     }
-  });
+  } else {
+    textAreaParent.style = '';
+  }
 }
 function showNewChatPage() {
   // chatStreamIsClosed = true;
@@ -390,7 +332,7 @@ function showNewChatPage() {
     runningPromptChainSteps = undefined;
     runningPromptChainIndex = 0;
     document.title = 'New Page';
-    const planName = account?.accounts?.default?.entitlement?.subscription_plan || 'chatgptfreeplan';
+    const planName = account?.account_plan?.subscription_plan || account?.accounts?.default?.entitlement?.subscription_plan || 'chatgptfreeplan';
     if (!conversationsAreSynced) return;
     const focusedConversations = document.querySelectorAll('.selected');
     focusedConversations.forEach((c) => {
@@ -466,12 +408,7 @@ function handleQueryParams(query) {
   const urlParams = new URLSearchParams(query);
   const promptId = urlParams.get('pid');
   if (promptId) {
-    chrome.runtime.sendMessage({
-      getPrompt: true,
-      detail: {
-        promptId,
-      },
-    }, (prompt) => {
+    getPrompt(promptId).then((prompt) => {
       const main = document.querySelector('main');
       const inputForm = main.querySelector('form');
       const textAreaElement = inputForm.querySelector('textarea');
@@ -483,49 +420,36 @@ function handleQueryParams(query) {
   }
 }
 function addArkoseCallback() {
-  setTimeout(() => {
-    const script = document.createElement('script');
-    script.setAttribute('type', 'text/javascript');
-    script.setAttribute('src', chrome.runtime.getURL('scripts/content/arkose.js'));
-    document.body.appendChild(script);
-    addArkoseScript();
-  }, 1000);
+  const script = document.createElement('script');
+  script.setAttribute('type', 'text/javascript');
+  script.setAttribute('src', chrome.runtime.getURL('scripts/content/arkose.js'));
+  document.body.appendChild(script);
 }
 function addArkoseScript() {
-  setTimeout(() => {
-    // check if a script element with src including api.js and chrome-extension exists
-    const arkoseScript = document.querySelector('script[src*="chrome-extension"][src*="api.js"]');
-    if (arkoseScript) return;
-    const arkoseApiScript = document.createElement('script');
-    arkoseApiScript.async = !0;
-    arkoseApiScript.defer = !0;
-    arkoseApiScript.setAttribute('type', 'text/javascript');
-    arkoseApiScript.setAttribute('data-status', 'loading');
-    arkoseApiScript.setAttribute('data-callback', 'useArkoseSetupEnforcement');
-    arkoseApiScript.setAttribute('src', chrome.runtime.getURL('v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/api.js'));
-    document.body.appendChild(arkoseApiScript);
-  }, 500);
+  // check if a script element with src including api.js and chrome-extension exists
+  const arkoseScript = document.querySelector('script[src*="chrome-extension"][src*="api.js"]');
+  if (arkoseScript) return;
+  const arkoseApiScript = document.createElement('script');
+  arkoseApiScript.async = !0;
+  arkoseApiScript.defer = !0;
+  arkoseApiScript.setAttribute('type', 'text/javascript');
+  arkoseApiScript.setAttribute('data-status', 'loading');
+  arkoseApiScript.setAttribute('data-callback', 'useArkoseSetupEnforcement');
+  arkoseApiScript.setAttribute('src', chrome.runtime.getURL('v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/api.js'));
+  document.body.appendChild(arkoseApiScript);
 }
-function arkoseTrigger() {
-  chrome.storage.local.get('settings', ({ settings }) => {
-    if (settings.selectedModel.tags.includes('gpt4')) {
-      window.localStorage.removeItem('arkoseToken');
-      const inputForm = document.querySelector('main form');
-      if (!inputForm) return;
-      if (!inputForm.querySelector('#enforcement-trigger')) {
-        inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
-      }
-      inputForm.querySelector('#enforcement-trigger').click();
-    }
-  });
+function addEnforcementTriggerElement() {
+  const main = document.querySelector('main');
+  if (!main) { return; }
+  const inputForm = main.querySelector('form');
+  if (!inputForm) { return; }
+  if (inputForm.querySelector('#enforcement-trigger')) return;
+  inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
 }
 
 function replaceTextAreaElemet(settings) {
   const inputForm = document.querySelector('main form');
   if (!inputForm) { return false; }
-  if (!inputForm.querySelector('#enforcement-trigger')) {
-    inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
-  }
   if (settings.customConversationWidth) {
     inputForm.style = `${inputForm.style.cssText}; max-width:${settings.conversationWidth}%;`;
   }
@@ -540,7 +464,7 @@ function replaceTextAreaElemet(settings) {
   let textAreaElement = inputForm.querySelector('textarea');
 
   if (!textAreaElement) {
-    const textAreaElementWrapperHTML = '<div class="flex flex-col w-full flex-grow relative border border-black/10 dark:border-gray-900/50 dark:text-white rounded-xl shadow-xs dark:shadow-xs dark:bg-gray-700 bg-white"><textarea id="prompt-textarea" tabindex="0" data-id="57b652f1-414c-433f-9041-1911b4ea7d85" rows="1" placeholder="Send a message (Type @ for Custom Prompt and # for Prompt Chains)" class="m-0 w-full resize-none border-0 bg-transparent py-[10px] pr-10 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:py-4 md:pr-12 pl-3 md:pl-4" style="max-height: 200px; height: 56px; overflow-y: hidden;" spellcheck="false"></textarea><button disabled="" class="absolute p-1 rounded-md md:bottom-3 md:p-2 md:right-3 dark:hover:bg-gray-900 dark:disabled:hover:bg-transparent right-2 disabled:text-gray-400 enabled:bg-brand-purple text-white bottom-1.5 transition-colors disabled:opacity-40" data-testid="send-button"><span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="icon-sm m-1 md:m-0"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg></span></button></div>';
+    const textAreaElementWrapperHTML = '<div class="flex flex-col w-full py-[10px] flex-grow md:py-4 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-xl shadow-xs dark:shadow-xs"><textarea id="prompt-textarea" tabindex="0" data-id="request-:r0:-0" rows="1" placeholder="Send a message." class="m-0 w-full resize-none border-0 bg-transparent p-0 pr-10 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:pr-12 pl-3 md:pl-0" style="max-height: 200px; height: 24px; overflow-y: hidden;"></textarea><button class="absolute p-1 rounded-md bottom-[10px] md:bottom-3 md:p-2 md:right-3 dark:hover:bg-gray-900 dark:disabled:hover:bg-transparent right-2 disabled:text-gray-400 text-white transition-colors disabled:opacity-40"><span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg></span></button></div>';
     // insert text area element wrapper in input form first child at the end
     inputForm.firstChild.insertAdjacentHTML('beforeend', textAreaElementWrapperHTML);
     textAreaElement = inputForm.querySelector('textarea');
@@ -548,32 +472,19 @@ function replaceTextAreaElemet(settings) {
   const newTextAreaElement = textAreaElement.cloneNode(true);
   newTextAreaElement.id = 'prompt-textarea';
   newTextAreaElement.dir = 'auto';
-  newTextAreaElement.placeholder = 'Send a message (Type @ for Custom Prompt and # for Prompt Chains)';
   // auto resize textarea height up to 200px
   newTextAreaElement.style.height = 'auto';
-  newTextAreaElement.style.height = `${newTextAreaElement.scrollHeight || '56'}px`;
+  newTextAreaElement.style.height = `${newTextAreaElement.scrollHeight}px`;
   newTextAreaElement.style.maxHeight = '200px';
-  newTextAreaElement.style.minHeight = '56px';
+  newTextAreaElement.style.minHeight = '24px';
   newTextAreaElement.style.paddingRight = '40px';
   newTextAreaElement.style.overflowY = 'hidden';
-
-  // keydown is triggered before input event and before value is changed.
-  newTextAreaElement.addEventListener('input', (event) => {
-    // console.warn('input event', 'old: ', textAreaElementOldValue, 'new: ', newTextAreaElement.value);
-    if (textAreaElementOldValue === '' && newTextAreaElement.value !== textAreaElementOldValue) {
-      textAreaElementOldValue = newTextAreaElement.value;
-      arkoseTrigger();
-    } else if (newTextAreaElement.value !== textAreaElementOldValue) {
-      textAreaElementOldValue = newTextAreaElement.value;
-    }
-  });
 
   newTextAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerSync);
   // also async
   newTextAreaElement.addEventListener('keydown', (event) => {
-    if (event.key === 'Enter' && event.which === 13 && !event.shiftKey && !isGenerating) {
+    if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
       disableTextInput = true;
-      textAreaElementOldValue = '';
       if (newTextAreaElement.value.trim().length === 0) {
         event.preventDefault();
         event.stopPropagation();
@@ -584,7 +495,6 @@ function replaceTextAreaElemet(settings) {
     }
   });
   newTextAreaElement.addEventListener('input', textAreaElementInputEventListener);
-  // newTextAreaElement.addEventListener('paste', textAreaElementInputEventListener);
 
   textAreaElement.replaceWith(newTextAreaElement);
   addInputCounter();
@@ -645,13 +555,10 @@ function addGpt4Counter() {
     if (!result.models.find((model) => model.slug === 'gpt-4')) return;
     gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
     const gpt4Timestamps = result.gpt4Timestamps || [];
-
     const messageCap = result?.conversationLimit?.message_cap || 50;
     const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
     const now = new Date().getTime();
-    const timestampsInCapWindow = gpt4Timestamps.filter((timestamp) => now - timestamp < (messageCapWindow / 60) * 60 * 60 * 1000);
-    // const resetTimeText = timestampsInCapWindow.length > 0 ? `New message available at: ${new Date(timestampsInCapWindow[0] + (messageCapWindow / 60) * 60 * 60 * 1000).toLocaleString()}` : '';
-    const gpt4counter = timestampsInCapWindow.length;
+    const gpt4counter = gpt4Timestamps.filter((timestamp) => now - timestamp < (messageCapWindow / 60) * 60 * 60 * 1000).length;
     const capExpiresAtTimeString = result.capExpiresAt ? `(Cap Expires At: ${result.capExpiresAt})` : '';
     if (gpt4counter) {
       gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4counter}/${messageCap} ${capExpiresAtTimeString}`;
@@ -668,7 +575,6 @@ function addGpt4Counter() {
     }
   });
 }
-
 function updateInputCounter(text) {
   const curInputCounterElement = document.querySelector('#gptx-input-counter');
   if (curInputCounterElement) {
@@ -794,7 +700,6 @@ function addExpandButton() {
   expandButton.style = 'bottom:-8px;margin:auto';
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
-    if (!settings) return;
     const { hideBottomSidebar } = settings;
     const userMenu = document.querySelector('#user-menu');
     if (!hideBottomSidebar) {
@@ -954,25 +859,6 @@ function removeMarkTagsInsideBackticks(input) {
     return backticks + codeWithoutMarkTags + backticks;
   });
 }
-function addAutoSyncToggleButton() {
-  const existingAutoSyncToggleButton = document.getElementById('auto-sync-toggle-button');
-  if (existingAutoSyncToggleButton) existingAutoSyncToggleButton.remove();
-
-  const autoSyncToggleButton = document.createElement('button');
-  autoSyncToggleButton.id = 'keyboard-shortcuts-modal-button';
-  autoSyncToggleButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="1.5em" viewBox="0 0 512 512" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" fill="currentColor"><path d="M256 79.1C178.5 79.1 112.7 130.1 89.2 199.7C84.96 212.2 71.34 218.1 58.79 214.7C46.23 210.5 39.48 196.9 43.72 184.3C73.6 95.8 157.3 32 256 32C337.5 32 408.8 75.53 448 140.6V104C448 90.75 458.7 80 472 80C485.3 80 496 90.75 496 104V200C496 213.3 485.3 224 472 224H376C362.7 224 352 213.3 352 200C352 186.7 362.7 176 376 176H412.8C383.7 118.1 324.4 80 256 80V79.1zM280 263.1C280 277.3 269.3 287.1 256 287.1C242.7 287.1 232 277.3 232 263.1V151.1C232 138.7 242.7 127.1 256 127.1C269.3 127.1 280 138.7 280 151.1V263.1zM224 352C224 334.3 238.3 319.1 256 319.1C273.7 319.1 288 334.3 288 352C288 369.7 273.7 384 256 384C238.3 384 224 369.7 224 352zM40 432C26.75 432 16 421.3 16 408V311.1C16 298.7 26.75 287.1 40 287.1H136C149.3 287.1 160 298.7 160 311.1C160 325.3 149.3 336 136 336H99.19C128.3 393 187.6 432 256 432C333.5 432 399.3 381.9 422.8 312.3C427 299.8 440.7 293 453.2 297.3C465.8 301.5 472.5 315.1 468.3 327.7C438.4 416.2 354.7 480 256 480C174.5 480 103.2 436.5 64 371.4V408C64 421.3 53.25 432 40 432V432z"/></svg>';
-  autoSyncToggleButton.className = 'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
-  autoSyncToggleButton.style = 'bottom: 6rem;right: 3rem;width: 2rem;height: 2rem;flex-wrap:wrap;border: 1px solid;color:#e06c2b';
-  autoSyncToggleButton.title = 'Auto Sync is OFF. Click to turn ON';
-  autoSyncToggleButton.addEventListener('click', () => {
-    chrome.storage.local.get(['settings'], ({ settings }) => {
-      chrome.storage.local.set({ settings: { ...settings, autoSync: true } }, () => {
-        window.location.reload();
-      });
-    });
-  });
-  document.body.appendChild(autoSyncToggleButton);
-}
 function highlight(text, searchTerm) {
   if (!text) return '';
   if (text.trim().length === 0) return '';
@@ -1020,12 +906,9 @@ function toast(html, type = 'info', duration = 4000) {
   if (existingToast) existingToast.remove();
   const element = document.createElement('div');
   element.id = 'gptx-toast';
-  element.style = 'position:fixed;right:24px;top:24px;border-radius:4px;background-color:#19c37d;padding:8px 16px;z-index:100001;max-width:600px;';
+  element.style = 'position:fixed;right:24px;top:24px;border-radius:4px;background-color:#19c37d;padding:8px 16px;z-index:100001;';
   if (type === 'error') {
     element.style.backgroundColor = '#ef4146';
-  }
-  if (type === 'warning') {
-    element.style.backgroundColor = '#e06c2b';
   }
   element.innerHTML = html;
   document.body.appendChild(element);

@@ -2,10 +2,13 @@
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-unused-vars */
 let API_URL = 'https://api.wfh.team';
-chrome.storage.local.get(['API_URL'], (r) => {
-  API_URL = r.API_URL;
+chrome.storage.local.get(['environment'], (result) => {
+  if (result.environment === 'development') {
+    API_URL = 'https://dev.wfh.team:8000';
+  }
 });
 let lastPromptSuggestions = [];
+
 
 // get auth token from sync storage
 const defaultHeaders = {
@@ -15,11 +18,11 @@ function getExamplePrompts(offset = 0, limit = 4) {
   const url = new URL('https://chat.openai.com/backend-api/prompt_library/');
   const params = { offset, limit };
   url.search = new URLSearchParams(params).toString();
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'GET',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
   }).then((response) => response.json()))
     .then((data) => {
@@ -34,11 +37,11 @@ function generateSuggestions(conversationId, messageId, model, numSuggestions = 
     model,
     num_suggestions: numSuggestions,
   };
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}/experimental/generate_suggestions`, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}/experimental/generate_suggestions`, {
     method: 'POST',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
     body: JSON.stringify(payload),
   }).then((response) => response.json()))
@@ -48,10 +51,10 @@ function generateSuggestions(conversationId, messageId, model, numSuggestions = 
     });
 }
 function generateChat(message, conversationId, messageId, parentMessageId, token, suggestions = [], saveHistory = true, role = 'user', action = 'next') {
-  return chrome.storage.local.get(['settings', 'enabledPluginIds', 'installedPlugins']).then((res) => chrome.storage.sync.get(['accessToken']).then((result) => {
+  return chrome.storage.local.get(['settings', 'enabledPluginIds']).then((res) => chrome.storage.sync.get(['auth_token']).then((result) => {
     const payload = {
       action,
-      arkose_token: res.settings.selectedModel.tags.includes('gpt4') && !res.settings.selectedModel.tags.includes('Unofficial') ? token : null,
+      arkose_token: res.settings.selectedModel.slug.includes('gpt-4') && !res.settings.selectedModel.tags.includes('Unofficial') ? token : null,
       model: res.settings.selectedModel.slug,
       parent_message_id: parentMessageId,
       history_and_training_disabled: !saveHistory,
@@ -77,10 +80,7 @@ function generateChat(message, conversationId, messageId, parentMessageId, token
     }
     // plugin model: text-davinci-002-plugins
     if (!conversationId && res.settings.selectedModel.slug.includes('plugins')) {
-      // remove plugin ids from enabledPluginIds that are not installed
-      const newEnabledPluginIds = res.enabledPluginIds.filter((id) => res.installedPlugins.find((p) => p.id === id));
-      payload.plugin_ids = newEnabledPluginIds;
-      chrome.storage.local.set({ enabledPluginIds: newEnabledPluginIds });
+      payload.plugin_ids = res.enabledPluginIds;
     }
     const eventSource = new SSE(
       '/backend-api/conversation',
@@ -89,7 +89,7 @@ function generateChat(message, conversationId, messageId, parentMessageId, token
         headers: {
           ...defaultHeaders,
           accept: 'text/event-stream',
-          Authorization: result.accessToken,
+          Authorization: result.auth_token,
         },
         payload: JSON.stringify(payload),
       },
@@ -107,11 +107,11 @@ function getConversation(conversationId) {
         return conversations[conversationId];
       }
     }
-    return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`, {
+    return chrome.storage.sync.get(['auth_token']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`, {
       method: 'GET',
       headers: {
         ...defaultHeaders,
-        Authorization: result.accessToken,
+        Authorization: result.auth_token,
       },
 
     }).then((response) => {
@@ -123,16 +123,18 @@ function getConversation(conversationId) {
   });
 }
 function getAccount() {
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/accounts/check', {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/backend-api/accounts/check', {
     method: 'GET',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
   }).then((response) => response.json()))
     .then((data) => {
-      if (data.accounts) {
-        chrome.storage.local.set({ account: data });
+      if (data.account_plan) {
+        chrome.storage.local.get(['account'], (res) => {
+          chrome.storage.local.set({ ...res.account, account: data });
+        });
       }
     });
 }
@@ -156,21 +158,21 @@ function setUserSystemMessage(aboutUser, aboutModel, enabled) {
     about_model_message: aboutModel,
     enabled,
   };
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/user_system_messages', {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/backend-api/user_system_messages', {
     method: 'POST',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
     body: JSON.stringify(data),
   }).then((res) => res.json()));
 }
 function getUserSystemMessage() {
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/user_system_messages', {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/backend-api/user_system_messages', {
     method: 'GET',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
   }).then((res) => res.json()))
     .then((data) => {
@@ -179,9 +181,6 @@ function getUserSystemMessage() {
 
         const newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
           if (p.isSelected) {
-            if (p.aboutModel === data.about_model_message && p.aboutUser === data.about_user_message) {
-              return p;
-            }
             return { ...p, isSelected: false };
           }
           if (p.aboutModel === data.about_model_message && p.aboutUser === data.about_user_message) {
@@ -195,11 +194,11 @@ function getUserSystemMessage() {
     });
 }
 function getModels() {
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/models', {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/backend-api/models', {
     method: 'GET',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
   }).then((response) => response.json()))
     .then((data) => {
@@ -211,7 +210,7 @@ function getModels() {
             settings: { ...settings, selectedModel: settings.selectedModel || data.models?.[0] },
           });
           if (data.models.map((m) => m.slug).find((m) => m.includes('plugins'))) {
-            const isPaid = account?.accounts?.default?.entitlement?.has_active_subscription || false;
+            const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
             if (isPaid) {
               getAllPlugins();
               getInstalledPlugins();
@@ -222,11 +221,11 @@ function getModels() {
     });
 }
 function getConversationLimit() {
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/public-api/conversation_limit', {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/public-api/conversation_limit', {
     method: 'GET',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
   }).then((response) => response.json())
     .then((data) => {
@@ -247,11 +246,11 @@ function messageFeedback(conversationId, messageId, rating, text = '') {
   if (text) {
     data.text = text;
   }
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/conversation/message_feedback', {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/backend-api/conversation/message_feedback', {
     method: 'POST',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
     body: JSON.stringify(data),
   }).then((res) => res.json()));
@@ -267,7 +266,7 @@ function getApprovedPlugins() {
   getPlugins(0, 100, undefined, 'approved').then((res) => res);
 }
 function getInstalledPlugins() {
-  getPlugins(0, 250, true, undefined).then((res) => {
+  getPlugins(0, 100, true, undefined).then((res) => {
     chrome.storage.local.set({
       installedPlugins: res.items,
     });
@@ -285,11 +284,11 @@ function getPlugins(offset = 0, limit = 20, isInstalled = undefined, statuses = 
   if (statuses) {
     url.searchParams.append('statuses', statuses);
   }
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'GET',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
   }).then((res) => {
     if (res.ok) {
@@ -305,11 +304,11 @@ function installPlugin(pluginId) {
   const data = {
     is_installed: true,
   };
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'PATCH',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
     body: JSON.stringify(data),
 
@@ -327,11 +326,11 @@ function uninstallPlugin(pluginId) {
   const data = {
     is_installed: false,
   };
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'PATCH',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
     body: JSON.stringify(data),
 
@@ -344,11 +343,11 @@ function uninstallPlugin(pluginId) {
 }
 function userSettings(pluginId) {
   const url = new URL(`https://chat.openai.com/backend-api/aip/${pluginId}/user-settings`);
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'GET',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
   }).then((res) => {
     if (res.ok) {
@@ -368,11 +367,11 @@ function createShare(conversationId, currentNodeId, isAnnonymous = true) {
     current_node_id: currentNodeId,
     // message_id: `aaa1${self.crypto.randomUUID().slice(4)}`,
   };
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'POST',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
     body: JSON.stringify(data),
 
@@ -413,11 +412,11 @@ function share(shareId, title, highlightedMessageId, isAnonymous = true, isVisib
     highlighted_message_id: highlightedMessageId,
     share_id: shareId,
   };
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'PATCH',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
     body: JSON.stringify(data),
 
@@ -433,11 +432,11 @@ function deleteShare(shareId) {
   const url = new URL(`https://chat.openai.com/backend-api/share/${shareId}`);
   // without passing limit it returns 50 by default
   // limit cannot be more than 20
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'DELETE',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
   }).then((res) => {
     if (res.ok) {
@@ -461,62 +460,68 @@ function getSelectedConversations(forceRefresh = false) {
 
 function getAllConversations(forceRefresh = false) {
   return new Promise((resolve) => {
-    chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings']).then((res) => {
-      const {
-        conversations, conversationsAreSynced, settings,
-      } = res;
-      const { autoSync, quickSync, quickSyncCount } = settings;
+    chrome.storage.sync.get('conversationsOrder', ({ conversationsOrder }) => {
+      chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings']).then((res) => {
+        const {
+          conversations, conversationsAreSynced, settings,
+        } = res;
+        const { autoSync, quickSync, quickSyncCount } = settings;
 
-      if (!forceRefresh && conversationsAreSynced && (typeof autoSync === 'undefined' || autoSync)) {
-        const visibleConversation = Object.values(conversations);
-        resolve(visibleConversation);
-      } else {
-        const allConversations = [];
-        const initialOffset = 0;
-        const initialLimit = (autoSync && quickSync && quickSyncCount > 0) ? Math.min(100, quickSyncCount) : 100;
-        getConversations(initialOffset, initialLimit).then((convs) => {
-          const {
-            limit, offset, items,
-          } = convs;
-          // eslint-disable-next-line no-nested-ternary
-          const total = (autoSync && quickSync && quickSyncCount > 0)
-            ? quickSyncCount
-            : convs.total ? Math.min(convs.total, 10000) : 10000; // sync last 10000 conversations
-          if (items.length === 0 || total === 0) {
-            resolve([]);
-            return;
-          }
-          allConversations.push(...items);
-          if (offset + limit < total) {
-            const promises = [];
-            for (let i = 1; i < Math.ceil(total / limit); i += 1) {
-              promises.push(getConversations(i * limit, limit));
+        // const allVisibleConversationsOrderIds = conversationsOrder.filter((conv) => conv.id !== 'trash').map((conv) => (typeof conv === 'object' ? conv.conversationIds : conv)).flat();
+
+        // const quickSyncCount = Math.max(settings.quickSyncCount || 0, allVisibleConversationsOrderIds.length);
+
+        if (!forceRefresh && conversationsAreSynced && (typeof autoSync === 'undefined' || autoSync)) {
+          const visibleConversation = Object.values(conversations);
+          resolve(visibleConversation);
+        } else {
+          const allConversations = [];
+          const initialOffset = 0;
+          const initialLimit = (autoSync && quickSync && quickSyncCount > 0) ? Math.min(100, quickSyncCount) : 100;
+          getConversations(initialOffset, initialLimit).then((convs) => {
+            const {
+              limit, offset, items,
+            } = convs;
+            // eslint-disable-next-line no-nested-ternary
+            const total = (autoSync && quickSync && quickSyncCount > 0)
+              ? quickSyncCount
+              : convs.total ? Math.min(convs.total, 10000) : 10000; // sync last 10000 conversations
+            if (items.length === 0 || total === 0) {
+              resolve([]);
+              return;
             }
-            Promise.all(promises).then((results) => {
-              results.forEach((result) => {
-                if (result.items) {
-                  allConversations.push(...result.items);
-                }
-              });
-              resolve(allConversations);
-            }, (err) => {
-              if (conversationsAreSynced) {
-                const visibleConversation = Object.values(conversations).filter((conversation) => !conversation.archived && !conversation.skipped);
-                resolve(visibleConversation);
+            allConversations.push(...items);
+            if (offset + limit < total) {
+              const promises = [];
+              for (let i = 1; i < Math.ceil(total / limit); i += 1) {
+                promises.push(getConversations(i * limit, limit));
               }
-              resolve(Promise.reject(err));
-            });
-          } else {
-            resolve(allConversations);
-          }
-        }, (err) => {
-          if (conversationsAreSynced) {
-            const visibleConversation = Object.values(conversations).filter((conversation) => !conversation.archived && !conversation.skipped);
-            resolve(visibleConversation);
-          }
-          resolve(Promise.reject(err));
-        });
-      }
+              Promise.all(promises).then((results) => {
+                results.forEach((result) => {
+                  if (result.items) {
+                    allConversations.push(...result.items);
+                  }
+                });
+                resolve(allConversations);
+              }, (err) => {
+                if (conversationsAreSynced) {
+                  const visibleConversation = Object.values(conversations).filter((conversation) => !conversation.archived && !conversation.skipped);
+                  resolve(visibleConversation);
+                }
+                resolve(Promise.reject(err));
+              });
+            } else {
+              resolve(allConversations);
+            }
+          }, (err) => {
+            if (conversationsAreSynced) {
+              const visibleConversation = Object.values(conversations).filter((conversation) => !conversation.archived && !conversation.skipped);
+              resolve(visibleConversation);
+            }
+            resolve(Promise.reject(err));
+          });
+        }
+      });
     });
   });
 }
@@ -526,11 +531,11 @@ function getSharedConversations(offset = 0, limit = 100) {
   // limit cannot be more than 20
   // const params = { offset, limit };
   // url.search = new URLSearchParams(params).toString();
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'GET',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
   }).then((res) => {
     if (res.ok) {
@@ -545,11 +550,11 @@ function getConversations(offset = 0, limit = 100, order = 'updated') {
   // limit cannot be more than 20
   const params = { offset, limit, order };
   url.search = new URLSearchParams(params).toString();
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(url, {
     method: 'GET',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
   }).then((res) => {
     if (res.ok) {
@@ -559,11 +564,11 @@ function getConversations(offset = 0, limit = 100, order = 'updated') {
   }));
 }
 function updateConversation(id, data) {
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${id}`, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${id}`, {
     method: 'PATCH',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
     body: JSON.stringify(data),
   }).then((res) => res.json()));
@@ -572,23 +577,24 @@ function generateTitle(conversationId, messageId) {
   return chrome.storage.local.get(['settings']).then((res) => {
     const data = {
       message_id: messageId,
+      model: res.settings.selectedModel.slug,
     };
-    return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/gen_title/${conversationId}`, {
+    return chrome.storage.sync.get(['auth_token']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/gen_title/${conversationId}`, {
       method: 'POST',
       headers: {
         ...defaultHeaders,
-        Authorization: result.accessToken,
+        Authorization: result.auth_token,
       },
       body: JSON.stringify(data),
     }).then((response) => response.json()));
   });
 }
 function renameConversation(conversationId, title) {
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`, {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`, {
     method: 'PATCH',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
     body: JSON.stringify({ title }),
   }).then((res) => res.json()));
@@ -599,11 +605,11 @@ function deleteConversation(conversationId) {
     if (!conversations[conversationId].saveHistory) {
       return { success: true };
     }
-    return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`, {
+    return chrome.storage.sync.get(['auth_token']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`, {
       method: 'PATCH',
       headers: {
         ...defaultHeaders,
-        Authorization: result.accessToken,
+        Authorization: result.auth_token,
       },
       body: JSON.stringify({ is_visible: false }),
     }).then((res) => {
@@ -615,11 +621,11 @@ function deleteConversation(conversationId) {
   });
 }
 function deleteAllConversations() {
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/conversations', {
+  return chrome.storage.sync.get(['auth_token']).then((result) => fetch('https://chat.openai.com/backend-api/conversations', {
     method: 'PATCH',
     headers: {
       ...defaultHeaders,
-      Authorization: result.accessToken,
+      Authorization: result.auth_token,
     },
     body: JSON.stringify({ is_visible: false }),
   }).then((res) => {
@@ -628,4 +634,207 @@ function deleteAllConversations() {
     }
     return Promise.reject(res);
   }));
+}
+function submitPrompt(openAiId, prompt, promptTitle, categories, promptLangage, modelSlug, nickname, url, hideFullPrompt = false, promptId = null) {
+  chrome.storage.sync.set({
+    name,
+    url,
+  });
+  const body = {
+    openai_id: openAiId,
+    text: prompt.trim(),
+    title: promptTitle.trim(),
+    nickname,
+    hide_full_prompt: hideFullPrompt,
+    url,
+  };
+  if (modelSlug) {
+    body.model_slug = modelSlug;
+  }
+  if (promptId) {
+    body.prompt_id = promptId;
+  }
+  if (categories) {
+    body.categories = categories.map((category) => category.trim().toLowerCase().replaceAll(/\s/g, '_')).join(',');
+  }
+  if (promptLangage && promptLangage !== 'select') {
+    body.language = promptLangage;
+  }
+  return fetch(`${API_URL}/gptx/add-prompt/`, {
+    method: 'POST',
+    headers: {
+      ...defaultHeaders,
+    },
+    body: JSON.stringify(body),
+  }).then((res) => res.json());
+}
+
+function deletePrompt(promptId) {
+  return chrome.storage.sync.get(['openai_id']).then((result) => {
+    const openAiId = result.openai_id;
+    return fetch(`${API_URL}/gptx/delete-prompt/`, {
+      method: 'POST',
+      headers: {
+        ...defaultHeaders,
+      },
+      body: JSON.stringify({
+        openai_id: openAiId,
+        prompt_id: promptId,
+      }),
+    }).then((res) => res.json());
+  });
+}
+function getNewsletters() {
+  return fetch(`${API_URL}/gptx/newsletters/`, {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+    },
+  }).then((res) => res.json());
+}
+function getNewsletter(id) {
+  return fetch(`${API_URL}/gptx/${id}/newsletter/`, {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+    },
+  }).then((res) => res.json());
+}
+function getLatestNewsletter(id) {
+  return fetch(`${API_URL}/gptx/latest-newsletter/`, {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+    },
+  }).then((res) => res.json());
+}
+function getReleaseNote(version) {
+  return fetch(`${API_URL}/gptx/release-notes/`, {
+    method: 'POST',
+    headers: {
+      ...defaultHeaders,
+    },
+    body: JSON.stringify({ version }),
+  }).then((res) => res.json());
+}
+function getLatestAnnouncement() {
+  return fetch(`${API_URL}/gptx/announcements/`, {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+    },
+  }).then((res) => res.json());
+}
+function getSponsor(version) {
+  return fetch(`${API_URL}/gptx/sponsor/`, {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+    },
+  }).then((res) => res.json());
+}
+function getPrompts(pageNumber, searchTerm, sortBy = 'recent', language = 'all', category = 'all') {
+  // get user id from sync storage
+  return chrome.storage.sync.get(['openai_id']).then((result) => {
+    const openaiId = result.openai_id;
+    let url = `${API_URL}/gptx/?order_by=${sortBy}`;
+    if (sortBy === 'mine') url = `${API_URL}/gptx/?order_by=${sortBy}&id=${openaiId}`;
+    if (pageNumber) url += `&page=${pageNumber}`;
+    if (language !== 'all') url += `&language=${language}`;
+    if (category !== 'all') url += `&category=${category}`;
+    if (searchTerm && searchTerm.trim().length > 0) url += `&search=${searchTerm}`;
+    return fetch(url)
+      .then((response) => response.json());
+  });
+}
+function getPrompt(pid) {
+  // get user id from sync storage
+  return chrome.storage.sync.get(['openai_id']).then((result) => {
+    const openaiId = result.openai_id;
+    const url = `${API_URL}/gptx/${pid}/`;
+    return fetch(url)
+      .then((response) => response.json());
+  });
+}
+
+function incrementUseCount(promptId) {
+  return chrome.storage.sync.get(['openai_id']).then((result) => {
+    const openaiId = result.openai_id;
+    // increment use count
+    const url = `${API_URL}/gptx/${promptId}/use-count/`;
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ openai_id: openaiId }),
+    }).then((response) => response.json());
+  });
+}
+
+function vote(promptId, voteType) {
+  return chrome.storage.sync.get(['openai_id']).then((result) => {
+    const openaiId = result.openai_id;
+    // update vote count
+    const url = `${API_URL}/gptx/${promptId}/vote/`;
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ openai_id: openaiId, vote_type: voteType }),
+    }).then((response) => response.json());
+  });
+}
+
+function report(promptId) {
+  return chrome.storage.sync.get(['openai_id']).then((result) => {
+    const openaiId = result.openai_id;
+    // increment report count
+    const url = `${API_URL}/gptx/${promptId}/report/`;
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ openai_id: openaiId }),
+    }).then((response) => response.json());
+  });
+}
+
+function incrementOpenRate(newsletterId) {
+  const url = `${API_URL}/gptx/increment-open-rate/`;
+  return fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ newsletter_id: newsletterId }),
+  }).then((response) => response.json());
+}
+
+function incrementClickRate(newsletterId) {
+  const url = `${API_URL}/gptx/increment-click-rate/`;
+  return fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ newsletter_id: newsletterId }),
+  }).then((response) => response.json());
+}
+
+function updateEmailNewsletter(emailNewsletter) {
+  chrome.storage.sync.get(['openai_id'], (result) => {
+    const openaiId = result.openai_id;
+    // increment report count
+    const url = `${API_URL}/gptx/update-email-newsletter/`;
+    return fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ p: openaiId, email_newsletter: emailNewsletter }),
+    });
+  });
 }

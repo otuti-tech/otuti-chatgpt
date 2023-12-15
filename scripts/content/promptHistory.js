@@ -31,7 +31,7 @@ function emptyHistory() {
     const { historyFilter } = settings;
     const searchValue = document.querySelector('input[id="history-search-input"]').value;
     historyListEmpty.innerHTML = historyFilter === 'favorites'
-      ? `No favorite found. ${searchValue ? 'Adjust your search' : `<span style="text-align:center;max-width:500px;">You can mark any prompt in your history as favorite. Click on the <span style="text-decoration: underline;">All</span> tab above and then mark any prompt as favorite by clicking on the bookmark icon next to it <img src=${chrome.runtime.getURL('icons/bookmark-off.png')} style="min-width: 24px; height: 32px; transform: rotate(90deg); position: relative; right: -10px; top: 2px;margin:auto;">`}</span>`
+      ? `No favorite found. ${searchValue ? 'Adjust your search' : `<span style="text-align:center;">You can mark any prompt in your history as favorite. Click on the <span style="text-decoration: underline;">All</span> tab above and then mark any prompt as favorite by clicking on the bookmark icon next to it <img src=${chrome.runtime.getURL('icons/bookmark-off.png')} style="min-width: 24px; height: 32px; transform: rotate(90deg); position: relative; right: -10px; top: 2px;margin:auto;">`}</span>`
       : `No history found. ${searchValue ? 'Adjust your search' : 'Start using the chat to see your prompt history here'}`;
   });
   return historyListEmpty;
@@ -507,7 +507,7 @@ function textAreaElementInputEventListener(event) {
         const { settings } = result;
         const { selectedModel } = settings;
         submitButton.disabled = false;
-        if (selectedModel.tags.includes('gpt4')) {
+        if (selectedModel.slug.startsWith('gpt-4')) {
           submitButton.style.backgroundColor = '#AB68FF';
         } else {
           submitButton.style.backgroundColor = '#19C37D';
@@ -519,19 +519,18 @@ function textAreaElementInputEventListener(event) {
     }
   }
   updateInputCounter(event.target.value);
+  // input size
+  if (disableTextInput && !isGenerating) {
+    event.preventDefault();
+    disableTextInput = false;
+    return;
+  }
 
   event.target.style.height = 'auto';
   event.target.style.height = `${event.target.scrollHeight}px`;
   if (event.target.scrollHeight > 200) {
     event.target.style.overflowY = 'scroll';
     event.target.scrollTop = event.target.scrollHeight;
-  }
-
-  // input size
-  if (disableTextInput && !isGenerating) {
-    event.preventDefault();
-    disableTextInput = false;
-    return;
   }
 
   // history
@@ -549,17 +548,17 @@ function textAreaElementInputEventListener(event) {
   });
 }
 // Add keyboard event listener to text area
-function textAreaElementKeydownEventListenerAsync(event) {
+function textAreaElementKeydownEventListenerASync(event) {
   const textAreaElement = event.target;
 
-  if (event.key === 'Enter' && event.which === 13 && !event.shiftKey && !isGenerating) {
+  if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
     updateInputCounter('');
     chrome.storage.local.get(['textInputValue'], (result) => {
       const textInputValue = result.textInputValue || '';
       if (textInputValue === '') return;
       const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
       if (!templateWords) {
-        textAreaElement.style.height = '56px';
+        textAreaElement.style.height = '24px';
       }
       addUserPromptToHistory(textInputValue);
     });
@@ -637,7 +636,7 @@ function textAreaElementKeydownEventListenerAsync(event) {
 function textAreaElementKeydownEventListenerSync(event) {
   const textAreaElement = event.target;
 
-  if (event.key === 'Enter' && event.which === 13 && !event.shiftKey && !isGenerating) {
+  if (event.key === 'Enter' && event.which === 13 && !event.shiftKey) {
     event.preventDefault();
     event.stopPropagation();
     updateInputCounter('');
@@ -646,7 +645,7 @@ function textAreaElementKeydownEventListenerSync(event) {
       if (textInputValue === '') return;
       const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
       if (!templateWords) {
-        textAreaElement.style.height = '56px';
+        textAreaElement.style.height = '24px';
       }
       addUserPromptToHistory(textInputValue);
     });
@@ -799,13 +798,13 @@ function addAsyncInputEvents() {
       const textInputValue = curTextAreaElement.value;
       // add text input value to local storage history
       if (textInputValue === '') return;
-      textAreaElement.style.height = '56px';
+      textAreaElement.style.height = '24px';
       addUserPromptToHistory(textInputValue);
     });
   }
 
   if (textAreaElement) {
     textAreaElement.addEventListener('input', textAreaElementInputEventListener);
-    textAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerAsync);
+    textAreaElement.addEventListener('keydown', textAreaElementKeydownEventListenerASync);
   }
 }

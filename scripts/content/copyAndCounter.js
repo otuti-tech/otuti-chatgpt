@@ -6,7 +6,7 @@ const copyRichText = (element) => {
   codeHeader.forEach((header) => {
     header.remove();
   });
-  content = content.innerHTML.trim();
+  content = content.innerHTML;
   const clipboardItem = new ClipboardItem({
     'text/html': new Blob(
       [content],
@@ -27,48 +27,48 @@ function addCopyButtonToResult(resultElement, index) {
   const copyHtmlButton = document.createElement('button');
   copyHtmlButton.textContent = 'HTML';
   copyHtmlButton.id = `result-html-copy-button-${index}`;
-  copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#444554;';
+  copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
   copyHtmlButton.addEventListener('mouseover', () => {
     copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;color:white;';
   });
   copyHtmlButton.addEventListener('mouseout', () => {
-    copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;';
+    copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
   });
 
   const copyMarkdownButton = document.createElement('button');
   copyMarkdownButton.textContent = 'Markdown';
   copyMarkdownButton.id = `result-markdown-copy-button-${index}`;
-  copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#444554;';
+  copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
   copyMarkdownButton.addEventListener('mouseover', () => {
     copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;color:white;';
   });
   copyMarkdownButton.addEventListener('mouseout', () => {
-    copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;';
+    copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
   });
 
   const copyMenu = document.createElement('div');
-  copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;background-color:#3b3b43;';
+  copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;';
   copyMenu.appendChild(copyMarkdownButton);
   copyMenu.appendChild(copyHtmlButton);
 
   const copyButton = document.createElement('button');
   copyButton.textContent = 'Copy';
   copyButton.id = `result-copy-button-${index}`;
-  copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;background-color:#444554;';
+  copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;';
   // add hover style to button
   copyButton.addEventListener('mouseover', () => {
     copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;background-color:#3b3b43;color:white;';
-    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;width:64px;background-color:#444554;';
+    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;width:64px;';
   });
   copyButton.addEventListener('mouseout', () => {
-    copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;background-color:#444554;';
-    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;background-color:#444554;';
+    copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;';
+    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;';
   });
   copyMenu.addEventListener('mouseover', () => {
-    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;width:64px;background-color:#444554;';
+    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;width:64px;';
   });
   copyMenu.addEventListener('mouseout', () => {
-    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;background-color:#444554;';
+    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;';
   });
   copyButton.addEventListener('click', () => {
     chrome.storage.local.get(['settings'], (result) => {
@@ -138,29 +138,25 @@ function addCopyButtonToResult(resultElement, index) {
   actionWrapper.appendChild(copyButton);
 }
 function updateCounterForResult(resultElement, index) {
-  chrome.storage.local.get(['settings'], (result) => {
-    const { showWordCount } = result.settings;
-    if (!showWordCount) return;
-    const prevCounter = document.querySelector(`#result-counter-${index}`);
-    let prevCounterText = '';
+  const prevCounter = document.querySelector(`#result-counter-${index}`);
+  let prevCounterText = '';
+  if (prevCounter) {
+    prevCounterText = prevCounter.innerText;
+  }
+  const resultText = resultElement.innerText;
+  const wordCount = resultText.split(/[ /]/).length; // +1 because of the "/" in the counter
+  const charCount = resultText.length;
+  const counterElement = document.createElement('div');
+  counterElement.textContent = `${Math.max(charCount, 0)} chars / ${Math.max(wordCount, 0)} words`;
+  if (prevCounterText !== counterElement.textContent) {
     if (prevCounter) {
-      prevCounterText = prevCounter.innerText;
+      prevCounter.remove();
     }
-    const resultText = resultElement.innerText;
-    const wordCount = resultText.split(/[ /]/).length; // +1 because of the "/" in the counter
-    const charCount = resultText.length;
-    const counterElement = document.createElement('div');
-    counterElement.textContent = `${Math.max(charCount, 0)} chars / ${Math.max(wordCount, 0)} words`;
-    if (prevCounterText !== counterElement.textContent) {
-      if (prevCounter) {
-        prevCounter.remove();
-      }
-      counterElement.id = `result-counter-${index}`;
-      const actionWrapper = document.querySelector(`#result-action-wrapper-${index}`);
-      if (!actionWrapper) return;
-      actionWrapper.appendChild(counterElement);
-    }
-  });
+    counterElement.id = `result-counter-${index}`;
+    const actionWrapper = document.querySelector(`#result-action-wrapper-${index}`);
+
+    actionWrapper.appendChild(counterElement);
+  }
 }
 
 function updateCounters() {
@@ -181,6 +177,18 @@ function updateCounterEventListeners() {
     addActionWrapperToResult(resultElement, i);
     updateCounterForResult(resultElement, i);
     addCopyButtonToResult(resultElement, i);
+    // Add event listeners to all assistantChats to update counter when innertext changes
+    resultElement.addEventListener('DOMCharacterDataModified', () => {
+      addActionWrapperToResult(resultElement, i);
+      updateCounterForResult(resultElement, i);
+      addCopyButtonToResult(resultElement, i);
+    });
+    // Add event listeners to all assistantChats to update counter when content changes
+    resultElement.addEventListener('DOMSubtreeModified', () => {
+      addActionWrapperToResult(resultElement, i);
+      updateCounterForResult(resultElement, i);
+      addCopyButtonToResult(resultElement, i);
+    });
   }
 }
 // eslint-disable-next-line no-unused-vars

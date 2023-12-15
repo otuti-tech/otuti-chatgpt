@@ -141,26 +141,26 @@ function updateTimestamp(conversationList) {
               if (event.target.checked && (event.shiftKey || shiftKeyPressed) && selectedConversations.length > 0) {
                 shiftKeyPressed = false;
                 const newSelectedConversations = [...selectedConversations, conversation];
-                const conversationsOrder = Array.from(conversationList.querySelectorAll('[id^=checkbox-wrapper-]')).map((c) => c.id.split('checkbox-wrapper-')[1]);
+                const conversationsOrder = Array.from(conversationList.querySelectorAll('[id^=checkbox-wrapper-]')).map((c) => c.id.split('checkbox-wrapper-')[1]?.slice(0, 5));
 
                 if (lastSelectedConversation) {
                   // find last conversation index in conversationsOrder
-                  let lastConversationIndex = conversationsOrder.findIndex((c) => c === lastSelectedConversation.id);
-                  let newConversationIndex = conversationsOrder.findIndex((c) => c === conversation.id);
+                  let lastConversationIndex = conversationsOrder.findIndex((c) => c === lastSelectedConversation.id?.slice(0, 5));
+                  let newConversationIndex = conversationsOrder.findIndex((c) => c === conversation.id?.slice(0, 5));
 
                   if (lastConversationIndex === -1 || newConversationIndex === -1) {
-                    const folderConatainingLastConversation = conversationsOrder.find((f) => f.conversationIds?.find((cid) => cid === lastSelectedConversation.id));
+                    const folderConatainingLastConversation = conversationsOrder.find((f) => f.conversationIds?.find((cid) => cid === lastSelectedConversation.id?.slice(0, 5)));
 
-                    const folderConatainingNewConversation = conversationsOrder.find((f) => f.conversationIds?.find((cid) => cid === conversation.id));
+                    const folderConatainingNewConversation = conversationsOrder.find((f) => f.conversationIds?.find((cid) => cid === conversation.id?.slice(0, 5)));
 
                     if (folderConatainingLastConversation?.id === folderConatainingNewConversation?.id) {
-                      lastConversationIndex = folderConatainingLastConversation?.conversationIds?.findIndex((cid) => cid === lastSelectedConversation.id);
-                      newConversationIndex = folderConatainingNewConversation?.conversationIds?.findIndex((cid) => cid === conversation.id);
+                      lastConversationIndex = folderConatainingLastConversation?.conversationIds?.findIndex((cid) => cid === lastSelectedConversation.id?.slice(0, 5));
+                      newConversationIndex = folderConatainingNewConversation?.conversationIds?.findIndex((cid) => cid === conversation.id?.slice(0, 5));
                       const conversationsToSelect = folderConatainingLastConversation.conversationIds?.slice(Math.min(lastConversationIndex, newConversationIndex) + 1, Math.max(lastConversationIndex, newConversationIndex)).filter((f) => typeof f === 'string');
 
                       // click on the new conversation to select it
                       conversationsToSelect.forEach((cid) => {
-                        const conv = Object.values(conversations).find((c) => c.id === cid);
+                        const conv = Object.values(conversations).find((c) => c.id?.slice(0, 5) === cid);
                         if (!selectedConversations.map((c) => c.id).includes(conv.id)) {
                           newSelectedConversations.push(conv);
                         }
@@ -177,7 +177,7 @@ function updateTimestamp(conversationList) {
 
                     // click on the new conversation to select it
                     conversationsToSelect.forEach((cid) => {
-                      const conv = Object.values(conversations).find((c) => c.id === cid);
+                      const conv = Object.values(conversations).find((c) => c.id?.slice(0, 5) === cid);
 
                       if (!selectedConversations.map((c) => c.id).includes(conv.id)) {
                         newSelectedConversations.push(conv);
@@ -204,11 +204,12 @@ function updateTimestamp(conversationList) {
             checkboxWrapper.style.display = 'block';
           });
           button.addEventListener('mouseleave', () => {
-            const curConversationList = document.querySelector('#conversation-list');
-            const selectedConversations = curConversationList.querySelectorAll('input[type="checkbox"]:checked');
-            if (selectedConversations.length === 0) {
-              checkboxWrapper.style.display = 'none';
-            }
+            chrome.storage.local.get(['selectedConversations'], (res) => {
+              const { selectedConversations } = res;
+              if (selectedConversations.length === 0) {
+                checkboxWrapper.style.display = 'none';
+              }
+            });
           });
         }
       });

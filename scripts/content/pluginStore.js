@@ -11,7 +11,7 @@ function initializePluginStoreModal(plugins) {
         style="pointer-events: auto;"
       >
         <div
-          class="grid-cols-[10px_1fr_10px] grid h-full w-full grid-rows-[minmax(10px,_1fr)_auto_minmax(10px,_1fr)] md:grid-rows-[minmax(20px,_1fr)_auto_minmax(20px,_1fr)] overflow-y-auto"
+          class="grid-cols-[minmax(10px,30px)_1fr_minmax(10px,30px)] grid h-full w-full grid-rows-[minmax(10px,_1fr)_auto_minmax(10px,_1fr)] md:grid-rows-[minmax(20px,_1fr)_auto_minmax(20px,_1fr)] overflow-y-auto"
         >
           <div
             role="dialog"
@@ -19,7 +19,7 @@ function initializePluginStoreModal(plugins) {
             aria-describedby="radix-:r2r:"
             aria-labelledby="radix-:r2q:"
             data-state="open"
-            class="relative col-auto col-start-2 row-auto row-start-2 w-full rounded-lg text-left shadow-xl transition-all left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 w-full max-w-7xl bg-gray-50 md:min-w-[672px] lg:min-w-[896px] xl:min-w-[1024px]"
+            class="relative col-auto col-start-2 row-auto row-start-2 w-full rounded-lg text-left shadow-xl transition-all left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 max-w-md w-full !max-w-7xl bg-gray-50 md:min-w-[672px] lg:min-w-[896px] xl:min-w-[1024px]"
             tabindex="-1"
             style="pointer-events: auto;"
           >
@@ -85,14 +85,6 @@ function initializePluginStoreModal(plugins) {
                   >
                     <div class="flex w-full gap-2 items-center justify-center">
                       Installed
-                    </div>
-                  </button>
-                  <button
-                    id="plugin-filter-not-installed"
-                    class="btn relative btn-neutral focus:ring-0 text-black/50"
-                  >
-                    <div class="flex w-full gap-2 items-center justify-center">
-                      Not Installed
                     </div>
                   </button>
                   <div class="relative">
@@ -360,18 +352,6 @@ function addPluginStoreEventListener(plugins) {
             addInstallButtonEventListener(filteredPlugins);
             addPaginationEventListener(filteredPlugins);
           });
-        } else if (filterType === 'not-installed') {
-          chrome.storage.local.get(['installedPlugins'], (res) => {
-            const { installedPlugins } = res;
-            filteredPlugins = allPlugins.filter((plugin) => !installedPlugins.map((p) => p.id).includes(plugin.id));
-            if (searchValue.trim() !== '') {
-              filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
-            }
-            pluginListWrapper.innerHTML = renderPluginList(filteredPlugins);
-            pluginStorePaginationWrapper.innerHTML = renderPageNumbers(filteredPlugins);
-            addInstallButtonEventListener(filteredPlugins);
-            addPaginationEventListener(filteredPlugins);
-          });
         } else {
           if (searchValue.trim() !== '') {
             filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
@@ -477,18 +457,6 @@ function addInstallButtonEventListener(plugins) {
               const pluginsDropdownWrapper = document.getElementById(`plugins-dropdown-wrapper-${idPrefix}`);
               pluginsDropdownWrapper.innerHTML = pluginsDropdown(newInstalledPlugins, enabledPluginIds, idPrefix);
               addPluginsDropdownEventListener(idPrefix);
-              const selectedFilter = document.querySelector('[id^="plugin-filter-"].btn-light');
-              const filter = selectedFilter ? selectedFilter.id.split('plugin-filter-')[1] : 'all';
-              if (filter === 'not-installed') {
-                document.querySelector(`#${pluginId}`).remove();
-                const pluginListWrapper = document.getElementById('plugin-list-wrapper');
-                const pluginStorePaginationWrapper = document.getElementById('plugin-store-pagination-wrapper');
-                const notIinstalledPlugins = allPlugins.filter((p1) => !newInstalledPlugins.map((p2) => p2.id).includes(p1.id));
-                pluginListWrapper.innerHTML = renderPluginList(notIinstalledPlugins);
-                pluginStorePaginationWrapper.innerHTML = renderPageNumbers(notIinstalledPlugins);
-                addInstallButtonEventListener(notIinstalledPlugins);
-                addPaginationEventListener(notIinstalledPlugins);
-              }
             });
           });
         }
@@ -506,7 +474,6 @@ function addInstallButtonEventListener(plugins) {
             allPlugins[allPluginIndex] = res;
             const installedPluginIndex = installedPlugins.findIndex((p) => p.id === pluginId);
             installedPlugins.splice(installedPluginIndex, 1);
-            const newEnabledPluginIds = enabledPluginIds.filter((id) => id !== pluginId);
             const selectedFilter = document.querySelector('[id^="plugin-filter-"].btn-light');
             const filter = selectedFilter ? selectedFilter.id.split('plugin-filter-')[1] : 'all';
             if (filter === 'installed') {
@@ -519,10 +486,10 @@ function addInstallButtonEventListener(plugins) {
               addPaginationEventListener(installedPlugins);
             }
 
-            chrome.storage.local.set({ allPlugins, installedPlugins, enabledPluginIds: newEnabledPluginIds });
+            chrome.storage.local.set({ allPlugins, installedPlugins });
             const idPrefix = 'navbar';
             const pluginsDropdownWrapper = document.getElementById(`plugins-dropdown-wrapper-${idPrefix}`);
-            pluginsDropdownWrapper.innerHTML = pluginsDropdown(installedPlugins, newEnabledPluginIds, idPrefix);
+            pluginsDropdownWrapper.innerHTML = pluginsDropdown(installedPlugins, enabledPluginIds, idPrefix);
             addPluginsDropdownEventListener(idPrefix);
           });
         });

@@ -1,4 +1,4 @@
-/* global navigation, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, addExpandButton, openLinksInNewTab, initializeKeyboardShortcuts, addArkoseCallback, addQuickAccessMenuEventListener, upgradeCustomInstructions, addAutoSyncToggleButton, addSounds */
+/* global getAccount, getModels, getConversationLimit, initializeStorage, cleanNav, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, addNavToggleButton, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeCopyAndCounter, initializeAddToPromptLibrary, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, initializeContentMessageListeners, addDevIndicator, addExpandButton, openLinksInNewTab, addEnforcementTriggerElement, initializeKeyboardShortcuts, addArkoseCallback, addQuickAccessMenuEventListener, upgradeCustomInstructions, watchError, showAutoSyncToast */
 
 // eslint-disable-next-line no-unused-vars
 function initialize() {
@@ -9,8 +9,12 @@ function initialize() {
     setTimeout(() => {
       initializeStorage().then(() => {
         // watchError();
+        getAccount();
+        getModels();
+        getConversationLimit();
         openLinksInNewTab();
         addNavToggleButton();
+        initializeContentMessageListeners();
         addQuickAccessMenuEventListener();
         cleanNav();
         upgradeCustomInstructions();
@@ -25,7 +29,8 @@ function initialize() {
         addExpandButton();
         addDevIndicator();
         initializeKeyboardShortcuts();
-        addSounds();
+        addEnforcementTriggerElement();
+        addArkoseCallback();
         // showAutoSyncToast();
         setTimeout(() => {
           chrome.storage.local.get(['settings'], (result) => {
@@ -33,19 +38,12 @@ function initialize() {
             if ((typeof settings?.autoSync === 'undefined' || settings?.autoSync) && !window.location.pathname.startsWith('/share/')) {
               // if (typeof settings?.autoSync === 'undefined' || settings?.autoSync) {
               initializeAutoSave();
-              addArkoseCallback();
             } else {
-              addAutoSyncToggleButton();
               initializeCopyAndCounter();
               initializeAddToPromptLibrary();
               initializeTimestamp();
               updateNewChatButtonNotSynced();
               addAsyncInputEvents();
-              navigation.addEventListener('navigate', () => {
-                setTimeout(() => {
-                  addAsyncInputEvents();
-                }, 500);
-              });
             }
             initializeReplaceDeleteConversationButton();
           });

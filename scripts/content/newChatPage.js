@@ -85,7 +85,6 @@ function customInstructionSettingsElement() {
         profileButtonWrapper.style.pointerEvents = 'none';
         profileButtonWrapper.style.opacity = '0.5';
       }
-
       profileButtonWrapper.appendChild(profileDropdown(newCustomInstructionProfiles, 'new-page'));
       profileButtonWrapper.appendChild(profileDropdownButton(newCustomInstructionProfiles, 'new-page'));
       customInstructionSettingsRight.appendChild(profileButtonWrapper);
