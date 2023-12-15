@@ -18,7 +18,7 @@ const debounce = (func, wait = 1000) => {
 const injectScript = debounce((tabId) => {
   chrome.scripting.executeScript({
     target: { tabId },
-    files: ['scripts/content/initialize.js'],
+    files: ['src/content/initialize.js'],
   });
 });
 chrome.runtime.onInstalled.addListener((detail) => {

@@ -75,11 +75,7 @@ function generateChat(
     chrome.storage.sync.get(['auth_token']).then((result) => {
       const payload = {
         action,
-        arkose_token:
-          res.settings.selectedModel.slug.includes('gpt-4') &&
-          !res.settings.selectedModel.tags.includes('Unofficial')
-            ? token
-            : null,
+        // arkose_token: res.settings.selectedModel.slug.includes('gpt-4') && !res.settings.selectedModel.tags.includes('Unofficial') ? token : null,
         model: res.settings.selectedModel.slug,
         parent_message_id: parentMessageId,
         history_and_training_disabled: !saveHistory,
@@ -232,9 +228,7 @@ function getUserSystemMessage() {
           }
           return p;
         });
-        chrome.storage.local.set({
-          customInstructionProfiles: newCustomInstructionProfiles,
-        });
+        chrome.storage.local.set({ customInstructionProfiles: newCustomInstructionProfiles });
       });
       return data;
     });
@@ -257,10 +251,7 @@ function getModels() {
           const { models, settings, account } = res;
           chrome.storage.local.set({
             models: data.models,
-            settings: {
-              ...settings,
-              selectedModel: settings.selectedModel || data.models?.[0],
-            },
+            settings: { ...settings, selectedModel: settings.selectedModel || data.models?.[0] },
           });
           if (data.models.map((m) => m.slug).find((m) => m.includes('plugins'))) {
             const isPaid =

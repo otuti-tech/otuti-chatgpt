@@ -444,7 +444,7 @@ function addConversationsEventListeners(conversationId) {
         saveButton.classList = 'btn flex justify-center gap-2 btn-primary mr-2';
         saveButton.innerText = 'Save & Submit';
         saveButton.addEventListener('click', () => {
-          window.localStorage.removeItem('arkoseToken');
+          // window.localStorage.removeItem('arkoseToken');
           if (result.settings.selectedModel.slug.includes('gpt-4')) {
             const inputForm = document.querySelector('main form');
             if (!inputForm) return;
