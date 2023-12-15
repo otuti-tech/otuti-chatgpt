@@ -8,14 +8,8 @@ const copyRichText = (element) => {
   });
   content = content.innerHTML;
   const clipboardItem = new ClipboardItem({
-    'text/html': new Blob(
-      [content],
-      { type: 'text/html' },
-    ),
-    'text/plain': new Blob(
-      [content],
-      { type: 'text/plain' },
-    ),
+    'text/html': new Blob([content], { type: 'text/html' }),
+    'text/plain': new Blob([content], { type: 'text/plain' }),
   });
   navigator.clipboard.write([clipboardItem]);
 };
@@ -27,23 +21,29 @@ function addCopyButtonToResult(resultElement, index) {
   const copyHtmlButton = document.createElement('button');
   copyHtmlButton.textContent = 'HTML';
   copyHtmlButton.id = `result-html-copy-button-${index}`;
-  copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
+  copyHtmlButton.style =
+    'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
   copyHtmlButton.addEventListener('mouseover', () => {
-    copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;color:white;';
+    copyHtmlButton.style =
+      'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;color:white;';
   });
   copyHtmlButton.addEventListener('mouseout', () => {
-    copyHtmlButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
+    copyHtmlButton.style =
+      'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
   });
 
   const copyMarkdownButton = document.createElement('button');
   copyMarkdownButton.textContent = 'Markdown';
   copyMarkdownButton.id = `result-markdown-copy-button-${index}`;
-  copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
+  copyMarkdownButton.style =
+    'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
   copyMarkdownButton.addEventListener('mouseover', () => {
-    copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;color:white;';
+    copyMarkdownButton.style =
+      'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;background-color:#3b3b43;color:white;';
   });
   copyMarkdownButton.addEventListener('mouseout', () => {
-    copyMarkdownButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
+    copyMarkdownButton.style =
+      'border-radius:4px;border:1px solid lightslategray;padding:4px;width:64px;';
   });
 
   const copyMenu = document.createElement('div');
@@ -54,21 +54,26 @@ function addCopyButtonToResult(resultElement, index) {
   const copyButton = document.createElement('button');
   copyButton.textContent = 'Copy';
   copyButton.id = `result-copy-button-${index}`;
-  copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;';
+  copyButton.style =
+    'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;';
   // add hover style to button
   copyButton.addEventListener('mouseover', () => {
-    copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;background-color:#3b3b43;color:white;';
+    copyButton.style =
+      'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;background-color:#3b3b43;color:white;';
     copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;width:64px;';
   });
   copyButton.addEventListener('mouseout', () => {
-    copyButton.style = 'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;';
-    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;';
+    copyButton.style =
+      'border-radius:4px;border:1px solid lightslategray;padding:4px;position:absolute;right:0;width:64px;';
+    copyMenu.style =
+      'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;';
   });
   copyMenu.addEventListener('mouseover', () => {
     copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;width:64px;';
   });
   copyMenu.addEventListener('mouseout', () => {
-    copyMenu.style = 'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;';
+    copyMenu.style =
+      'font-size:10px;position:absolute;right:0;bottom:49px;display:none;width:64px;';
   });
   copyButton.addEventListener('click', () => {
     chrome.storage.local.get(['settings'], (result) => {
@@ -76,19 +81,17 @@ function addCopyButtonToResult(resultElement, index) {
       let resultText = resultElement.innerText;
       if (copyMode) {
         const parentElement = resultElement.closest('div.bg-gray-50.dark\\:bg-\\[\\#444654\\]');
-        const previousText = parentElement.previousElementSibling.querySelector('.whitespace-pre-wrap').textContent;
+        const previousText =
+          parentElement.previousElementSibling.querySelector('.whitespace-pre-wrap').textContent;
         resultText = `>> USER: ${previousText}\n>> ASSISTANT: ${resultElement.innerText}`;
       }
 
       navigator.clipboard.writeText(resultText);
       // animate copy button text to copied and back in 3 seconds
       copyButton.textContent = 'Copied!';
-      setTimeout(
-        () => {
-          copyButton.textContent = 'Copy';
-        },
-        1000,
-      );
+      setTimeout(() => {
+        copyButton.textContent = 'Copy';
+      }, 1000);
     });
   });
   copyHtmlButton.addEventListener('click', () => {
@@ -97,18 +100,16 @@ function addCopyButtonToResult(resultElement, index) {
       const newResultElement = resultElement.cloneNode(true);
       if (copyMode) {
         const parentElement = resultElement.closest('div.bg-gray-50.dark\\:bg-\\[\\#444654\\]');
-        const previousText = parentElement.previousElementSibling.querySelector('.whitespace-pre-wrap').textContent;
+        const previousText =
+          parentElement.previousElementSibling.querySelector('.whitespace-pre-wrap').textContent;
         newResultElement.innerHTML = `<div>USER:</div><div>${previousText}</div><br><div>ASSISTANT:</div>${newResultElement.innerHTML}`;
       }
       copyRichText(newResultElement);
       // animate copy button text to copied and back in 3 seconds
       copyHtmlButton.textContent = 'Copied!';
-      setTimeout(
-        () => {
-          copyHtmlButton.textContent = 'HTML';
-        },
-        1000,
-      );
+      setTimeout(() => {
+        copyHtmlButton.textContent = 'HTML';
+      }, 1000);
     });
   });
   copyMarkdownButton.addEventListener('click', () => {
@@ -119,18 +120,16 @@ function addCopyButtonToResult(resultElement, index) {
 
       if (copyMode) {
         const parentElement = resultElement.closest('div.bg-gray-50.dark\\:bg-\\[\\#444654\\]');
-        const previousText = parentElement.previousElementSibling.querySelector('.whitespace-pre-wrap').textContent;
+        const previousText =
+          parentElement.previousElementSibling.querySelector('.whitespace-pre-wrap').textContent;
         markdown = `##USER:\n${previousText}\n\n##ASSISTANT:\n ${markdown}`;
       }
       navigator.clipboard.writeText(markdown);
       // animate copy markdownButton text to copied and back in 3 seconds
       copyMarkdownButton.textContent = 'Copied!';
-      setTimeout(
-        () => {
-          copyMarkdownButton.textContent = 'Markdown';
-        },
-        1500,
-      );
+      setTimeout(() => {
+        copyMarkdownButton.textContent = 'Markdown';
+      }, 1500);
     });
   });
   const actionWrapper = document.querySelector(`#result-action-wrapper-${index}`);

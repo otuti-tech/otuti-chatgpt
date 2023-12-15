@@ -19,9 +19,18 @@ function addQuickAccessMenuEventListener() {
     const previousTrigger = previousAtPosition > previousHashtagPosition ? '@' : '#';
     const previousTriggerPosition = Math.max(previousAtPosition, previousHashtagPosition);
     // get the word between the previous trigger and the cursor
-    if (!quickAccessMenuElement && previousTriggerPosition !== -1 && cursorPosition > previousTriggerPosition && textAreaValue.lastIndexOf(' ', cursorPosition - 1) < previousTriggerPosition) {
+    if (
+      !quickAccessMenuElement &&
+      previousTriggerPosition !== -1 &&
+      cursorPosition > previousTriggerPosition &&
+      textAreaValue.lastIndexOf(' ', cursorPosition - 1) < previousTriggerPosition
+    ) {
       quickAccessMenu(previousTrigger);
-    } else if (quickAccessMenuElement && (previousTriggerPosition === -1 || textAreaValue.lastIndexOf(' ', cursorPosition - 1) > previousTriggerPosition)) {
+    } else if (
+      quickAccessMenuElement &&
+      (previousTriggerPosition === -1 ||
+        textAreaValue.lastIndexOf(' ', cursorPosition - 1) > previousTriggerPosition)
+    ) {
       quickAccessMenuElement.remove();
     }
   });
@@ -48,9 +57,17 @@ function addQuickAccessMenuEventListener() {
       const previousTriggerPosition = Math.max(previousAtPosition, previousHashtagPosition);
 
       // if there is a space between previoustriggerpos and cur cursor position
-      if (!quickAccessMenuElement && previousTriggerPosition !== -1 && cursorPosition > previousTriggerPosition && textAreaValue.lastIndexOf(' ', cursorPosition - 1) < previousTriggerPosition) {
+      if (
+        !quickAccessMenuElement &&
+        previousTriggerPosition !== -1 &&
+        cursorPosition > previousTriggerPosition &&
+        textAreaValue.lastIndexOf(' ', cursorPosition - 1) < previousTriggerPosition
+      ) {
         quickAccessMenu(previousTrigger);
-      } else if (previousTriggerPosition === -1 || textAreaValue.lastIndexOf(' ', cursorPosition - 1) > previousTriggerPosition) {
+      } else if (
+        previousTriggerPosition === -1 ||
+        textAreaValue.lastIndexOf(' ', cursorPosition - 1) > previousTriggerPosition
+      ) {
         quickAccessMenuElement.remove();
       }
     } else if (!quickAccessMenuElement.contains(e.target)) {
@@ -63,7 +80,9 @@ function addQuickAccessMenuEventListener() {
     const menuContent = menu.querySelector('#quick-access-menu-content');
     if (event.key === 'ArrowUp') {
       // rotate focus between quick-access-menu-item s where style.display:block
-      const menuItems = menuContent.querySelectorAll('[id^=quick-access-menu-item-]:not([style*="display: none"])');
+      const menuItems = menuContent.querySelectorAll(
+        '[id^=quick-access-menu-item-]:not([style*="display: none"])',
+      );
       if (menuItems.length > 0) {
         if (!menu.contains(document.activeElement)) {
           menu.focus();
@@ -83,7 +102,9 @@ function addQuickAccessMenuEventListener() {
     }
     if (event.key === 'ArrowDown') {
       // rotate focus to between quick-access-menu-item s
-      const menuItems = menuContent.querySelectorAll('[id^=quick-access-menu-item-]:not([style*="display: none"])');
+      const menuItems = menuContent.querySelectorAll(
+        '[id^=quick-access-menu-item-]:not([style*="display: none"])',
+      );
       if (menuItems.length > 0) {
         if (!menu.contains(document.activeElement)) {
           menu.focus();
@@ -146,10 +167,12 @@ function quickAccessMenu(trigger) {
   }
   const menu = document.createElement('div');
   menu.id = 'quick-access-menu';
-  menu.classList = 'absolute flex flex-col gap-2 bg-white dark:bg-gray-800 border border-white/20 rounded shadow-xs';
+  menu.classList =
+    'absolute flex flex-col gap-2 bg-white dark:bg-gray-800 border border-white/20 rounded shadow-xs';
   menu.style = 'height: 300px; top:-300px; left:0; width:100%; z-index: 1000;';
   const menuHeader = document.createElement('div');
-  menuHeader.classList = 'flex justify-between items-center p-2 border-b dark:border-white/20 border-gray-900/50';
+  menuHeader.classList =
+    'flex justify-between items-center p-2 border-b dark:border-white/20 border-gray-900/50';
   const menuTitle = document.createElement('h3');
   menuTitle.classList = 'text-lg font-bold';
   menuHeader.appendChild(menuTitle);
@@ -194,7 +217,8 @@ function loadCustomPrompts() {
       const prompt = sortedCustomPrompts[i];
       const promptElement = document.createElement('button');
       promptElement.id = `quick-access-menu-item-${i}`;
-      promptElement.classList = 'btn w-full text-left focus:outline focus:ring-2 focus:ring-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700';
+      promptElement.classList =
+        'btn w-full text-left focus:outline focus:ring-2 focus:ring-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700';
       promptElement.innerHTML = `<span style="font-weight:bold; font-size:16px; margin-right:16px;">${prompt.title}</span><span style="font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;color:#888;">${prompt.text}</span>`;
       promptElement.addEventListener('click', () => {
         const inputForm = document.querySelector('main form');
@@ -206,7 +230,10 @@ function loadCustomPrompts() {
         const textAreaValue = textAreaElement.value;
         const cursorPosition = textAreaElement.selectionStart;
         const previousAtPosition = textAreaValue.lastIndexOf('@', cursorPosition);
-        const newText = textAreaValue.substring(0, previousAtPosition) + prompt.text + textAreaValue.substring(cursorPosition);
+        const newText =
+          textAreaValue.substring(0, previousAtPosition) +
+          prompt.text +
+          textAreaValue.substring(cursorPosition);
         textAreaElement.value = newText;
         textAreaElement.focus();
         textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
@@ -228,7 +255,7 @@ function loadPromptChains() {
     if (!promptChains) {
       const noPromptChains = document.createElement('div');
       noPromptChains.classList = 'text-center text-gray-500';
-      noPromptChains.textContent = 'You haven\'t created any prompt chain yet.';
+      noPromptChains.textContent = "You haven't created any prompt chain yet.";
       menuContent.appendChild(noPromptChains);
       return;
     }
@@ -236,7 +263,8 @@ function loadPromptChains() {
       const prompt = sortedPromptChains[i];
       const promptElement = document.createElement('button');
       promptElement.id = `quick-access-menu-item-${i}`;
-      promptElement.classList = 'btn w-full text-left focus:outline focus:ring-2 focus:ring-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700';
+      promptElement.classList =
+        'btn w-full text-left focus:outline focus:ring-2 focus:ring-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700';
       promptElement.innerHTML = `<span style="font-weight:bold; font-size:16px; margin-right:16px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;">${prompt.title}</span><span style="font-size:14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;color:#888;">Step 1: ${prompt.steps[0]}</span>`;
       // also trigger on enter
       promptElement.addEventListener('click', () => {

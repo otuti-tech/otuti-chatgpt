@@ -10,9 +10,9 @@
 // add eventlistener to the catch call to https://chat.openai.com/api/auth/session and grab the payload
 //------------------------------------------------------------------------------------------------
 // eslint-disable-next-line prefer-const
-let isGenerating = false;// true when the user is generating a response
+let isGenerating = false; // true when the user is generating a response
 // eslint-disable-next-line prefer-const
-let disableTextInput = false;// to prevent input from showing extra line right before submit
+let disableTextInput = false; // to prevent input from showing extra line right before submit
 // eslint-disable-next-line prefer-const
 let chatStreamIsClosed = false; // to force close the chat stream
 // eslint-disable-next-line prefer-const
@@ -58,49 +58,62 @@ function initializeStorage() {
   // });
   return chrome.storage.sync.get(['conversationsOrder']).then((res) => {
     const syncConversationsOrder = res.conversationsOrder || [];
-    return chrome.storage.local.get(['selectedConversations', 'conversationsOrder', 'customModels']).then((result) => {
-      const localConversationsOrder = result.conversationsOrder || [];
-      return chrome.storage.sync.set({
-        conversationsOrder: [...new Set([...syncConversationsOrder, ...localConversationsOrder])],
-      }).then(() => chrome.storage.local.remove(['conversationsOrder']).then(() => {
-        chrome.storage.local.set({
-          selectedConversations: result.selectedConversations || [],
-          lastSelectedConversation: null,
-          customModels: result.customModels || [],
-          unofficialModels: [
-            {
-              title: 'gpt-4-0314',
-              description: 'Previous snapshot of the GPT-4. The March 14th snapshot will be available until June 14th.',
-              slug: 'gpt-4-0314',
-              tags: ['Unofficial'],
-            },
-            {
-              title: 'gpt-4-32k',
-              description: 'GPT-4 with 32k token limit.',
-              slug: 'gpt-4-32k',
-              tags: ['Unofficial'],
-            },
-            {
-              title: 'gpt-4-32k-0314',
-              description: 'Previous snapshot of the GPT-4-32k. The March 14th snapshot will be available until June 14th.',
-              slug: 'gpt-4-32k-0314',
-              tags: ['Unofficial'],
-            },
-          ],
-        });
-      }));
-    });
+    return chrome.storage.local
+      .get(['selectedConversations', 'conversationsOrder', 'customModels'])
+      .then((result) => {
+        const localConversationsOrder = result.conversationsOrder || [];
+        return chrome.storage.sync
+          .set({
+            conversationsOrder: [
+              ...new Set([...syncConversationsOrder, ...localConversationsOrder]),
+            ],
+          })
+          .then(() =>
+            chrome.storage.local.remove(['conversationsOrder']).then(() => {
+              chrome.storage.local.set({
+                selectedConversations: result.selectedConversations || [],
+                lastSelectedConversation: null,
+                customModels: result.customModels || [],
+                unofficialModels: [
+                  {
+                    title: 'gpt-4-0314',
+                    description:
+                      'Previous snapshot of the GPT-4. The March 14th snapshot will be available until June 14th.',
+                    slug: 'gpt-4-0314',
+                    tags: ['Unofficial'],
+                  },
+                  {
+                    title: 'gpt-4-32k',
+                    description: 'GPT-4 with 32k token limit.',
+                    slug: 'gpt-4-32k',
+                    tags: ['Unofficial'],
+                  },
+                  {
+                    title: 'gpt-4-32k-0314',
+                    description:
+                      'Previous snapshot of the GPT-4-32k. The March 14th snapshot will be available until June 14th.',
+                    slug: 'gpt-4-32k-0314',
+                    tags: ['Unofficial'],
+                  },
+                ],
+              });
+            }),
+          );
+      });
   });
 }
 // eslint-disable-next-line new-cap
-const markdown = (role, searchValue = '') => new markdownit({
-  html: role === 'assistant' && searchValue === '',
-  linkify: true,
-  highlight(str, _lang) {
-    const { language, value } = hljs.highlightAuto(str);
-    return `<pre dir="ltr" class="w-full"><div class="bg-black mb-4 rounded-md"><div id='code-header' class="flex items-center relative text-gray-200 ${role === 'user' ? 'bg-gray-900' : 'bg-gray-800'} px-4 py-2 text-xs font-sans rounded-t-md" style='border-top-left-radius:6px;border-top-right-radius:6px;'><span class="">${language}</span><button id='copy-code' data-initialized="false" class="flex ml-auto gap-2"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>Copy code</button></div><div class="p-4 overflow-y-auto"><code class="!whitespace-pre hljs language-${language}">${value}</code></div></div></pre>`;
-  },
-});
+const markdown = (role, searchValue = '') =>
+  new markdownit({
+    html: role === 'assistant' && searchValue === '',
+    linkify: true,
+    highlight(str, _lang) {
+      const { language, value } = hljs.highlightAuto(str);
+      return `<pre dir="ltr" class="w-full"><div class="bg-black mb-4 rounded-md"><div id='code-header' class="flex items-center relative text-gray-200 ${
+        role === 'user' ? 'bg-gray-900' : 'bg-gray-800'
+      } px-4 py-2 text-xs font-sans rounded-t-md" style='border-top-left-radius:6px;border-top-right-radius:6px;'><span class="">${language}</span><button id='copy-code' data-initialized="false" class="flex ml-auto gap-2"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>Copy code</button></div><div class="p-4 overflow-y-auto"><code class="!whitespace-pre hljs language-${language}">${value}</code></div></div></pre>`;
+    },
+  });
 function watchError() {
   const targetNode = document.body;
   const config = { childList: true, subtree: true };
@@ -111,14 +124,17 @@ function watchError() {
         const error = document.querySelector('h2')?.textContent === 'Oops, an error occurred!';
         if (error) {
           chrome.storage.local.get('settings', ({ settings }) => {
-            chrome.storage.local.set({
-              settings: {
-                ...settings,
-                autoSync: false,
+            chrome.storage.local.set(
+              {
+                settings: {
+                  ...settings,
+                  autoSync: false,
+                },
               },
-            }, () => {
-              refreshPage();
-            });
+              () => {
+                refreshPage();
+              },
+            );
           });
         }
       }
@@ -149,7 +165,8 @@ function addDevIndicator() {
   chrome.storage.local.get('environment', ({ environment }) => {
     if (environment === 'development') {
       const devIndicator = document.createElement('div');
-      devIndicator.style = 'position:fixed;bottom:16px;right:16px;z-index:9000;background-color:#19c37d;width:4px;height:4px;border-radius:100%;';
+      devIndicator.style =
+        'position:fixed;bottom:16px;right:16px;z-index:9000;background-color:#19c37d;width:4px;height:4px;border-radius:100%;';
       document.body.appendChild(devIndicator);
     }
   });
@@ -171,20 +188,26 @@ let scrolUpDetected = false;
 function addScrollDetector(element) {
   let lastScrollTop = element.scrollTop;
   scrolUpDetected = false;
-  element.addEventListener('scroll', () => { // or window.addEventListener("scroll"....
-    const st = element.scrollTop; // Credits: "https://github.com/qeremy/so/blob/master/so.dom.js#L426"
-    if (st > lastScrollTop) {
-      // downscroll code
-      // if reached the end of the page set scrolUpDetected to false
-      if (element.scrollHeight - element.scrollTop === element.clientHeight) {
-        scrolUpDetected = false;
-      }
-    } else if (st < lastScrollTop - 3) { // 20 is the threshold
-      // upscroll code
-      scrolUpDetected = true;
-    } // else was horizontal scroll
-    lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
-  }, false);
+  element.addEventListener(
+    'scroll',
+    () => {
+      // or window.addEventListener("scroll"....
+      const st = element.scrollTop; // Credits: "https://github.com/qeremy/so/blob/master/so.dom.js#L426"
+      if (st > lastScrollTop) {
+        // downscroll code
+        // if reached the end of the page set scrolUpDetected to false
+        if (element.scrollHeight - element.scrollTop === element.clientHeight) {
+          scrolUpDetected = false;
+        }
+      } else if (st < lastScrollTop - 3) {
+        // 20 is the threshold
+        // upscroll code
+        scrolUpDetected = true;
+      } // else was horizontal scroll
+      lastScrollTop = st <= 0 ? 0 : st; // For Mobile or negative scrolling
+    },
+    false,
+  );
 }
 function addScrollButtons() {
   const existingScrollButtonWrapper = document.getElementById('scroll-button-wrapper');
@@ -192,12 +215,15 @@ function addScrollButtons() {
 
   const scrollButtonWrapper = document.createElement('div');
   scrollButtonWrapper.id = 'scroll-button-wrapper';
-  scrollButtonWrapper.className = 'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
+  scrollButtonWrapper.className =
+    'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
   scrollButtonWrapper.style = 'bottom: 6rem;right: 3rem;width: 2rem;height: 4rem;flex-wrap:wrap;';
   const scrollUpButton = document.createElement('button');
   scrollUpButton.id = 'scroll-up-button';
-  scrollUpButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="4" viewBox="0 0 48 48" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M24 44V4m20 20L24 4 4 24"></path></svg>';
-  scrollUpButton.className = 'flex items-center justify-center border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-t-md z-10';
+  scrollUpButton.innerHTML =
+    '<svg stroke="currentColor" fill="none" stroke-width="4" viewBox="0 0 48 48" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M24 44V4m20 20L24 4 4 24"></path></svg>';
+  scrollUpButton.className =
+    'flex items-center justify-center border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-t-md z-10';
   scrollUpButton.style = 'width: 2rem;height: 2rem;border: 1px solid;';
   scrollUpButton.addEventListener('click', () => {
     const conversationTop = document.querySelector('[id^=message-wrapper-]');
@@ -207,8 +233,10 @@ function addScrollButtons() {
 
   const scrollDownButton = document.createElement('button');
   scrollDownButton.id = 'scroll-down-button';
-  scrollDownButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="4" viewBox="0 0 48 48" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M24 4v40M4 24l20 20 20-20"></path></svg>';
-  scrollDownButton.className = 'flex items-center justify-center border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-b-md z-10';
+  scrollDownButton.innerHTML =
+    '<svg stroke="currentColor" fill="none" stroke-width="4" viewBox="0 0 48 48" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M24 4v40M4 24l20 20 20-20"></path></svg>';
+  scrollDownButton.className =
+    'flex items-center justify-center border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-b-md z-10';
   scrollDownButton.style = 'width: 2rem;height: 2rem;border: 1px solid; border-top: none;';
   scrollDownButton.addEventListener('click', () => {
     const conversationBottom = document.querySelector('#conversation-bottom');
@@ -237,43 +265,51 @@ function addNavToggleButton() {
     const navToggleButton = document.createElement('div');
     navToggleButton.id = 'nav-toggle-button';
     navToggleButton.title = 'Hide/Show Sidebar (CMD/CTRL + ALT + H)';
-    navToggleButton.className = 'absolute flex items-center justify-center bg-gray-900 text-gray-200 text-xs font-sans cursor-pointer rounded-r-md';
+    navToggleButton.className =
+      'absolute flex items-center justify-center bg-gray-900 text-gray-200 text-xs font-sans cursor-pointer rounded-r-md';
 
     if (settings?.navOpen || settings?.navOpen === undefined) {
-      navToggleButton.style = 'width:16px;height:40px;right:-16px;bottom:0px;font-size:20px;z-index: 100;';
+      navToggleButton.style =
+        'width:16px;height:40px;right:-16px;bottom:0px;font-size:20px;z-index: 100;';
       navToggleButton.innerHTML = '‹';
     } else {
       sidebar.style.marginLeft = '-260px';
       mainContent.classList.replace('md:pl-[260px]', 'md:pl-0');
-      navToggleButton.style = 'width:40px;height:40px;right:-40px;bottom:0px;font-size:20px;z-index: 100;';
+      navToggleButton.style =
+        'width:40px;height:40px;right:-40px;bottom:0px;font-size:20px;z-index: 100;';
       navToggleButton.innerHTML = '›';
     }
     navToggleButton.addEventListener('click', () => {
       chrome.storage.local.get(['settings'], (res) => {
         const curNavToggleBtn = document.querySelector('#nav-toggle-button');
         const newNavOpen = curNavToggleBtn.innerHTML === '›';
-        chrome.storage.local.set({
-          settings: {
-            ...res.settings,
-            navOpen: newNavOpen,
+        chrome.storage.local.set(
+          {
+            settings: {
+              ...res.settings,
+              navOpen: newNavOpen,
+            },
           },
-        }, () => {
-          if (newNavOpen) {
-            const nav = document.querySelector('.w-\\[260px\\]').parentElement;
-            const main = nav?.nextElementSibling;
-            nav.style.marginLeft = '0px';
-            main.classList.replace('md:pl-0', 'md:pl-[260px]');
-            curNavToggleBtn.style = 'width:16px;height:40px;right:-16px;bottom:0px;font-size:20px;z-index: 100;';
-            curNavToggleBtn.innerHTML = '‹';
-          } else {
-            const nav = document.querySelector('.w-\\[260px\\]').parentElement;
-            const main = nav?.nextElementSibling;
-            nav.style.marginLeft = '-260px';
-            main.classList.replace('md:pl-[260px]', 'md:pl-0');
-            curNavToggleBtn.style = 'width:40px;height:40px;right:-40px;bottom:0px;font-size:20px;z-index: 100;';
-            curNavToggleBtn.innerHTML = '›';
-          }
-        });
+          () => {
+            if (newNavOpen) {
+              const nav = document.querySelector('.w-\\[260px\\]').parentElement;
+              const main = nav?.nextElementSibling;
+              nav.style.marginLeft = '0px';
+              main.classList.replace('md:pl-0', 'md:pl-[260px]');
+              curNavToggleBtn.style =
+                'width:16px;height:40px;right:-16px;bottom:0px;font-size:20px;z-index: 100;';
+              curNavToggleBtn.innerHTML = '‹';
+            } else {
+              const nav = document.querySelector('.w-\\[260px\\]').parentElement;
+              const main = nav?.nextElementSibling;
+              nav.style.marginLeft = '-260px';
+              main.classList.replace('md:pl-[260px]', 'md:pl-0');
+              curNavToggleBtn.style =
+                'width:40px;height:40px;right:-40px;bottom:0px;font-size:20px;z-index: 100;';
+              curNavToggleBtn.innerHTML = '›';
+            }
+          },
+        );
       });
     });
     sidebar.appendChild(navToggleButton);
@@ -288,7 +324,11 @@ function showHideTextAreaElement(forceShow = false) {
   if (allMessageWrapper.length > 0) {
     const lastMessageWrapperElement = allMessageWrapper[allMessageWrapper.length - 1];
 
-    if (!forceShow && lastMessageWrapperElement && lastMessageWrapperElement.dataset.role === 'user') {
+    if (
+      !forceShow &&
+      lastMessageWrapperElement &&
+      lastMessageWrapperElement.dataset.role === 'user'
+    ) {
       textAreaParent.style.display = 'none';
       if (continueButton) continueButton.style.display = 'none';
     } else {
@@ -311,28 +351,47 @@ function showNewChatPage() {
 
     const { conversationsAreSynced, account, settings } = result;
     const {
-      selectedLanguage, selectedTone, selectedWritingStyle, autoClick, showExamplePrompts, autoResetTopNav,
+      selectedLanguage,
+      selectedTone,
+      selectedWritingStyle,
+      autoClick,
+      showExamplePrompts,
+      autoResetTopNav,
     } = settings;
-    chrome.storage.local.set({
-      settings: {
-        ...settings,
-        autoClick: false,
-        selectedLanguage: autoResetTopNav ? languageList.find((language) => language.code === 'default') : selectedLanguage,
-        selectedTone: autoResetTopNav ? toneList.find((tone) => tone.code === 'default') : selectedTone,
-        selectedWritingStyle: autoResetTopNav ? writingStyleList.find((writingStyle) => writingStyle.code === 'default') : selectedWritingStyle,
+    chrome.storage.local.set(
+      {
+        settings: {
+          ...settings,
+          autoClick: false,
+          selectedLanguage: autoResetTopNav
+            ? languageList.find((language) => language.code === 'default')
+            : selectedLanguage,
+          selectedTone: autoResetTopNav
+            ? toneList.find((tone) => tone.code === 'default')
+            : selectedTone,
+          selectedWritingStyle: autoResetTopNav
+            ? writingStyleList.find((writingStyle) => writingStyle.code === 'default')
+            : selectedWritingStyle,
+        },
       },
-    }, () => {
-      if (autoResetTopNav) {
-        document.querySelectorAll('#language-list-dropdown li')?.[0]?.click();
-        document.querySelectorAll('#tone-list-dropdown li')?.[0]?.click();
-        document.querySelectorAll('#writing-style-list-dropdown li')?.[0]?.click();
-      }
-      document.querySelector('#auto-click-button')?.classList?.replace('btn-primary', 'btn-neutral');
-    });
+      () => {
+        if (autoResetTopNav) {
+          document.querySelectorAll('#language-list-dropdown li')?.[0]?.click();
+          document.querySelectorAll('#tone-list-dropdown li')?.[0]?.click();
+          document.querySelectorAll('#writing-style-list-dropdown li')?.[0]?.click();
+        }
+        document
+          .querySelector('#auto-click-button')
+          ?.classList?.replace('btn-primary', 'btn-neutral');
+      },
+    );
     runningPromptChainSteps = undefined;
     runningPromptChainIndex = 0;
     document.title = 'New Page';
-    const planName = account?.account_plan?.subscription_plan || account?.accounts?.default?.entitlement?.subscription_plan || 'chatgptfreeplan';
+    const planName =
+      account?.account_plan?.subscription_plan ||
+      account?.accounts?.default?.entitlement?.subscription_plan ||
+      'chatgptfreeplan';
     if (!conversationsAreSynced) return;
     const focusedConversations = document.querySelectorAll('.selected');
     focusedConversations.forEach((c) => {
@@ -356,13 +415,14 @@ function showNewChatPage() {
     textAreaElement.focus();
     showHideTextAreaElement();
     if (showExamplePrompts) loadExamplePrompts();
-    initializeRegenerateResponseButton();// basically just hide the button, so conversationId is not needed
+    initializeRegenerateResponseButton(); // basically just hide the button, so conversationId is not needed
     handleQueryParams(search);
   });
 }
 function suggestionButton(suggestion) {
   const button = document.createElement('button');
-  button.className = 'btn relative btn-neutral group w-full whitespace-nowrap rounded-xl text-left text-gray-700 shadow-[0px_1px_6px_0px_rgba(0,0,0,0.02)] dark:text-gray-300 md:whitespace-normal';
+  button.className =
+    'btn relative btn-neutral group w-full whitespace-nowrap rounded-xl text-left text-gray-700 shadow-[0px_1px_6px_0px_rgba(0,0,0,0.02)] dark:text-gray-300 md:whitespace-normal';
   button.style = 'width: 49%;';
   button.innerHTML = `<div class="flex w-full gap-2 items-center justify-center"><div class="flex w-full items-center justify-between"><div class="flex flex-col overflow-hidden"><div class="truncate font-semibold">${suggestion.title}</div><div class="truncate opacity-50">${suggestion.description}</div></div><div class="absolute bottom-0 right-0 top-0 flex items-center rounded-xl bg-gradient-to-l from-gray-100 from-[60%] pl-6 pr-3 text-gray-700 opacity-0 group-hover:opacity-100 dark:from-gray-700 dark:text-gray-200"><span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg></span></div></div></div>`;
   button.addEventListener('click', () => {
@@ -435,21 +495,33 @@ function addArkoseScript() {
   arkoseApiScript.setAttribute('type', 'text/javascript');
   arkoseApiScript.setAttribute('data-status', 'loading');
   arkoseApiScript.setAttribute('data-callback', 'useArkoseSetupEnforcement');
-  arkoseApiScript.setAttribute('src', chrome.runtime.getURL('v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/api.js'));
+  arkoseApiScript.setAttribute(
+    'src',
+    chrome.runtime.getURL('v2/35536E1E-65B4-4D96-9D97-6ADB7EFF8147/api.js'),
+  );
   document.body.appendChild(arkoseApiScript);
 }
 function addEnforcementTriggerElement() {
   const main = document.querySelector('main');
-  if (!main) { return; }
+  if (!main) {
+    return;
+  }
   const inputForm = main.querySelector('form');
-  if (!inputForm) { return; }
+  if (!inputForm) {
+    return;
+  }
   if (inputForm.querySelector('#enforcement-trigger')) return;
-  inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
+  inputForm.firstChild.insertAdjacentHTML(
+    'beforeend',
+    '<button type="button" class="hidden" id="enforcement-trigger"></button>',
+  );
 }
 
 function replaceTextAreaElemet(settings) {
   const inputForm = document.querySelector('main form');
-  if (!inputForm) { return false; }
+  if (!inputForm) {
+    return false;
+  }
   if (settings.customConversationWidth) {
     inputForm.style = `${inputForm.style.cssText}; max-width:${settings.conversationWidth}%;`;
   }
@@ -464,7 +536,8 @@ function replaceTextAreaElemet(settings) {
   let textAreaElement = inputForm.querySelector('textarea');
 
   if (!textAreaElement) {
-    const textAreaElementWrapperHTML = '<div class="flex flex-col w-full py-[10px] flex-grow md:py-4 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-xl shadow-xs dark:shadow-xs"><textarea id="prompt-textarea" tabindex="0" data-id="request-:r0:-0" rows="1" placeholder="Send a message." class="m-0 w-full resize-none border-0 bg-transparent p-0 pr-10 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:pr-12 pl-3 md:pl-0" style="max-height: 200px; height: 24px; overflow-y: hidden;"></textarea><button class="absolute p-1 rounded-md bottom-[10px] md:bottom-3 md:p-2 md:right-3 dark:hover:bg-gray-900 dark:disabled:hover:bg-transparent right-2 disabled:text-gray-400 text-white transition-colors disabled:opacity-40"><span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg></span></button></div>';
+    const textAreaElementWrapperHTML =
+      '<div class="flex flex-col w-full py-[10px] flex-grow md:py-4 md:pl-4 relative border border-black/10 bg-white dark:border-gray-900/50 dark:text-white dark:bg-gray-700 rounded-xl shadow-xs dark:shadow-xs"><textarea id="prompt-textarea" tabindex="0" data-id="request-:r0:-0" rows="1" placeholder="Send a message." class="m-0 w-full resize-none border-0 bg-transparent p-0 pr-10 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:pr-12 pl-3 md:pl-0" style="max-height: 200px; height: 24px; overflow-y: hidden;"></textarea><button class="absolute p-1 rounded-md bottom-[10px] md:bottom-3 md:p-2 md:right-3 dark:hover:bg-gray-900 dark:disabled:hover:bg-transparent right-2 disabled:text-gray-400 text-white transition-colors disabled:opacity-40"><span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg></span></button></div>';
     // insert text area element wrapper in input form first child at the end
     inputForm.firstChild.insertAdjacentHTML('beforeend', textAreaElementWrapperHTML);
     textAreaElement = inputForm.querySelector('textarea');
@@ -527,13 +600,15 @@ function addInputCounter() {
   if (existingInputCounterElement) existingInputCounterElement.remove();
   const inputCounterElement = document.createElement('span');
   inputCounterElement.id = 'gptx-input-counter';
-  inputCounterElement.style = 'position: absolute; bottom: -15px; right: 0px; font-size: 10px; color: #999; opacity: 0.8;z-index: 100;';
+  inputCounterElement.style =
+    'position: absolute; bottom: -15px; right: 0px; font-size: 10px; color: #999; opacity: 0.8;z-index: 100;';
   inputCounterElement.innerText = '0 chars / 0 words';
 
   textAreaElement.parentElement.appendChild(inputCounterElement);
 }
 function getGPT4CounterMessageCapWindow(messageCapWindow) {
-  if (messageCapWindow < 60) return messageCapWindow < 2 ? 'minute' : ''.concat(messageCapWindow, ' minutes');
+  if (messageCapWindow < 60)
+    return messageCapWindow < 2 ? 'minute' : ''.concat(messageCapWindow, ' minutes');
   const n = Math.floor(messageCapWindow / 60);
   if (n < 24) return n < 2 ? 'hour' : ''.concat(n, ' hours');
   const t = Math.floor(n / 24);
@@ -549,23 +624,35 @@ function addGpt4Counter() {
   if (existingGpt4CounterElement) existingGpt4CounterElement.remove();
   const gpt4CounterElement = document.createElement('span');
   gpt4CounterElement.id = 'gpt4-counter';
-  gpt4CounterElement.style = 'position: absolute; bottom: -15px; left: 0px; font-size: 10px; color: #999; opacity: 0.8; z-index: 100;display:none;';
-  chrome.storage.local.get(['gpt4Timestamps', 'models', 'conversationLimit', 'settings', 'capExpiresAt'], (result) => {
-    if (!result.models) return;
-    if (!result.models.find((model) => model.slug === 'gpt-4')) return;
-    gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
-    const gpt4Timestamps = result.gpt4Timestamps || [];
-    const messageCap = result?.conversationLimit?.message_cap || 50;
-    const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
-    const now = new Date().getTime();
-    const gpt4counter = gpt4Timestamps.filter((timestamp) => now - timestamp < (messageCapWindow / 60) * 60 * 60 * 1000).length;
-    const capExpiresAtTimeString = result.capExpiresAt ? `(Cap Expires At: ${result.capExpiresAt})` : '';
-    if (gpt4counter) {
-      gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4counter}/${messageCap} ${capExpiresAtTimeString}`;
-    } else {
-      gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 0/${messageCap}`;
-    }
-  });
+  gpt4CounterElement.style =
+    'position: absolute; bottom: -15px; left: 0px; font-size: 10px; color: #999; opacity: 0.8; z-index: 100;display:none;';
+  chrome.storage.local.get(
+    ['gpt4Timestamps', 'models', 'conversationLimit', 'settings', 'capExpiresAt'],
+    (result) => {
+      if (!result.models) return;
+      if (!result.models.find((model) => model.slug === 'gpt-4')) return;
+      gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
+      const gpt4Timestamps = result.gpt4Timestamps || [];
+      const messageCap = result?.conversationLimit?.message_cap || 50;
+      const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
+      const now = new Date().getTime();
+      const gpt4counter = gpt4Timestamps.filter(
+        (timestamp) => now - timestamp < (messageCapWindow / 60) * 60 * 60 * 1000,
+      ).length;
+      const capExpiresAtTimeString = result.capExpiresAt
+        ? `(Cap Expires At: ${result.capExpiresAt})`
+        : '';
+      if (gpt4counter) {
+        gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(
+          messageCapWindow,
+        )}): ${gpt4counter}/${messageCap} ${capExpiresAtTimeString}`;
+      } else {
+        gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(
+          messageCapWindow,
+        )}): 0/${messageCap}`;
+      }
+    },
+  );
 
   textAreaElement.parentElement.appendChild(gpt4CounterElement);
 
@@ -590,16 +677,25 @@ function updateInputCounter(text) {
     if (charCount > 16500) {
       curInputCounterElement.style.color = '#ff4a4a';
     }
-    curInputCounterElement.innerText = `${Math.max(charCount, 0)} chars / ${Math.max(wordCount, 0)} words`;
+    curInputCounterElement.innerText = `${Math.max(charCount, 0)} chars / ${Math.max(
+      wordCount,
+      0,
+    )} words`;
   }
 }
 function canSubmitPrompt() {
   const submitButton = document.querySelector('main form textarea ~ button');
-  if (!submitButton) { return false; }
+  if (!submitButton) {
+    return false;
+  }
   // if submit button not contained and svg element retur false
-  const submitSVG = submitButton.querySelector('svg');// (...)
-  if (!submitSVG) { return false; }
-  if (isGenerating) { return false; }
+  const submitSVG = submitButton.querySelector('svg'); // (...)
+  if (!submitSVG) {
+    return false;
+  }
+  if (isGenerating) {
+    return false;
+  }
   // if (submitButton.disabled) { return false; } // remove since openai now disables submit button when input is empty
   return true;
 }
@@ -619,7 +715,8 @@ function addActionButtonWrapperAboveInput() {
   if (!submitButton) return;
   const actionButtonWrapper = document.createElement('div');
   actionButtonWrapper.id = 'action-button-wrapper';
-  actionButtonWrapper.style = 'display:flex;justify-content:space-between;align-items:center;position:absolute;width:100%;bottom:57px;';
+  actionButtonWrapper.style =
+    'display:flex;justify-content:space-between;align-items:center;position:absolute;width:100%;bottom:57px;';
   const textAreaElementWrapper = textAreaElement.parentElement.parentElement;
   textAreaElementWrapper.insertBefore(actionButtonWrapper, textAreaElement.parentElement);
 }
@@ -636,12 +733,29 @@ function formatDate(date) {
   const dateMonth = date.getMonth() + 1;
   const dateYear = date.getFullYear();
   if (todayDate === dateDate && todayMonth === dateMonth && todayYear === dateYear) {
-    return `Today ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' })}`;
+    return `Today ${date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: 'numeric',
+    })}`;
   }
-  if (yesterday.getDate() === dateDate && yesterday.getMonth() + 1 === dateMonth && yesterday.getFullYear() === dateYear) {
-    return `Yesterday ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' })}`;
+  if (
+    yesterday.getDate() === dateDate &&
+    yesterday.getMonth() + 1 === dateMonth &&
+    yesterday.getFullYear() === dateYear
+  ) {
+    return `Yesterday ${date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: 'numeric',
+    })}`;
   }
-  return `${date.toLocaleDateString('en-US', { year: '2-digit', month: '2-digit', day: '2-digit' })} ${date.toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric' })}`;
+  return `${date.toLocaleDateString('en-US', {
+    year: '2-digit',
+    month: '2-digit',
+    day: '2-digit',
+  })} ${date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: 'numeric',
+  })}`;
 }
 function addButtonToNavFooter(title, onClick) {
   const nav = document.querySelector('nav');
@@ -651,7 +765,8 @@ function addButtonToNavFooter(title, onClick) {
   if (!existingNavFooter) {
     navFooter = document.createElement('div');
     navFooter.id = 'nav-footer';
-    navFooter.style = 'margin:8px 0 0 0;padding-right:8px;width:100%;display:flex; flex-direction:column-reverse;justify-content:flex-start;align-items:center;min-height:108px;';
+    navFooter.style =
+      'margin:8px 0 0 0;padding-right:8px;width:100%;display:flex; flex-direction:column-reverse;justify-content:flex-start;align-items:center;min-height:108px;';
   }
   const navGap = document.querySelector('nav > :nth-child(3)');
   navGap.style = `${navGap.style.cssText};display:flex;margin-right:-8px;`;
@@ -665,7 +780,8 @@ function addButtonToNavFooter(title, onClick) {
   if (document.querySelector(`#${title.toLowerCase().replaceAll(' ', '-')}-button`)) return;
   // create the setting button by copying the nav button
   const button = document.createElement('a');
-  button.classList = 'flex py-3 px-3 items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
+  button.classList =
+    'flex py-3 px-3 items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
   button.textContent = title;
 
   const buttonIcon = document.createElement('img');
@@ -696,7 +812,8 @@ function addExpandButton() {
   conversationListParent.style.position = 'relative';
   const expandButton = document.createElement('button');
   expandButton.id = 'expand-sidebar-bottom-button';
-  expandButton.classList = 'flex items-center justify-center w-10 h-4 relative rounded-md bg-gray-800 hover:bg-gray-700 ';
+  expandButton.classList =
+    'flex items-center justify-center w-10 h-4 relative rounded-md bg-gray-800 hover:bg-gray-700 ';
   expandButton.style = 'bottom:-8px;margin:auto';
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
@@ -704,10 +821,12 @@ function addExpandButton() {
     const userMenu = document.querySelector('#user-menu');
     if (!hideBottomSidebar) {
       userMenu.style.paddingTop = '8px';
-      expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
+      expandButton.innerHTML =
+        '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
     } else {
       userMenu.style.paddingTop = '20px';
-      expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>';
+      expandButton.innerHTML =
+        '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>';
       conversationListParent.style.minHeight = 'calc(100vh - 98px)';
       conversationListParent.style.maxHeight = 'calc(100vh - 98px)';
     }
@@ -716,21 +835,27 @@ function addExpandButton() {
     chrome.storage.local.get(['settings'], (result) => {
       const { settings } = result;
       const { hideBottomSidebar } = settings;
-      chrome.storage.local.set({ settings: { ...settings, hideBottomSidebar: !hideBottomSidebar } }, () => {
-        const curConversationListParent = document.querySelector('#conversation-list').parentElement;
-        const userMenu = document.querySelector('#user-menu');
-        if (!hideBottomSidebar) {
-          userMenu.style.paddingTop = '20px';
-          curConversationListParent.style.minHeight = 'calc(100vh - 98px)';
-          curConversationListParent.style.maxHeight = 'calc(100vh - 98px)';
-          expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>';
-        } else {
-          userMenu.style.paddingTop = '8px';
-          curConversationListParent.style.minHeight = 'unset';
-          curConversationListParent.style.maxHeight = 'unset';
-          expandButton.innerHTML = '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
-        }
-      });
+      chrome.storage.local.set(
+        { settings: { ...settings, hideBottomSidebar: !hideBottomSidebar } },
+        () => {
+          const curConversationListParent =
+            document.querySelector('#conversation-list').parentElement;
+          const userMenu = document.querySelector('#user-menu');
+          if (!hideBottomSidebar) {
+            userMenu.style.paddingTop = '20px';
+            curConversationListParent.style.minHeight = 'calc(100vh - 98px)';
+            curConversationListParent.style.maxHeight = 'calc(100vh - 98px)';
+            expandButton.innerHTML =
+              '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>';
+          } else {
+            userMenu.style.paddingTop = '8px';
+            curConversationListParent.style.minHeight = 'unset';
+            curConversationListParent.style.maxHeight = 'unset';
+            expandButton.innerHTML =
+              '<svg class="w-4 h-4 text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>';
+          }
+        },
+      );
     });
   });
   // add expandButton after conversationListParent
@@ -747,9 +872,7 @@ function addExpandButton() {
 //   createModal('Settings', 'Your can change your settings here', div, div);
 // }
 //------------------------------------------------------------------------------------------------
-const allAsistantChats = () => Array.from(
-  document.querySelectorAll('.markdown.prose'),
-);
+const allAsistantChats = () => Array.from(document.querySelectorAll('.markdown.prose'));
 
 // Helper Functions
 // Add action wrapper to result
@@ -758,7 +881,8 @@ function addActionWrapperToResult(resultElement, index) {
   if (lastActionWrapper) return;
   const actionWrapper = document.createElement('div');
   actionWrapper.id = `result-action-wrapper-${index}`;
-  actionWrapper.style = 'display:flex;justify-content:space-between;align-items:center;margin-top:16px;color: lightslategray; font-size:0.7em;width: 100%; height:40px;';
+  actionWrapper.style =
+    'display:flex;justify-content:space-between;align-items:center;margin-top:16px;color: lightslategray; font-size:0.7em;width: 100%; height:40px;';
 
   resultElement.insertAdjacentElement('afterend', actionWrapper);
 }
@@ -780,16 +904,38 @@ function removeUnusedButtons() {
   const nav = document.querySelector('nav');
   if (!nav) return;
   const allNavButtons = Array.from(nav.querySelectorAll('a'));
-  const improveButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'improve chatgpt');
-  const settingsButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'settings');
-  const myPlanButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'my plan');
-  const myAccountButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'my account');
-  const upgradeButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'upgrade plan');
-  const upgradePlusButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase().includes('upgrade to plus'));
-  const updatesButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'get help');
-  const discordButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'openai discord');
-  const darkModeButton = allNavButtons.find((button) => button.textContent.toLocaleLowerCase() === 'light mode' || button.textContent.toLocaleLowerCase() === 'dark mode');
-  const clearConversationsButton = allNavButtons.find((button) => button.textContent.toLowerCase() === 'clear conversations');
+  const improveButton = allNavButtons.find(
+    (button) => button.textContent.toLocaleLowerCase() === 'improve chatgpt',
+  );
+  const settingsButton = allNavButtons.find(
+    (button) => button.textContent.toLocaleLowerCase() === 'settings',
+  );
+  const myPlanButton = allNavButtons.find(
+    (button) => button.textContent.toLocaleLowerCase() === 'my plan',
+  );
+  const myAccountButton = allNavButtons.find(
+    (button) => button.textContent.toLocaleLowerCase() === 'my account',
+  );
+  const upgradeButton = allNavButtons.find(
+    (button) => button.textContent.toLocaleLowerCase() === 'upgrade plan',
+  );
+  const upgradePlusButton = allNavButtons.find((button) =>
+    button.textContent.toLocaleLowerCase().includes('upgrade to plus'),
+  );
+  const updatesButton = allNavButtons.find(
+    (button) => button.textContent.toLocaleLowerCase() === 'get help',
+  );
+  const discordButton = allNavButtons.find(
+    (button) => button.textContent.toLocaleLowerCase() === 'openai discord',
+  );
+  const darkModeButton = allNavButtons.find(
+    (button) =>
+      button.textContent.toLocaleLowerCase() === 'light mode' ||
+      button.textContent.toLocaleLowerCase() === 'dark mode',
+  );
+  const clearConversationsButton = allNavButtons.find(
+    (button) => button.textContent.toLowerCase() === 'clear conversations',
+  );
   if (clearConversationsButton) {
     clearConversationsButton.id = 'clear-conversations-button';
     clearConversationsButton.style.display = 'none';
@@ -837,7 +983,8 @@ function updateNewChatButtonNotSynced() {
     const textAreaElement = document.querySelector('main form textarea');
     const nav = document.querySelector('nav');
     const newChatButton = nav?.querySelector('a');
-    newChatButton.classList = 'flex py-3 px-3 w-full items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
+    newChatButton.classList =
+      'flex py-3 px-3 w-full items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
     newChatButton.id = 'new-chat-button';
     newChatButton.addEventListener('click', () => {
       resetSelection();
@@ -846,9 +993,11 @@ function updateNewChatButtonNotSynced() {
       }
     });
     if (selectedConversations?.length > 0) {
-      newChatButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Clear selection';
+      newChatButton.innerHTML =
+        '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Clear selection';
     } else {
-      newChatButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New chat';
+      newChatButton.innerHTML =
+        '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New chat';
     }
   });
 }
@@ -873,7 +1022,14 @@ function highlight(text, searchTerm) {
 function highlightBracket(text) {
   if (text.trim().length === 0) return '';
   // replace brackets [] and text between them with <mark> tag and remove the brackets
-  return text.replace(/\[.*?\]/g, (match) => `<strong style="margin:0 2px; padding:1px 4px; border-radius:4px; background-color:#444554; font-style:italic; border:solid 1px lightslategray;">${match.replace(/[[\]]/g, '')}</strong>`);
+  return text.replace(
+    /\[.*?\]/g,
+    (match) =>
+      `<strong style="margin:0 2px; padding:1px 4px; border-radius:4px; background-color:#444554; font-style:italic; border:solid 1px lightslategray;">${match.replace(
+        /[[\]]/g,
+        '',
+      )}</strong>`,
+  );
 }
 function highlightHTML(text, elementId) {
   const element = document.getElementById(elementId);
@@ -886,16 +1042,13 @@ function highlightHTML(text, elementId) {
   // there can be multiple <pre>..</pre> tags in innerHTML
   // each <pre>..</pre> tag can have multiple attributes like style and class
   // keep the attributes of <pre>..</pre> tags
-  innerHTML = innerHTML.replace(
-    /<pre.*?>(.*?)<\/pre>/g,
-    (match, preContent) => {
-      const preContentWithMark = preContent.replace(
-        new RegExp(text, 'gi'),
-        (m) => `<mark>${m}</mark>`,
-      );
-      return match.replace(preContent, preContentWithMark);
-    },
-  );
+  innerHTML = innerHTML.replace(/<pre.*?>(.*?)<\/pre>/g, (match, preContent) => {
+    const preContentWithMark = preContent.replace(
+      new RegExp(text, 'gi'),
+      (m) => `<mark>${m}</mark>`,
+    );
+    return match.replace(preContent, preContentWithMark);
+  });
 
   element.innerHTML = innerHTML;
 }
@@ -906,16 +1059,14 @@ function toast(html, type = 'info', duration = 4000) {
   if (existingToast) existingToast.remove();
   const element = document.createElement('div');
   element.id = 'gptx-toast';
-  element.style = 'position:fixed;right:24px;top:24px;border-radius:4px;background-color:#19c37d;padding:8px 16px;z-index:100001;';
+  element.style =
+    'position:fixed;right:24px;top:24px;border-radius:4px;background-color:#19c37d;padding:8px 16px;z-index:100001;';
   if (type === 'error') {
     element.style.backgroundColor = '#ef4146';
   }
   element.innerHTML = html;
   document.body.appendChild(element);
-  setTimeout(
-    () => {
-      element.remove();
-    },
-    duration,
-  );
+  setTimeout(() => {
+    element.remove();
+  }, duration);
 }

@@ -9,7 +9,10 @@ chrome.storage.local.get('environment', ({ environment }) => {
 function registerUser(data) {
   chrome.storage.local.get(['account'], (r) => {
     const { account } = r;
-    const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
+    const isPaid =
+      account?.account_plan?.is_paid_subscription_active ||
+      account?.accounts?.default?.entitlement?.has_active_subscription ||
+      false;
     const { user } = data;
     const { version } = chrome.runtime.getManifest();
     const body = {
@@ -27,7 +30,8 @@ function registerUser(data) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
-    }).then((res) => res.json())
+    })
+      .then((res) => res.json())
       .then((newData) => {
         chrome.storage.sync.set({
           openai_id: user.id,
@@ -42,7 +46,12 @@ function registerUser(data) {
           lastUserSync: Date.now(),
         });
         chrome.storage.local.get(['settings'], (result) => {
-          chrome.storage.local.set({ settings: { ...result.settings, emailNewsletter: newData.email_newsletter } });
+          chrome.storage.local.set({
+            settings: {
+              ...result.settings,
+              emailNewsletter: newData.email_newsletter,
+            },
+          });
         });
         chrome.runtime.setUninstallURL(`${API_URL}/gptx/uninstall?p=${user.id.split('-')[1]}`);
       });
@@ -51,38 +60,44 @@ function registerUser(data) {
 /* eslint-disable no-unused-vars */
 chrome.webRequest.onBeforeSendHeaders.addListener(
   (details) => {
-    chrome.storage.sync.get(['user_id', 'openai_id', 'version', 'avatar', 'lastUserSync'], (result) => {
-      // or conditionor
-      const { version } = chrome.runtime.getManifest();
+    chrome.storage.sync.get(
+      ['user_id', 'openai_id', 'version', 'avatar', 'lastUserSync'],
+      (result) => {
+        // or conditionor
+        const { version } = chrome.runtime.getManifest();
 
-      const shouldRegister = !result.lastUserSync
-        || result.lastUserSync < Date.now() - 1000 * 60 * 60 * 24
-        || !result.avatar
-        || !result.user_id
-        || !result.openai_id
-        || result.version !== version;
-      if (shouldRegister && details.url === 'https://chat.openai.com/api/auth/session') {
-        const requestHeaders = details.requestHeaders.reduce((acc, header) => {
-          acc[header.name] = header.value;
-          return acc;
-        }, {});
-        // add stop=true to prevent infinity calls
-        fetch('https://chat.openai.com/api/auth/session?stop=true', {
-          method: 'GET',
-          headers: requestHeaders,
-        }).then((res) => {
-          if (res.ok) {
-            return res.json();
-          }
-          return null;
-        }).then((data) => {
-          if (data?.user?.id) {
-            registerUser(data);
-          }
-        });
-        // chrome.webRequest.onBeforeSendHeaders.removeListener();
-      }
-    });
+        const shouldRegister =
+          !result.lastUserSync ||
+          result.lastUserSync < Date.now() - 1000 * 60 * 60 * 24 ||
+          !result.avatar ||
+          !result.user_id ||
+          !result.openai_id ||
+          result.version !== version;
+        if (shouldRegister && details.url === 'https://chat.openai.com/api/auth/session') {
+          const requestHeaders = details.requestHeaders.reduce((acc, header) => {
+            acc[header.name] = header.value;
+            return acc;
+          }, {});
+          // add stop=true to prevent infinity calls
+          fetch('https://chat.openai.com/api/auth/session?stop=true', {
+            method: 'GET',
+            headers: requestHeaders,
+          })
+            .then((res) => {
+              if (res.ok) {
+                return res.json();
+              }
+              return null;
+            })
+            .then((data) => {
+              if (data?.user?.id) {
+                registerUser(data);
+              }
+            });
+          // chrome.webRequest.onBeforeSendHeaders.removeListener();
+        }
+      },
+    );
   },
   {
     urls: ['https://chat.openai.com/api/auth/session'],

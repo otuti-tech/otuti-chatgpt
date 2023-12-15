@@ -3,7 +3,13 @@
 function createReleaseNoteModal(version) {
   const bodyContent = releaseNoteModalContent(version);
   const actionsBarContent = releaseNoteModalActions();
-  createModal(`Release note (v ${version})`, 'You can see the latest changes here', bodyContent, actionsBarContent, true);
+  createModal(
+    `Release note (v ${version})`,
+    'You can see the latest changes here',
+    bodyContent,
+    actionsBarContent,
+    true,
+  );
 }
 
 function releaseNoteModalContent(version) {
@@ -17,19 +23,27 @@ function releaseNoteModalContent(version) {
   content.appendChild(base);
   const logoWatermark = document.createElement('img');
   logoWatermark.src = chrome.runtime.getURL('icons/logo.png');
-  logoWatermark.style = 'position: fixed; top: 50%; right: 50%; width: 400px; height: 400px; opacity: 0.07; transform: translate(50%, -50%);box-shadow:none !important;';
+  logoWatermark.style =
+    'position: fixed; top: 50%; right: 50%; width: 400px; height: 400px; opacity: 0.07; transform: translate(50%, -50%);box-shadow:none !important;';
   content.appendChild(logoWatermark);
   const releaseNoteText = document.createElement('article');
-  releaseNoteText.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding:16px;position: relative;z-index:10;color: #fff;';
+  releaseNoteText.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start;height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding:16px;position: relative;z-index:10;color: #fff;';
   getReleaseNote(version).then((data) => {
     const releaseNote = data;
-    releaseNoteText.innerHTML = `<div style="font-size:1em;">Release date: ${new Date(data.created_at).toDateString()} (<span id="previous-version" data-version="${data.previous_version}" style="color:gold;cursor:pointer;">Previous release note</span>)</div>${releaseNote.text}`;
+    releaseNoteText.innerHTML = `<div style="font-size:1em;">Release date: ${new Date(
+      data.created_at,
+    ).toDateString()} (<span id="previous-version" data-version="${
+      data.previous_version
+    }" style="color:gold;cursor:pointer;">Previous release note</span>)</div>${releaseNote.text}`;
     setTimeout(() => {
       const previousVersion = document.getElementById('previous-version');
       if (previousVersion) {
         previousVersion.addEventListener('click', () => {
           // cose current modal
-          document.querySelector(`button[id="modal-close-button-release-note-(v-${version})"]`).click();
+          document
+            .querySelector(`button[id="modal-close-button-release-note-(v-${version})"]`)
+            .click();
           createReleaseNoteModal(previousVersion.dataset.version);
         });
       }
@@ -42,7 +56,8 @@ function releaseNoteModalContent(version) {
 function releaseNoteModalActions() {
   // add actionbar at the bottom of the content
   const actionBar = document.createElement('div');
-  actionBar.style = 'display: flex; flex-wrap:wrap;justify-content: space-between; align-items: center;width: 100%; font-size: 12px;';
+  actionBar.style =
+    'display: flex; flex-wrap:wrap;justify-content: space-between; align-items: center;width: 100%; font-size: 12px;';
   actionBar.appendChild(settingsModalActions());
   return actionBar;
 }

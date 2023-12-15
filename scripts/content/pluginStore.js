@@ -155,7 +155,10 @@ function renderPluginList(plugins) {
     pluginListWrapper.innerHTML = '';
   }
   return `
-  ${plugins.slice((currentPluginStorePage - 1) * 8, currentPluginStorePage * 8).map((plugin) => `<div
+  ${plugins
+    .slice((currentPluginStorePage - 1) * 8, currentPluginStorePage * 8)
+    .map(
+      (plugin) => `<div
     id="${plugin.id}"
     class="flex flex-col gap-4 rounded border border-black/10 bg-white p-6 dark:border-white/20 dark:bg-gray-900"
   >
@@ -178,11 +181,15 @@ function renderPluginList(plugins) {
         <div class="max-w-full truncate text-lg leading-6">
         ${plugin.manifest.name_for_human}
         </div>
-        <button id="plugin-store-install-button-${plugin.id}" class="btn relative ${plugin.user_settings.is_installed ? 'btn-light' : 'btn-primary'} hover:bg-gray-200">
+        <button id="plugin-store-install-button-${plugin.id}" class="btn relative ${
+          plugin.user_settings.is_installed ? 'btn-light' : 'btn-primary'
+        } hover:bg-gray-200">
           <div
             class="flex w-full gap-2 items-center justify-center"
           >
-            ${plugin.user_settings.is_installed ? `Uninstall<svg
+            ${
+              plugin.user_settings.is_installed
+                ? `Uninstall<svg
               stroke="currentColor"
               fill="none"
               stroke-width="2"
@@ -197,7 +204,8 @@ function renderPluginList(plugins) {
               <circle cx="12" cy="12" r="10"></circle>
               <line x1="15" y1="9" x2="9" y2="15"></line>
               <line x1="9" y1="9" x2="15" y2="15"></line>
-            </svg>` : `Install<svg
+            </svg>`
+                : `Install<svg
                 stroke="currentColor"
                 fill="none"
                 stroke-width="2"
@@ -212,7 +220,8 @@ function renderPluginList(plugins) {
                 <polyline points="8 17 12 21 16 17"></polyline>
                 <line x1="12" y1="12" x2="12" y2="21"></line>
                 <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path>
-            </svg>`}
+            </svg>`
+            }
           </div>
         </button>
       </div>
@@ -222,7 +231,9 @@ function renderPluginList(plugins) {
     >
       ${plugin.manifest.description_for_human}
     </div>
-  </div>`).join('')}`;
+  </div>`,
+    )
+    .join('')}`;
 }
 function renderPageNumbers(plugins) {
   const pluginStorePaginationWrapper = document.querySelector('#plugin-store-pagination-wrapper');
@@ -235,7 +246,9 @@ function renderPageNumbers(plugins) {
   return `<button
       id="plugin-pagination-prev"
       role="button"
-      class="text-sm text-black/70 dark:text-white/70 whitespace-nowrap cursor-default flex items-center ${currentPluginStorePage === 1 ? 'opacity-50' : 'hover:text-black/50 dark:hover:text-white/50'}"
+      class="text-sm text-black/70 dark:text-white/70 whitespace-nowrap cursor-default flex items-center ${
+        currentPluginStorePage === 1 ? 'opacity-50' : 'hover:text-black/50 dark:hover:text-white/50'
+      }"
     >
       <svg
       stroke="currentColor"
@@ -252,18 +265,30 @@ function renderPageNumbers(plugins) {
       <polyline points="15 18 9 12 15 6"></polyline></svg
       >Prev</button
     >
-    ${Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => `<button
+    ${Array.from({ length: totalPages }, (_, i) => i + 1)
+      .map(
+        (page) => `<button
       id="plugin-page-${page}"
       role="button"
-      class="${currentPluginStorePage === page ? 'text-sm whitespace-nowrap flex h-5 w-5 items-center justify-center text-blue-600 hover:text-blue-600 dark:text-blue-600 dark:hover:text-blue-600' : 'text-sm text-black/70 dark:text-white/70 whitespace-nowrap hover:text-black/50 dark:hover:text-white/50 flex h-5 w-5 items-center justify-center'}"
+      class="${
+        currentPluginStorePage === page
+          ? 'text-sm whitespace-nowrap flex h-5 w-5 items-center justify-center text-blue-600 hover:text-blue-600 dark:text-blue-600 dark:hover:text-blue-600'
+          : 'text-sm text-black/70 dark:text-white/70 whitespace-nowrap hover:text-black/50 dark:hover:text-white/50 flex h-5 w-5 items-center justify-center'
+      }"
     >
       ${page}</button
     >
-    `).join('')}
+    `,
+      )
+      .join('')}
     <button
       id="plugin-pagination-next"
       role="button"
-      class="text-sm text-black/70 dark:text-white/70 whitespace-nowrap flex items-center  ${currentPluginStorePage === totalPages ? 'opacity-50' : 'hover:text-black/50 dark:hover:text-white/50'}"
+      class="text-sm text-black/70 dark:text-white/70 whitespace-nowrap flex items-center  ${
+        currentPluginStorePage === totalPages
+          ? 'opacity-50'
+          : 'hover:text-black/50 dark:hover:text-white/50'
+      }"
     >
       Next<svg
       stroke="currentColor"
@@ -311,30 +336,47 @@ function addPluginStoreEventListener(plugins) {
         const filterType = button.id.split('plugin-filter-')[1];
         currentPluginStorePage = 1;
         const searchValue = pluginSearchInput.value;
-        const previousActivePageButton = document.querySelector('[id^="plugin-page-"].text-blue-600');
+        const previousActivePageButton = document.querySelector(
+          '[id^="plugin-page-"].text-blue-600',
+        );
         if (previousActivePageButton) {
-          previousActivePageButton.classList = 'text-sm text-black/70 dark:text-white/70 whitespace-nowrap hover:text-black/50 dark:hover:text-white/50';
+          previousActivePageButton.classList =
+            'text-sm text-black/70 dark:text-white/70 whitespace-nowrap hover:text-black/50 dark:hover:text-white/50';
         }
         const previousSelectedFilter = document.querySelector('[id^="plugin-filter-"].btn-light');
         previousSelectedFilter.classList = 'btn relative btn-neutral focus:ring-0 text-black/50';
         button.classList = 'btn relative btn-light focus:ring-0 hover:bg-gray-200';
 
         const pluginListWrapper = document.getElementById('plugin-list-wrapper');
-        const pluginStorePaginationWrapper = document.getElementById('plugin-store-pagination-wrapper');
+        const pluginStorePaginationWrapper = document.getElementById(
+          'plugin-store-pagination-wrapper',
+        );
         let filteredPlugins = allPlugins;
         if (filterType === 'popular') {
-          filteredPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c.id).includes('most_popular'));
+          filteredPlugins = allPlugins.filter((plugin) =>
+            plugin.categories.map((c) => c.id).includes('most_popular'),
+          );
           if (searchValue.trim() !== '') {
-            filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
+            filteredPlugins = filteredPlugins.filter((plugin) =>
+              `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`
+                .toLowerCase()
+                .includes(searchValue.toLowerCase()),
+            );
           }
           pluginListWrapper.innerHTML = renderPluginList(filteredPlugins);
           pluginStorePaginationWrapper.innerHTML = renderPageNumbers(filteredPlugins);
           addInstallButtonEventListener(filteredPlugins);
           addPaginationEventListener(filteredPlugins);
         } else if (filterType === 'new') {
-          filteredPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c.id).includes('newly_added'));
+          filteredPlugins = allPlugins.filter((plugin) =>
+            plugin.categories.map((c) => c.id).includes('newly_added'),
+          );
           if (searchValue.trim() !== '') {
-            filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
+            filteredPlugins = filteredPlugins.filter((plugin) =>
+              `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`
+                .toLowerCase()
+                .includes(searchValue.toLowerCase()),
+            );
           }
           pluginListWrapper.innerHTML = renderPluginList(filteredPlugins);
           pluginStorePaginationWrapper.innerHTML = renderPageNumbers(filteredPlugins);
@@ -345,7 +387,11 @@ function addPluginStoreEventListener(plugins) {
             const { installedPlugins } = res;
             filteredPlugins = installedPlugins;
             if (searchValue.trim() !== '') {
-              filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
+              filteredPlugins = filteredPlugins.filter((plugin) =>
+                `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`
+                  .toLowerCase()
+                  .includes(searchValue.toLowerCase()),
+              );
             }
             pluginListWrapper.innerHTML = renderPluginList(filteredPlugins);
             pluginStorePaginationWrapper.innerHTML = renderPageNumbers(filteredPlugins);
@@ -354,7 +400,11 @@ function addPluginStoreEventListener(plugins) {
           });
         } else {
           if (searchValue.trim() !== '') {
-            filteredPlugins = filteredPlugins.filter((plugin) => `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`.toLowerCase().includes(searchValue.toLowerCase()));
+            filteredPlugins = filteredPlugins.filter((plugin) =>
+              `${plugin.manifest.name_for_human} ${plugin.manifest.description_for_human}`
+                .toLowerCase()
+                .includes(searchValue.toLowerCase()),
+            );
           }
           pluginListWrapper.innerHTML = renderPluginList(filteredPlugins);
           pluginStorePaginationWrapper.innerHTML = renderPageNumbers(filteredPlugins);
@@ -393,8 +443,10 @@ function addPaginationEventListener(plugins) {
       const pageNumber = parseInt(button.id.split('plugin-page-')[1], 10);
       currentPluginStorePage = pageNumber;
       const previousActiveButton = document.querySelector('[id^="plugin-page-"].text-blue-600');
-      previousActiveButton.classList = 'text-sm text-black/70 dark:text-white/70 whitespace-nowrap hover:text-black/50 dark:hover:text-white/50 flex h-5 w-5 items-center justify-center';
-      button.classList = 'text-sm whitespace-nowrap flex h-5 w-5 items-center justify-center text-blue-600 hover:text-blue-600 dark:text-blue-600 dark:hover:text-blue-600';
+      previousActiveButton.classList =
+        'text-sm text-black/70 dark:text-white/70 whitespace-nowrap hover:text-black/50 dark:hover:text-white/50 flex h-5 w-5 items-center justify-center';
+      button.classList =
+        'text-sm whitespace-nowrap flex h-5 w-5 items-center justify-center text-blue-600 hover:text-blue-600 dark:text-blue-600 dark:hover:text-blue-600';
       const pluginListWrapper = document.querySelector('#plugin-list-wrapper');
       // const pluginStorePaginationWrapper = document.querySelector('#plugin-store-pagination-wrapper');
       const pageSize = 8;
@@ -404,19 +456,25 @@ function addPaginationEventListener(plugins) {
       const curPluginPaginationNextButton = document.getElementById('plugin-pagination-next');
       if (pageNumber === 1) {
         curPluginPaginationPrevButton.disabled = true;
-        curPluginPaginationPrevButton.classList = 'text-sm text-black/70 dark:text-white/70 whitespace-nowrap cursor-default flex items-center opacity-50';
+        curPluginPaginationPrevButton.classList =
+          'text-sm text-black/70 dark:text-white/70 whitespace-nowrap cursor-default flex items-center opacity-50';
         curPluginPaginationNextButton.disabled = false;
-        curPluginPaginationNextButton.classList = 'text-sm text-black/70 dark:text-white/70 whitespace-nowrap flex items-center  hover:text-black/50 dark:hover:text-white/50';
+        curPluginPaginationNextButton.classList =
+          'text-sm text-black/70 dark:text-white/70 whitespace-nowrap flex items-center  hover:text-black/50 dark:hover:text-white/50';
       } else if (pageNumber === totalPages) {
         curPluginPaginationPrevButton.disabled = false;
-        curPluginPaginationPrevButton.classList = 'text-sm text-black/70 dark:text-white/70 whitespace-nowrap flex items-center  hover:text-black/50 dark:hover:text-white/50';
+        curPluginPaginationPrevButton.classList =
+          'text-sm text-black/70 dark:text-white/70 whitespace-nowrap flex items-center  hover:text-black/50 dark:hover:text-white/50';
         curPluginPaginationNextButton.disabled = true;
-        curPluginPaginationNextButton.classList = 'text-sm text-black/70 dark:text-white/70 whitespace-nowrap cursor-default flex items-center opacity-50';
+        curPluginPaginationNextButton.classList =
+          'text-sm text-black/70 dark:text-white/70 whitespace-nowrap cursor-default flex items-center opacity-50';
       } else {
         curPluginPaginationPrevButton.disabled = false;
-        curPluginPaginationPrevButton.classList = 'text-sm text-black/70 dark:text-white/70 whitespace-nowrap flex items-center  hover:text-black/50 dark:hover:text-white/50';
+        curPluginPaginationPrevButton.classList =
+          'text-sm text-black/70 dark:text-white/70 whitespace-nowrap flex items-center  hover:text-black/50 dark:hover:text-white/50';
         curPluginPaginationNextButton.disabled = false;
-        curPluginPaginationNextButton.classList = 'text-sm text-black/70 dark:text-white/70 whitespace-nowrap flex items-center  hover:text-black/50 dark:hover:text-white/50';
+        curPluginPaginationNextButton.classList =
+          'text-sm text-black/70 dark:text-white/70 whitespace-nowrap flex items-center  hover:text-black/50 dark:hover:text-white/50';
       }
       if (pluginListWrapper) {
         pluginListWrapper.innerHTML = renderPluginList(plugins);
@@ -441,57 +499,86 @@ function addInstallButtonEventListener(plugins) {
           window.open(url, '_self');
         } else {
           button.classList = 'btn relative btn-light bg-green-100 hover:bg-green-100';
-          button.innerHTML = 'Installing <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="animate-spin text-center" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
+          button.innerHTML =
+            'Installing <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="animate-spin text-center" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
 
           installPlugin(pluginId).then((res) => {
-            chrome.storage.local.get(['allPlugins', 'installedPlugins', 'enabledPluginIds'], (result) => {
-              button.disabled = false;
-              button.classList = 'btn relative btn-light hover:bg-gray-200';
-              button.innerHTML = 'Uninstall <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" > <circle cx="12" cy="12" r="10"></circle> <line x1="15" y1="9" x2="9" y2="15"></line> <line x1="9" y1="9" x2="15" y2="15"></line> </svg>';
-              const { allPlugins, installedPlugins, enabledPluginIds } = result;
-              const allPluginIndex = allPlugins.findIndex((p) => p.id === pluginId);
-              allPlugins[allPluginIndex] = res;
-              const newInstalledPlugins = installedPlugins.map((p) => p.id).includes(res.id) ? installedPlugins : [...installedPlugins, res];
-              chrome.storage.local.set({ allPlugins, installedPlugins: newInstalledPlugins });
-              const idPrefix = 'navbar';
-              const pluginsDropdownWrapper = document.getElementById(`plugins-dropdown-wrapper-${idPrefix}`);
-              pluginsDropdownWrapper.innerHTML = pluginsDropdown(newInstalledPlugins, enabledPluginIds, idPrefix);
-              addPluginsDropdownEventListener(idPrefix);
-            });
+            chrome.storage.local.get(
+              ['allPlugins', 'installedPlugins', 'enabledPluginIds'],
+              (result) => {
+                button.disabled = false;
+                button.classList = 'btn relative btn-light hover:bg-gray-200';
+                button.innerHTML =
+                  'Uninstall <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" > <circle cx="12" cy="12" r="10"></circle> <line x1="15" y1="9" x2="9" y2="15"></line> <line x1="9" y1="9" x2="15" y2="15"></line> </svg>';
+                const { allPlugins, installedPlugins, enabledPluginIds } = result;
+                const allPluginIndex = allPlugins.findIndex((p) => p.id === pluginId);
+                allPlugins[allPluginIndex] = res;
+                const newInstalledPlugins = installedPlugins.map((p) => p.id).includes(res.id)
+                  ? installedPlugins
+                  : [...installedPlugins, res];
+                chrome.storage.local.set({
+                  allPlugins,
+                  installedPlugins: newInstalledPlugins,
+                });
+                const idPrefix = 'navbar';
+                const pluginsDropdownWrapper = document.getElementById(
+                  `plugins-dropdown-wrapper-${idPrefix}`,
+                );
+                pluginsDropdownWrapper.innerHTML = pluginsDropdown(
+                  newInstalledPlugins,
+                  enabledPluginIds,
+                  idPrefix,
+                );
+                addPluginsDropdownEventListener(idPrefix);
+              },
+            );
           });
         }
       } else {
         button.classList = 'btn relative btn-light bg-green-100 hover:bg-green-100';
-        button.innerHTML = 'Unnstalling <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="animate-spin text-center" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
+        button.innerHTML =
+          'Unnstalling <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="animate-spin text-center" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
         uninstallPlugin(pluginId).then((res) => {
-          chrome.storage.local.get(['allPlugins', 'installedPlugins', 'enabledPluginIds'], (result) => {
-            button.disabled = false;
-            button.classList = 'btn relative btn-primary';
-            button.innerHTML = 'Install <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" > <polyline points="8 17 12 21 16 17"></polyline> <line x1="12" y1="12" x2="12" y2="21"></line> <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path> </svg>';
-            const { allPlugins, installedPlugins, enabledPluginIds } = result;
-            const allPluginIndex = allPlugins.findIndex((p) => p.id === pluginId);
-            // replace item at index using with res
-            allPlugins[allPluginIndex] = res;
-            const installedPluginIndex = installedPlugins.findIndex((p) => p.id === pluginId);
-            installedPlugins.splice(installedPluginIndex, 1);
-            const selectedFilter = document.querySelector('[id^="plugin-filter-"].btn-light');
-            const filter = selectedFilter ? selectedFilter.id.split('plugin-filter-')[1] : 'all';
-            if (filter === 'installed') {
-              document.querySelector(`#${pluginId}`).remove();
-              const pluginListWrapper = document.getElementById('plugin-list-wrapper');
-              const pluginStorePaginationWrapper = document.getElementById('plugin-store-pagination-wrapper');
-              pluginListWrapper.innerHTML = renderPluginList(installedPlugins);
-              pluginStorePaginationWrapper.innerHTML = renderPageNumbers(installedPlugins);
-              addInstallButtonEventListener(installedPlugins);
-              addPaginationEventListener(installedPlugins);
-            }
+          chrome.storage.local.get(
+            ['allPlugins', 'installedPlugins', 'enabledPluginIds'],
+            (result) => {
+              button.disabled = false;
+              button.classList = 'btn relative btn-primary';
+              button.innerHTML =
+                'Install <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg" > <polyline points="8 17 12 21 16 17"></polyline> <line x1="12" y1="12" x2="12" y2="21"></line> <path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"></path> </svg>';
+              const { allPlugins, installedPlugins, enabledPluginIds } = result;
+              const allPluginIndex = allPlugins.findIndex((p) => p.id === pluginId);
+              // replace item at index using with res
+              allPlugins[allPluginIndex] = res;
+              const installedPluginIndex = installedPlugins.findIndex((p) => p.id === pluginId);
+              installedPlugins.splice(installedPluginIndex, 1);
+              const selectedFilter = document.querySelector('[id^="plugin-filter-"].btn-light');
+              const filter = selectedFilter ? selectedFilter.id.split('plugin-filter-')[1] : 'all';
+              if (filter === 'installed') {
+                document.querySelector(`#${pluginId}`).remove();
+                const pluginListWrapper = document.getElementById('plugin-list-wrapper');
+                const pluginStorePaginationWrapper = document.getElementById(
+                  'plugin-store-pagination-wrapper',
+                );
+                pluginListWrapper.innerHTML = renderPluginList(installedPlugins);
+                pluginStorePaginationWrapper.innerHTML = renderPageNumbers(installedPlugins);
+                addInstallButtonEventListener(installedPlugins);
+                addPaginationEventListener(installedPlugins);
+              }
 
-            chrome.storage.local.set({ allPlugins, installedPlugins });
-            const idPrefix = 'navbar';
-            const pluginsDropdownWrapper = document.getElementById(`plugins-dropdown-wrapper-${idPrefix}`);
-            pluginsDropdownWrapper.innerHTML = pluginsDropdown(installedPlugins, enabledPluginIds, idPrefix);
-            addPluginsDropdownEventListener(idPrefix);
-          });
+              chrome.storage.local.set({ allPlugins, installedPlugins });
+              const idPrefix = 'navbar';
+              const pluginsDropdownWrapper = document.getElementById(
+                `plugins-dropdown-wrapper-${idPrefix}`,
+              );
+              pluginsDropdownWrapper.innerHTML = pluginsDropdown(
+                installedPlugins,
+                enabledPluginIds,
+                idPrefix,
+              );
+              addPluginsDropdownEventListener(idPrefix);
+            },
+          );
         });
       }
     });

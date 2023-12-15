@@ -4,7 +4,12 @@
 function createKeyboardShortcutsModal(version) {
   const bodyContent = keyboardShortcutsModalContent(version);
   const actionsBarContent = keyboardShortcutsModalActions();
-  createModal('Keyboard Shortcuts', 'Some shortkeys only work when Auto-Sync is ON. Having issues? see our <a href="https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24" target="_blank" rel="noopener noreferrer" style="color:gold;">FAQ</a>', bodyContent, actionsBarContent);
+  createModal(
+    'Keyboard Shortcuts',
+    'Some shortkeys only work when Auto-Sync is ON. Having issues? see our <a href="https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24" target="_blank" rel="noopener noreferrer" style="color:gold;">FAQ</a>',
+    bodyContent,
+    actionsBarContent,
+  );
 }
 
 function keyboardShortcutsModalContent() {
@@ -15,10 +20,12 @@ function keyboardShortcutsModalContent() {
   content.classList = 'markdown prose-invert';
   const logoWatermark = document.createElement('img');
   logoWatermark.src = chrome.runtime.getURL('icons/logo.png');
-  logoWatermark.style = 'position: fixed; top: 50%; right: 50%; width: 400px; height: 400px; opacity: 0.07; transform: translate(50%, -50%);box-shadow:none !important;';
+  logoWatermark.style =
+    'position: fixed; top: 50%; right: 50%; width: 400px; height: 400px; opacity: 0.07; transform: translate(50%, -50%);box-shadow:none !important;';
   content.appendChild(logoWatermark);
   const keyboardShortcutsText = document.createElement('div');
-  keyboardShortcutsText.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding: 16px;position: relative;z-index:10;color: #fff;';
+  keyboardShortcutsText.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding: 16px;position: relative;z-index:10;color: #fff;';
   keyboardShortcutsText.innerHTML = `
   <table style="width:100%">
     <tr>
@@ -93,7 +100,9 @@ function keyboardShortcutsModalActions() {
 function showPluginStore() {
   chrome.storage.local.get(['allPlugins'], (result) => {
     const { allPlugins } = result;
-    const popularPlugins = allPlugins.filter((plugin) => plugin.categories.map((c) => c.id).includes('most_popular'));
+    const popularPlugins = allPlugins.filter((plugin) =>
+      plugin.categories.map((c) => c.id).includes('most_popular'),
+    );
     const pluginStoreModal = initializePluginStoreModal(popularPlugins);
     const pluginStoreWrapper = document.createElement('div');
     pluginStoreWrapper.id = 'plugin-store-wrapper';
@@ -128,7 +137,9 @@ function registerShortkeys() {
           document.querySelector('#quick-access-menu').remove();
           document.querySelector('main form textarea').focus();
         } else {
-          const stopGeneratingResponseButton = document.querySelector('#stop-generating-response-button');
+          const stopGeneratingResponseButton = document.querySelector(
+            '#stop-generating-response-button',
+          );
           if (stopGeneratingResponseButton) {
             e.preventDefault();
             stopGeneratingResponseButton.click();
@@ -214,14 +225,19 @@ function registerShortkeys() {
   });
 }
 function addKeyboardShortcutsModalButton() {
-  const existingKeyboardShortcutsModalButton = document.getElementById('keyboard-shortcuts-modal-button');
+  const existingKeyboardShortcutsModalButton = document.getElementById(
+    'keyboard-shortcuts-modal-button',
+  );
   if (existingKeyboardShortcutsModalButton) existingKeyboardShortcutsModalButton.remove();
 
   const keyboardShortcutsModalButton = document.createElement('button');
   keyboardShortcutsModalButton.id = 'keyboard-shortcuts-modal-button';
-  keyboardShortcutsModalButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="1.5em" viewBox="0 0 576 512" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" fill="currentColor"><path d="M64 112c-8.8 0-16 7.2-16 16V384c0 8.8 7.2 16 16 16H512c8.8 0 16-7.2 16-16V128c0-8.8-7.2-16-16-16H64zM0 128C0 92.7 28.7 64 64 64H512c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM176 320H400c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V336c0-8.8 7.2-16 16-16zm-72-72c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H120c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H120c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H200c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H200c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H280c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H280c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H360c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H360c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H440c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H440c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16z"/></svg>';
-  keyboardShortcutsModalButton.className = 'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
-  keyboardShortcutsModalButton.style = 'bottom: 3rem;right: 3rem;width: 2rem;height: 2rem;flex-wrap:wrap;border: 1px solid;';
+  keyboardShortcutsModalButton.innerHTML =
+    '<svg xmlns="http://www.w3.org/2000/svg" height="1.5em" viewBox="0 0 576 512" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" fill="currentColor"><path d="M64 112c-8.8 0-16 7.2-16 16V384c0 8.8 7.2 16 16 16H512c8.8 0 16-7.2 16-16V128c0-8.8-7.2-16-16-16H64zM0 128C0 92.7 28.7 64 64 64H512c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM176 320H400c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V336c0-8.8 7.2-16 16-16zm-72-72c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H120c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H120c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H200c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H200c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H280c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H280c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H360c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H360c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H440c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H440c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16z"/></svg>';
+  keyboardShortcutsModalButton.className =
+    'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
+  keyboardShortcutsModalButton.style =
+    'bottom: 3rem;right: 3rem;width: 2rem;height: 2rem;flex-wrap:wrap;border: 1px solid;';
   keyboardShortcutsModalButton.addEventListener('click', () => {
     createKeyboardShortcutsModal();
   });

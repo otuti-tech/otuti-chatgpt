@@ -1,6 +1,8 @@
 const list = document.getElementById('list');
-let base; let randomized; let dragging; let
-  draggedOver;
+let base;
+let randomized;
+let dragging;
+let draggedOver;
 let isRight = 'Not In Order!';
 
 const genRandom = (array) => {
@@ -21,8 +23,7 @@ const renderItems = (data) => {
     const node = document.createElement('li');
     node.draggable = true;
     node.style.backgroundColor = item;
-    node.style.backgroundColor = node.style.backgroundColor.length > 0
-      ? item : 'lightblue';
+    node.style.backgroundColor = node.style.backgroundColor.length > 0 ? item : 'lightblue';
     node.addEventListener('drag', setDragging);
     node.addEventListener('dragover', setDraggedOver);
     node.addEventListener('drop', compare);
@@ -37,19 +38,22 @@ const compare = (e) => {
   randomized.splice(index1, 1);
   randomized.splice(index2, 0, dragging);
 
-  isRight = randomized.join('') === base.join('')
-    ? 'In Order!' : 'Not In Order!';
+  isRight = randomized.join('') === base.join('') ? 'In Order!' : 'Not In Order!';
 
   renderItems(randomized);
 };
 
 const setDraggedOver = (e) => {
   e.preventDefault();
-  draggedOver = Number.isNaN(parseInt(e.target.innerText, 10)) ? e.target.innerText : parseInt(e.target.innerText, 10);
+  draggedOver = Number.isNaN(parseInt(e.target.innerText, 10))
+    ? e.target.innerText
+    : parseInt(e.target.innerText, 10);
 };
 
 const setDragging = (e) => {
-  dragging = Number.isNaN(parseInt(e.target.innerText, 10)) ? e.target.innerText : parseInt(e.target.innerText, 10);
+  dragging = Number.isNaN(parseInt(e.target.innerText, 10))
+    ? e.target.innerText
+    : parseInt(e.target.innerText, 10);
 };
 
 // genRandom([0, 1, 2, 3, 4, 5, 6])

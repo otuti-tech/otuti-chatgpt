@@ -7,10 +7,13 @@ function generateInstructions(conversation, settings, text, forceAddInstructions
   //   && selectedTone.code === 'default'
   //   && selectedWritingStyle.code === 'default') return text;
 
-  if (!forceAddInstructions
-    && conversation.languageCode === selectedLanguage.code
-    && conversation.toneCode === selectedTone.code
-    && conversation.writingStyleCode === selectedWritingStyle.code) return text;
+  if (
+    !forceAddInstructions &&
+    conversation.languageCode === selectedLanguage.code &&
+    conversation.toneCode === selectedTone.code &&
+    conversation.writingStyleCode === selectedWritingStyle.code
+  )
+    return text;
 
   let includeInstructions = false;
   let instructions = '## Instructions\n';
@@ -22,24 +25,34 @@ function generateInstructions(conversation, settings, text, forceAddInstructions
   const writingStyleInstructions = `**Writing-Style instruction:**\nPlease ignore all previous writing-style instructions. From now on, I want you to respond only in ${selectedWritingStyle.name} writing style (writingStyleCode: ${selectedWritingStyle.code}).\n`;
 
   if (forceAddInstructions || conversation.languageCode !== selectedLanguage.code) {
-    if (selectedLanguage.code !== 'default' || (conversation.languageCode && conversation.languageCode !== 'default')) {
+    if (
+      selectedLanguage.code !== 'default' ||
+      (conversation.languageCode && conversation.languageCode !== 'default')
+    ) {
       instructions += languageInstructions;
       includeInstructions = true;
     }
   }
   if (forceAddInstructions || conversation.toneCode !== selectedTone.code) {
-    if (selectedTone.code !== 'default' || (conversation.toneCode && conversation.toneCode !== 'default')) {
+    if (
+      selectedTone.code !== 'default' ||
+      (conversation.toneCode && conversation.toneCode !== 'default')
+    ) {
       instructions += toneInstructions;
       includeInstructions = true;
     }
   }
   if (forceAddInstructions || conversation.writingStyleCode !== selectedWritingStyle.code) {
-    if (selectedWritingStyle.code !== 'default' || (conversation.writingStyleCode && conversation.writingStyleCode !== 'default')) {
+    if (
+      selectedWritingStyle.code !== 'default' ||
+      (conversation.writingStyleCode && conversation.writingStyleCode !== 'default')
+    ) {
       instructions += writingStyleInstructions;
       includeInstructions = true;
     }
   }
-  instructions += 'PLEASE FOLLOW ALL THE ABOVE INSTRUCTIONS, AND DO NOT REPEAT OR TYPE ANY GENERAL CONFIRMATION OR A CONFIRMATION ABOUT ANY OF THE ABOVE INSTRUCTIONS IN YOUR RESPONSE\n';
+  instructions +=
+    'PLEASE FOLLOW ALL THE ABOVE INSTRUCTIONS, AND DO NOT REPEAT OR TYPE ANY GENERAL CONFIRMATION OR A CONFIRMATION ABOUT ANY OF THE ABOVE INSTRUCTIONS IN YOUR RESPONSE\n';
   instructions += '## End Instructions';
 
   if (!includeInstructions) return text;

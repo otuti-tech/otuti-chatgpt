@@ -1,11 +1,23 @@
 /* global highlight, languageList,toneList, writingStyleList, escapeHtml */
 // eslint-disable-next-line no-unused-vars
-function rowUser(conversation, node, childIndex, childCount, name, avatar, customConversationWidth, conversationWidth, searchValue = '') {
+function rowUser(
+  conversation,
+  node,
+  childIndex,
+  childCount,
+  name,
+  avatar,
+  customConversationWidth,
+  conversationWidth,
+  searchValue = '',
+) {
   const { pinned, message } = node;
   const { id } = message;
 
   // remove any text between ## Instructions and ## End Instructions\n\n including the instructions
-  const messageContent = message.content.parts.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '');
+  const messageContent = message.content.parts
+    .join('\n')
+    .replace(/## Instructions[\s\S]*## End Instructions\n\n/, '');
   const highlightedMessageContent = highlight(escapeHtml(messageContent), searchValue);
   const messageText = message.content.parts.join('\n');
   const languageCode = messageText.match(/\(languageCode: (.*)\)/)?.[1];
@@ -13,11 +25,21 @@ function rowUser(conversation, node, childIndex, childCount, name, avatar, custo
   const writingStyleCode = messageText.match(/\(writingStyleCode: (.*)\)/)?.[1];
   const languageName = languageList.find((lang) => lang.code === languageCode)?.name;
   const toneName = toneList.find((tone) => tone.code === toneCode)?.name;
-  const writingStyleName = writingStyleList.find((writingStyle) => writingStyle.code === writingStyleCode)?.name;
+  const writingStyleName = writingStyleList.find(
+    (writingStyle) => writingStyle.code === writingStyleCode,
+  )?.name;
   return `<div id="message-wrapper-${id}" data-role="user"
-  class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group ${pinned ? 'border-l-pinned bg-pinned dark:bg-pinned' : 'dark:bg-gray-800'}">
-  <div class="relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0" style="${customConversationWidth ? `max-width:${conversationWidth}%` : ''}">
-  <button id="message-pin-button-${id}" title="pin/unpin message" class="${pinned ? 'visible' : 'invisible group-hover:visible'}" style="background-color: transparent; border: none; cursor: pointer;min-width: 18px;position: absolute; top: -8px; right: 6px;z-index:0;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="${pinned ? 'gold' : '#aaa'}" d="M48 0H336C362.5 0 384 21.49 384 48V487.7C384 501.1 373.1 512 359.7 512C354.7 512 349.8 510.5 345.7 507.6L192 400L38.28 507.6C34.19 510.5 29.32 512 24.33 512C10.89 512 0 501.1 0 487.7V48C0 21.49 21.49 0 48 0z"/></svg></button>
+  class="w-full border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group ${
+    pinned ? 'border-l-pinned bg-pinned dark:bg-pinned' : 'dark:bg-gray-800'
+  }">
+  <div class="relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0" style="${
+    customConversationWidth ? `max-width:${conversationWidth}%` : ''
+  }">
+  <button id="message-pin-button-${id}" title="pin/unpin message" class="${
+    pinned ? 'visible' : 'invisible group-hover:visible'
+  }" style="background-color: transparent; border: none; cursor: pointer;min-width: 18px;position: absolute; top: -8px; right: 6px;z-index:0;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="${
+    pinned ? 'gold' : '#aaa'
+  }" d="M48 0H336C362.5 0 384 21.49 384 48V487.7C384 501.1 373.1 512 359.7 512C354.7 512 349.8 510.5 345.7 507.6L192 400L38.28 507.6C34.19 510.5 29.32 512 24.33 512C10.89 512 0 501.1 0 487.7V48C0 21.49 21.49 0 48 0z"/></svg></button>
     <div class="flex flex-col relative items-end">
       <div class="relative flex"><span
           style="box-sizing: border-box; display: inline-block; overflow: hidden; width: initial; height: initial; background: none; opacity: 1; border: 0px; margin: 0px; padding: 0px; position: relative; max-width: 100%;"><span
@@ -28,10 +50,20 @@ function rowUser(conversation, node, childIndex, childCount, name, avatar, custo
             alt=${name}
             src="/_next/image?url=${encodeURIComponent(avatar)}&amp;w=64&amp;q=75"
             decoding="async" data-nimg="intrinsic" class="rounded-sm"
-            srcset="/_next/image?url=${encodeURIComponent(avatar)}&amp;w=32&amp;q=75 1x, /_next/image?url=${encodeURIComponent(avatar)}&amp;w=64&amp;q=75 2x"
+            srcset="/_next/image?url=${encodeURIComponent(
+              avatar,
+            )}&amp;w=32&amp;q=75 1x, /_next/image?url=${encodeURIComponent(
+              avatar,
+            )}&amp;w=64&amp;q=75 2x"
             style="position: absolute; inset: 0px; box-sizing: border-box; padding: 0px; border: none; margin: auto; display: block; width: 0px; height: 0px; min-width: 100%; max-width: 100%; min-height: 100%; max-height: 100%;"></span>
       </div>
-      <div id="thread-buttons-wrapper-${id}" class="text-xs flex items-center justify-center gap-1 invisible absolute left-0 top-2 -ml-4 -translate-x-full ${childCount > 1 ? 'group-hover:visible' : ''}"><button id="thread-prev-button-${id}" class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400" ${childIndex === 1 ? 'disabled' : ''}><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="15 18 9 12 15 6"></polyline></svg></button><span id="thread-count-wrapper-${id}" class="flex-grow flex-shrink-0">${childIndex} / ${childCount}</span><button id="thread-next-button-${id}" ${childIndex === childCount ? 'disabled' : ''} class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400"><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="9 18 15 12 9 6"></polyline></svg></button></div>
+      <div id="thread-buttons-wrapper-${id}" class="text-xs flex items-center justify-center gap-1 invisible absolute left-0 top-2 -ml-4 -translate-x-full ${
+        childCount > 1 ? 'group-hover:visible' : ''
+      }"><button id="thread-prev-button-${id}" class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400" ${
+        childIndex === 1 ? 'disabled' : ''
+      }><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="15 18 9 12 15 6"></polyline></svg></button><span id="thread-count-wrapper-${id}" class="flex-grow flex-shrink-0">${childIndex} / ${childCount}</span><button id="thread-next-button-${id}" ${
+        childIndex === childCount ? 'disabled' : ''
+      } class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400"><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="9 18 15 12 9 6"></polyline></svg></button></div>
     </div>
     <div class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]">
       <div class="flex flex-grow flex-col gap-3">
@@ -58,9 +90,21 @@ function rowUser(conversation, node, childIndex, childCount, name, avatar, custo
       <div class="flex justify-between"></div>
     </div>
     <div class="absolute left-0 flex" style="bottom:-16px;">
-      ${languageName ? `<div id="language-code-${id}" title="You changed the response language here. This prompt includes a hidden language instructions" class="h-8 p-2 mr-1 flex items-center justify-center rounded-md border text-sm text-gray-500 dark:text-gray-400 border-gray-500 dark:border-gray-400 bg-white dark:bg-gray-800">Language: ${languageName}</div>` : ''}
-      ${toneName ? `<div id="tone-code-${id}" title="You changed the response tone here. This prompt includes a hidden tone instructions" class="h-8 p-2 mr-1 flex items-center justify-center rounded-md border text-sm text-gray-500 dark:text-gray-400 border-gray-500 dark:border-gray-400 bg-white dark:bg-gray-800">Tone: ${toneName}</div>` : ''}
-      ${writingStyleName ? `<div id="writing-style-code-${id}" title="You changed the response writing style here. This prompt includes a hidden writing style instructions" class="h-8 p-2 mr-1 flex items-center justify-center rounded-md border text-sm text-gray-500 dark:text-gray-400 border-gray-500 dark:border-gray-400 bg-white dark:bg-gray-800">Writing Style: ${writingStyleName}</div>` : ''}
+      ${
+        languageName
+          ? `<div id="language-code-${id}" title="You changed the response language here. This prompt includes a hidden language instructions" class="h-8 p-2 mr-1 flex items-center justify-center rounded-md border text-sm text-gray-500 dark:text-gray-400 border-gray-500 dark:border-gray-400 bg-white dark:bg-gray-800">Language: ${languageName}</div>`
+          : ''
+      }
+      ${
+        toneName
+          ? `<div id="tone-code-${id}" title="You changed the response tone here. This prompt includes a hidden tone instructions" class="h-8 p-2 mr-1 flex items-center justify-center rounded-md border text-sm text-gray-500 dark:text-gray-400 border-gray-500 dark:border-gray-400 bg-white dark:bg-gray-800">Tone: ${toneName}</div>`
+          : ''
+      }
+      ${
+        writingStyleName
+          ? `<div id="writing-style-code-${id}" title="You changed the response writing style here. This prompt includes a hidden writing style instructions" class="h-8 p-2 mr-1 flex items-center justify-center rounded-md border text-sm text-gray-500 dark:text-gray-400 border-gray-500 dark:border-gray-400 bg-white dark:bg-gray-800">Writing Style: ${writingStyleName}</div>`
+          : ''
+      }
     </div>
   </div>
 </div>

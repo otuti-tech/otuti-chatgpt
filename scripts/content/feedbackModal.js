@@ -1,6 +1,7 @@
 /* global messageFeedback */
 function feedbackModal(rating) {
-  return rating === 'thumbsUp' ? `<div id="headlessui-portal-root">
+  return rating === 'thumbsUp'
+    ? `<div id="headlessui-portal-root">
 <div data-headlessui-portal=""><button type="button" aria-hidden="true"
   style="position: fixed; top: 1px; left: 1px; width: 1px; height: 0px; padding: 0px; margin: -1px; overflow: hidden; clip: rect(0px, 0px, 0px, 0px); white-space: nowrap; border-width: 0px;"></button>
   <div>

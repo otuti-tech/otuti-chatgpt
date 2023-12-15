@@ -3,7 +3,11 @@
 // eslint-disable-next-line no-unused-vars
 function initialize() {
   const historyButton = document.querySelector('a[id="my-prompt-history-button"]');
-  if (window.location.pathname.startsWith('/share/') && !window.location.pathname.endsWith('/continue')) return;
+  if (
+    window.location.pathname.startsWith('/share/') &&
+    !window.location.pathname.endsWith('/continue')
+  )
+    return;
 
   if (!historyButton) {
     setTimeout(() => {
@@ -35,7 +39,10 @@ function initialize() {
         setTimeout(() => {
           chrome.storage.local.get(['settings'], (result) => {
             const { settings } = result;
-            if ((typeof settings?.autoSync === 'undefined' || settings?.autoSync) && !window.location.pathname.startsWith('/share/')) {
+            if (
+              (typeof settings?.autoSync === 'undefined' || settings?.autoSync) &&
+              !window.location.pathname.startsWith('/share/')
+            ) {
               // if (typeof settings?.autoSync === 'undefined' || settings?.autoSync) {
               initializeAutoSave();
             } else {

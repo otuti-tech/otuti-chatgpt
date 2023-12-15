@@ -37,7 +37,11 @@ function shareModal(conversation, shareData, name) {
     currentNodeId = parentId;
   }
   sortedNodes.reverse();
-  const filteredSortedNodes = sortedNodes.filter((n) => n?.message?.author?.role === 'user' || (n?.message?.recipient === 'all' && n?.message?.author?.role === 'assistant'));
+  const filteredSortedNodes = sortedNodes.filter(
+    (n) =>
+      n?.message?.author?.role === 'user' ||
+      (n?.message?.recipient === 'all' && n?.message?.author?.role === 'assistant'),
+  );
 
   return `<div
   data-state="open"
@@ -92,7 +96,10 @@ function shareModal(conversation, shareData, name) {
       <div class="p-4 sm:p-6 sm:pt-4">
         <div class="w-full">
           <p class="mb-6 text-gray-500">
-          ${!shareData.already_exists ? 'Messages you send after creating your link won\'t be shared. Anyone with the URL will be able to view the shared conversation.' : `You have shared this conversation <a
+          ${
+            !shareData.already_exists
+              ? "Messages you send after creating your link won't be shared. Anyone with the URL will be able to view the shared conversation."
+              : `You have shared this conversation <a
               href="${shareData.share_url}"
               target="_blank"
               rel="noreferrer"
@@ -100,7 +107,8 @@ function shareModal(conversation, shareData, name) {
               >before</a
             >. If you want to update the shared conversation content,
             delete this link and create a new
-            shared link.`}
+            shared link.`
+          }
           </p>
         </div>
         <div
@@ -177,7 +185,9 @@ function shareModal(conversation, shareData, name) {
           </svg>
         </div>
       </button>
-      ${shareData.already_exists ? `
+      ${
+        shareData.already_exists
+          ? `
       <button
         id="share-modal-delete-button"
         class="btn relative btn-neutral mb-auto mt-auto"
@@ -194,7 +204,9 @@ function shareModal(conversation, shareData, name) {
          <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
         </div>
       </button>
-      ` : ''}
+      `
+          : ''
+      }
     </div>
   </div>
               </div >
@@ -281,12 +293,14 @@ function addShareModalEventListener(shareData, name) {
     const shareModalAnonButtonIcon = shareModalAnonButton.querySelector('svg');
     if (shareConversationAnonymously) {
       shareConversationAnonymously = false;
-      shareModalAnonButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+      shareModalAnonButton.innerHTML =
+        '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
       const shareModalUserName = document.getElementById('share-modal-user-name');
       shareModalUserName.innerHTML = `${name}  · `;
     } else {
       shareConversationAnonymously = true;
-      shareModalAnonButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path> <circle cx="12" cy="7" r="4"></circle> <line x1="24" y1="0" x2="0" y2="24"></line> </svg>';
+      shareModalAnonButton.innerHTML =
+        '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path> <circle cx="12" cy="7" r="4"></circle> <line x1="24" y1="0" x2="0" y2="24"></line> </svg>';
       const shareModalUserName = document.getElementById('share-modal-user-name');
       shareModalUserName.innerHTML = '';
     }
@@ -308,16 +322,19 @@ function addShareModalEventListener(shareData, name) {
       if (!shareModalDeleteButtonIcon.classList.contains('text-red-500')) {
         shareModalDeleteButton.style.borderColor = '#ff4a4a';
         shareModalDeleteButton.style.backgroundColor = '#864e6140';
-        shareModalDeleteButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="text-red-500 h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        shareModalDeleteButton.innerHTML =
+          '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="text-red-500 h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="20 6 9 17 4 12"></polyline></svg>';
         setTimeout(() => {
           shareModalDeleteButton.style = '';
-          shareModalDeleteButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+          shareModalDeleteButton.innerHTML =
+            '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
         }, 3000);
       } else {
         // delete
         deleteShare(shareData.share_id);
         shareModalDeleteButton.style = '';
-        shareModalDeleteButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
+        shareModalDeleteButton.innerHTML =
+          '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
         shareModalWrapper.remove();
         toast('Deleted shared conversation!');
       }
@@ -328,7 +345,12 @@ function addShareModalEventListener(shareData, name) {
     e.preventDefault();
     e.stopPropagation();
 
-    share(shareData.share_id, sharingConversationName, shareData.highlighted_message_id, shareConversationAnonymously).then((res) => {
+    share(
+      shareData.share_id,
+      sharingConversationName,
+      shareData.highlighted_message_id,
+      shareConversationAnonymously,
+    ).then((res) => {
       navigator.clipboard.writeText(shareData.share_url);
       toast('Copied shared conversation URL to clipboard! ');
       shareModalWrapper.remove();
@@ -345,7 +367,8 @@ function addConversationNameEventListener(shareData) {
     // replace name with input
     const shareModalNameInput = document.createElement('input');
     shareModalNameInput.id = 'share-modal-name-input';
-    shareModalNameInput.classList = 'border-none focus:ring-gray-200 dark:focus:ring-gray-600 bg-transparent py-0.5 -my-0.5 pl-1 -ml-1 w-full';
+    shareModalNameInput.classList =
+      'border-none focus:ring-gray-200 dark:focus:ring-gray-600 bg-transparent py-0.5 -my-0.5 pl-1 -ml-1 w-full';
     shareModalNameInput.value = sharingConversationName;
     // replace shareModalNameWrapper with shareModalNameInput
     shareModalNameWrapper.replaceWith(shareModalNameInput);
@@ -382,7 +405,10 @@ function addConversationNameEventListener(shareData) {
       </button>
     </div>`;
       // convert html to element
-      const newShareModalNameWrapperElement = new DOMParser().parseFromString(newShareModalNameWrapper, 'text/html').body.firstChild;
+      const newShareModalNameWrapperElement = new DOMParser().parseFromString(
+        newShareModalNameWrapper,
+        'text/html',
+      ).body.firstChild;
       // replace shareModalNameInput with shareModalNameWrapper html
       shareModalNameInput.replaceWith(newShareModalNameWrapperElement);
       addConversationNameEventListener(shareData);
@@ -396,19 +422,20 @@ function addConversationNameEventListener(shareData) {
   });
 }
 function generateContent(nodes) {
-  return nodes.map((node, index) => {
-    const { message } = node;
-    if (message.author?.role === 'user') {
-      return userRow(message);
-    }
-    return assistantRow(message);
-  }).join('');
+  return nodes
+    .map((node, index) => {
+      const { message } = node;
+      if (message.author?.role === 'user') {
+        return userRow(message);
+      }
+      return assistantRow(message);
+    })
+    .join('');
 }
 
 function userRow(message) {
   const messageContent = message.content.parts.join('\n');
-  const messageContentPartsHTML = markdown('user')
-    .render(messageContent);
+  const messageContentPartsHTML = markdown('user').render(messageContent);
   return `<div
   class="group w-full text-gray-800 dark:text-gray-100 dark:bg-gray-800"
 >
@@ -473,7 +500,10 @@ function assistantRow(message) {
         citationText = '';
       }
 
-      messageContentParts = messageContentParts.replace(messageContentParts.substring(startIndex, endIndex), citationText);
+      messageContentParts = messageContentParts.replace(
+        messageContentParts.substring(startIndex, endIndex),
+        citationText,
+      );
     });
   }
   messageContentParts = messageContentParts.replace(/[^n}]\n\\/g, '\n\n\\');
@@ -483,8 +513,13 @@ function assistantRow(message) {
       engine: katex,
       delimiters: 'brackets',
       katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
-    }).render(messageContentParts);
-  const avatarColor = (message.metadata.model_slug?.includes('plugins') || message.metadata.model_slug?.startsWith('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';
+    })
+    .render(messageContentParts);
+  const avatarColor =
+    message.metadata.model_slug?.includes('plugins') ||
+    message.metadata.model_slug?.startsWith('gpt-4')
+      ? 'rgb(171, 104, 255)'
+      : 'rgb(25, 195, 125)';
 
   return `<div
   class="group w-full text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-[#444654]"

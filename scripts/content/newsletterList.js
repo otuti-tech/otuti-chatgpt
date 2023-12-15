@@ -4,7 +4,12 @@
 function createNewsletterListModal(version) {
   const bodyContent = newsletterListModalContent(version);
   const actionsBarContent = newsletterListModalActions();
-  createModal('Newsletter Archive', 'You can find all of our previous newsletters here (<a href="https://superpowerdaily.com" target="_blank" rel="noopener noreferrer" style="color:gold;">Read Online</a>)', bodyContent, actionsBarContent);
+  createModal(
+    'Newsletter Archive',
+    'You can find all of our previous newsletters here (<a href="https://superpowerdaily.com" target="_blank" rel="noopener noreferrer" style="color:gold;">Read Online</a>)',
+    bodyContent,
+    actionsBarContent,
+  );
 }
 
 function newsletterListModalContent() {
@@ -15,10 +20,12 @@ function newsletterListModalContent() {
   content.classList = 'markdown prose-invert';
   const logoWatermark = document.createElement('img');
   logoWatermark.src = chrome.runtime.getURL('icons/logo.png');
-  logoWatermark.style = 'position: fixed; top: 50%; right: 50%; width: 400px; height: 400px; opacity: 0.07; transform: translate(50%, -50%);box-shadow:none !important;';
+  logoWatermark.style =
+    'position: fixed; top: 50%; right: 50%; width: 400px; height: 400px; opacity: 0.07; transform: translate(50%, -50%);box-shadow:none !important;';
   content.appendChild(logoWatermark);
   const newsletterListText = document.createElement('article');
-  newsletterListText.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding: 16px;position: relative;z-index:10;color: #fff;';
+  newsletterListText.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding: 16px;position: relative;z-index:10;color: #fff;';
   getNewsletters().then((data) => {
     const newsletterList = data;
     if (newsletterList.length === 0) {
@@ -29,11 +36,16 @@ function newsletterListModalContent() {
       for (let i = 0; i < newsletterList.length; i += 1) {
         const newsletter = newsletterList[i];
         const releaseDate = new Date(newsletter.release_date);
-        const releaseDateWithOffset = new Date(releaseDate.getTime() + (releaseDate.getTimezoneOffset() * 60000));
+        const releaseDateWithOffset = new Date(
+          releaseDate.getTime() + releaseDate.getTimezoneOffset() * 60000,
+        );
         const newsletterLine = document.createElement('div');
-        newsletterLine.style = `font-size:1em;display:flex;margin:8px 0;align-items:flex-start; ${readNewsletterIds.includes(newsletter.id) ? 'opacity:0.5;' : ''}`;
+        newsletterLine.style = `font-size:1em;display:flex;margin:8px 0;align-items:flex-start; ${
+          readNewsletterIds.includes(newsletter.id) ? 'opacity:0.5;' : ''
+        }`;
         const newsletterDate = document.createElement('div');
-        newsletterDate.style = 'border: solid 1px gold;border-radius:4px;padding:4px;color:gold;cursor:pointer;margin-right:8px;min-width:144px; text-align:center;';
+        newsletterDate.style =
+          'border: solid 1px gold;border-radius:4px;padding:4px;color:gold;cursor:pointer;margin-right:8px;min-width:144px; text-align:center;';
         newsletterDate.textContent = releaseDateWithOffset.toDateString();
         newsletterDate.addEventListener('click', () => {
           getNewsletter(newsletter.id).then((newsletterData) => {
@@ -43,9 +55,13 @@ function newsletterListModalContent() {
               if (!oldReadNewsletterIds.includes(newsletter.id)) {
                 incrementOpenRate(newsletter.id);
               }
-              chrome.storage.local.set({ readNewsletterIds: [...oldReadNewsletterIds, newsletter.id] }, () => {
-                newsletterLine.style = 'font-size:1em;display:flex;margin:8px 0;align-items:flex-start; opacity:0.5;';
-              });
+              chrome.storage.local.set(
+                { readNewsletterIds: [...oldReadNewsletterIds, newsletter.id] },
+                () => {
+                  newsletterLine.style =
+                    'font-size:1em;display:flex;margin:8px 0;align-items:flex-start; opacity:0.5;';
+                },
+              );
             });
           });
         });
@@ -72,7 +88,8 @@ function addNewsletterButton() {
   if (document.querySelector('#newsletter-button')) return;
   // create the setting button by copying the nav button
   const newsletterButton = document.createElement('a');
-  newsletterButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
+  newsletterButton.classList =
+    'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
   newsletterButton.textContent = 'Newsletter Archive';
   newsletterButton.title = 'CMD/CTRL + SHIFT + L';
 

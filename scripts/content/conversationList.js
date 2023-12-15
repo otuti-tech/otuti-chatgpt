@@ -35,16 +35,17 @@ function removeOriginalConversationList() {
           return from.el.id !== 'folder-content-trash';
         },
       },
-      draggable: '[id^="conversation-button-"], [id^="wrapper-folder-"]:not([id="wrapper-folder-trash"]',
+      draggable:
+        '[id^="conversation-button-"], [id^="wrapper-folder-"]:not([id="wrapper-folder-trash"]',
       onEnd: (event) => {
-        const {
-          item, to, oldDraggableIndex, newDraggableIndex,
-        } = event;
+        const { item, to, oldDraggableIndex, newDraggableIndex } = event;
         const isFolder = item.id.startsWith('wrapper-folder-');
         const isToFolder = to.id.startsWith('folder-content-');
 
         const fromId = 'conversation-list';
-        const toId = isToFolder ? to.id.split('folder-content-')[1]?.slice(0, 5) : 'conversation-list';
+        const toId = isToFolder
+          ? to.id.split('folder-content-')[1]?.slice(0, 5)
+          : 'conversation-list';
         if (oldDraggableIndex === newDraggableIndex && toId === fromId) return;
 
         if (!isFolder && isToFolder && toId === 'trash') {
@@ -110,7 +111,8 @@ function createSearchBox() {
     searchbox.id = 'conversation-search';
     searchbox.tabIndex = 0;
     searchbox.placeholder = 'Search conversations';
-    searchbox.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 conversation-search';
+    searchbox.classList =
+      'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 conversation-search';
     searchbox.addEventListener('keydown', (event) => {
       if (event.key === 'ArrowDown') {
         const focusedConversation = document.querySelector('.selected');
@@ -133,51 +135,77 @@ function createSearchBox() {
         }
       }
     });
-    searchbox.addEventListener('input', debounce((event) => {
-      const searchValue = event.target.value.toLowerCase();
-      chrome.storage.sync.get(['conversationsOrder'], (syncResult) => {
-        chrome.storage.local.get(['conversations'], (result) => {
-          const { conversationsOrder } = syncResult;
-          const { conversations } = result;
-          // remove existing conversations
-          const curConversationList = document.querySelector('#conversation-list');
-          // remove conversations list childs other than the search box wrapper (first child)
-          while (curConversationList.childNodes.length > 1) {
-            curConversationList.removeChild(curConversationList.lastChild);
-          }
-
-          const allConversations = Object.values(conversations).filter((c) => !c.skipped);
-          let filteredConversations = allConversations.sort((a, b) => b.update_time - a.update_time);
-
-          resetSelection();
-          if (searchValue) {
-            filteredConversations = allConversations.filter((c) => (
-              c.title?.toLowerCase()?.includes(searchValue.toLowerCase())
-              || Object.values(c.mapping).map((m) => m?.message?.content?.parts?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))
-                .join(' ')?.toLowerCase()
-                .includes(searchValue.toLowerCase())));
-            const filteredConversationIds = filteredConversations.map((c) => c.id.slice(0, 5));
-            // convert filtered conversations to object with id as key
-            const filteredConversationsObj = filteredConversations.reduce((acc, cur) => {
-              acc[cur.id] = cur;
-              return acc;
-            }, {});
-            loadStorageConversations(filteredConversationsObj, filteredConversationIds, searchValue);
-          } else {
-            loadStorageConversations(conversations, conversationsOrder, searchValue);
-            const { pathname } = new URL(window.location.toString());
-            const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-            if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
-              loadConversation(conversationId, '', false);
+    searchbox.addEventListener(
+      'input',
+      debounce((event) => {
+        const searchValue = event.target.value.toLowerCase();
+        chrome.storage.sync.get(['conversationsOrder'], (syncResult) => {
+          chrome.storage.local.get(['conversations'], (result) => {
+            const { conversationsOrder } = syncResult;
+            const { conversations } = result;
+            // remove existing conversations
+            const curConversationList = document.querySelector('#conversation-list');
+            // remove conversations list childs other than the search box wrapper (first child)
+            while (curConversationList.childNodes.length > 1) {
+              curConversationList.removeChild(curConversationList.lastChild);
             }
-          }
+
+            const allConversations = Object.values(conversations).filter((c) => !c.skipped);
+            let filteredConversations = allConversations.sort(
+              (a, b) => b.update_time - a.update_time,
+            );
+
+            resetSelection();
+            if (searchValue) {
+              filteredConversations = allConversations.filter(
+                (c) =>
+                  c.title?.toLowerCase()?.includes(searchValue.toLowerCase()) ||
+                  Object.values(c.mapping)
+                    .map((m) =>
+                      m?.message?.content?.parts
+                        ?.join(' ')
+                        ?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''),
+                    )
+                    .join(' ')
+                    ?.toLowerCase()
+                    .includes(searchValue.toLowerCase()),
+              );
+              const filteredConversationIds = filteredConversations.map((c) => c.id.slice(0, 5));
+              // convert filtered conversations to object with id as key
+              const filteredConversationsObj = filteredConversations.reduce((acc, cur) => {
+                acc[cur.id] = cur;
+                return acc;
+              }, {});
+              loadStorageConversations(
+                filteredConversationsObj,
+                filteredConversationIds,
+                searchValue,
+              );
+            } else {
+              loadStorageConversations(conversations, conversationsOrder, searchValue);
+              const { pathname } = new URL(window.location.toString());
+              const conversationId = pathname
+                .split('/')
+                .pop()
+                .replace(/[^a-z0-9-]/gi, '');
+              if (
+                /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+                  conversationId,
+                )
+              ) {
+                loadConversation(conversationId, '', false);
+              }
+            }
+          });
         });
-      });
-    }), 500);
+      }),
+      500,
+    );
 
     const newFolderButton = document.createElement('button');
     newFolderButton.id = 'new-folder-button';
-    newFolderButton.classList = 'w-12 h-full flex items-center justify-center rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 border border-gray-800';
+    newFolderButton.classList =
+      'w-12 h-full flex items-center justify-center rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 border border-gray-800';
     const newFoolderIcon = document.createElement('img');
     newFoolderIcon.classList = 'w-5 h-5';
     newFoolderIcon.src = chrome.runtime.getURL('icons/new-folder.png');
@@ -202,12 +230,22 @@ function createSearchBox() {
       chrome.storage.sync.get(['conversationsOrder'], (syncResult) => {
         chrome.storage.local.get(['settings'], (result) => {
           const newFolder = {
-            id: self.crypto.randomUUID().slice(0, 5), name: 'New Folder', conversationIds: [], isOpen: true,
+            id: self.crypto.randomUUID().slice(0, 5),
+            name: 'New Folder',
+            conversationIds: [],
+            isOpen: true,
           };
           const { conversationsOrder } = syncResult;
           const { settings } = result;
-          chrome.storage.sync.set({ conversationsOrder: [newFolder, ...conversationsOrder] });
-          const newFolderElement = createFolder(newFolder, settings.conversationTimestamp, [], true);
+          chrome.storage.sync.set({
+            conversationsOrder: [newFolder, ...conversationsOrder],
+          });
+          const newFolderElement = createFolder(
+            newFolder,
+            settings.conversationTimestamp,
+            [],
+            true,
+          );
           const curConversationList = document.querySelector('#conversation-list');
           curConversationList.insertBefore(newFolderElement, searchboxWrapper.nextSibling);
           curConversationList.scrollTop = 0;
@@ -223,7 +261,9 @@ function createSearchBox() {
 // add new conversation to the top of the list
 // eslint-disable-next-line no-unused-vars
 function prependConversation(conversation) {
-  const existingConversationElement = document.querySelector(`#conversation-button-${conversation.id}`);
+  const existingConversationElement = document.querySelector(
+    `#conversation-button-${conversation.id}`,
+  );
   if (existingConversationElement) existingConversationElement.remove();
   const conversationList = document.querySelector('#conversation-list');
   const searchboxWrapper = document.querySelector('#conversation-search-wrapper');
@@ -236,14 +276,19 @@ function prependConversation(conversation) {
     e.preventDefault();
     e.stopPropagation();
     // get closet element with id starting with conversation-button
-    const conversationElementId = e.srcElement.closest('[id^="conversation-button-"]').id.split('conversation-button-')[1];
+    const conversationElementId = e.srcElement
+      .closest('[id^="conversation-button-"]')
+      .id.split('conversation-button-')[1];
     // if commandkey or ctrlkey is pressed, open in new tab
     if (e.metaKey || (isWindows() && e.ctrlKey)) {
       window.open(`https://chat.openai.com/c/${conversationElementId}`, '_blank');
       return;
     }
     const { pathname } = new URL(window.location.toString());
-    const urlConversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+    const urlConversationId = pathname
+      .split('/')
+      .pop()
+      .replace(/[^a-z0-9-]/gi, '');
     if (urlConversationId !== conversationElementId) {
       window.history.pushState({}, '', `https://chat.openai.com/c/${conversationElementId}`);
       // set conversations with class selected to not selected
@@ -276,7 +321,8 @@ function prependConversation(conversation) {
   // add timestamp
   const timestampElement = document.createElement('div');
   timestampElement.id = 'timestamp';
-  timestampElement.style = 'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
+  timestampElement.style =
+    'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
     const timestamp = settings.conversationTimestamp
@@ -299,7 +345,9 @@ function prependConversation(conversation) {
   }
   chrome.storage.sync.get(['conversationsOrder'], (result) => {
     const { conversationsOrder } = result;
-    chrome.storage.sync.set({ conversationsOrder: [conversation.id?.slice(0, 5), ...conversationsOrder] });
+    chrome.storage.sync.set({
+      conversationsOrder: [conversation.id?.slice(0, 5), ...conversationsOrder],
+    });
   });
 
   // after adding first conversation
@@ -320,7 +368,9 @@ function generateTitleForConversation(conversationId, messageId, profile) {
       document.title = title;
       const conversationElement = document.querySelector(`#conversation-button-${conversationId}`);
       conversationElement.classList.add('animate-flash');
-      const conversationTitle = conversationElement.querySelector(`#conversation-title-${conversationId}`);
+      const conversationTitle = conversationElement.querySelector(
+        `#conversation-title-${conversationId}`,
+      );
       const topDiv = document.querySelector('#conversation-top');
       // animate writing title one character at a time
       conversationTitle.innerHTML = '';
@@ -334,10 +384,11 @@ function generateTitleForConversation(conversationId, messageId, profile) {
       });
       // at the end, add sss
       setTimeout(() => {
-        if (topDiv) topDiv.innerHTML += `<span style="display:flex;" title="What would you like ChatGPT to know about you to provide better responses?\n${profile?.about_user_message} \n\nHow would you like ChatGPT to respond?\n${profile?.about_model_message}">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;Custom instructions: On&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="none" class="ml-0.5 mt-0.5 h-4 w-4 flex-shrink-0 text-gray-600 dark:text-gray-200 sm:mb-0.5 sm:mt-0 sm:h-5 sm:w-5"><path d="M8.4375 8.4375L8.46825 8.4225C8.56442 8.37445 8.67235 8.35497 8.77925 8.36637C8.88615 8.37776 8.98755 8.41955 9.07143 8.48678C9.15532 8.55402 9.21818 8.64388 9.25257 8.74574C9.28697 8.8476 9.29145 8.95717 9.2655 9.0615L8.7345 11.1885C8.70836 11.2929 8.7127 11.4026 8.74702 11.5045C8.78133 11.6065 8.84418 11.6965 8.9281 11.7639C9.01202 11.8312 9.1135 11.8731 9.2205 11.8845C9.32749 11.8959 9.43551 11.8764 9.53175 11.8282L9.5625 11.8125M15.75 9C15.75 9.88642 15.5754 10.7642 15.2362 11.5831C14.897 12.4021 14.3998 13.1462 13.773 13.773C13.1462 14.3998 12.4021 14.897 11.5831 15.2362C10.7642 15.5754 9.88642 15.75 9 15.75C8.11358 15.75 7.23583 15.5754 6.41689 15.2362C5.59794 14.897 4.85382 14.3998 4.22703 13.773C3.60023 13.1462 3.10303 12.4021 2.76381 11.5831C2.42459 10.7642 2.25 9.88642 2.25 9C2.25 7.20979 2.96116 5.4929 4.22703 4.22703C5.4929 2.96116 7.20979 2.25 9 2.25C10.7902 2.25 12.5071 2.96116 13.773 4.22703C15.0388 5.4929 15.75 7.20979 15.75 9ZM9 6.1875H9.006V6.1935H9V6.1875Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>`;
+        if (topDiv)
+          topDiv.innerHTML += `<span style="display:flex;" title="What would you like ChatGPT to know about you to provide better responses?\n${profile?.about_user_message} \n\nHow would you like ChatGPT to respond?\n${profile?.about_model_message}">&nbsp;&nbsp;&nbsp;•&nbsp;&nbsp;&nbsp;Custom instructions: On&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="none" class="ml-0.5 mt-0.5 h-4 w-4 flex-shrink-0 text-gray-600 dark:text-gray-200 sm:mb-0.5 sm:mt-0 sm:h-5 sm:w-5"><path d="M8.4375 8.4375L8.46825 8.4225C8.56442 8.37445 8.67235 8.35497 8.77925 8.36637C8.88615 8.37776 8.98755 8.41955 9.07143 8.48678C9.15532 8.55402 9.21818 8.64388 9.25257 8.74574C9.28697 8.8476 9.29145 8.95717 9.2655 9.0615L8.7345 11.1885C8.70836 11.2929 8.7127 11.4026 8.74702 11.5045C8.78133 11.6065 8.84418 11.6965 8.9281 11.7639C9.01202 11.8312 9.1135 11.8731 9.2205 11.8845C9.32749 11.8959 9.43551 11.8764 9.53175 11.8282L9.5625 11.8125M15.75 9C15.75 9.88642 15.5754 10.7642 15.2362 11.5831C14.897 12.4021 14.3998 13.1462 13.773 13.773C13.1462 14.3998 12.4021 14.897 11.5831 15.2362C10.7642 15.5754 9.88642 15.75 9 15.75C8.11358 15.75 7.23583 15.5754 6.41689 15.2362C5.59794 14.897 4.85382 14.3998 4.22703 13.773C3.60023 13.1462 3.10303 12.4021 2.76381 11.5831C2.42459 10.7642 2.25 9.88642 2.25 9C2.25 7.20979 2.96116 5.4929 4.22703 4.22703C5.4929 2.96116 7.20979 2.25 9 2.25C10.7902 2.25 12.5071 2.96116 13.773 4.22703C15.0388 5.4929 15.75 7.20979 15.75 9ZM9 6.1875H9.006V6.1935H9V6.1875Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>`;
       }, title.length * 50);
     });
-  }, 500);// a little delay to make sure gen title still works even if user stops the generation
+  }, 500); // a little delay to make sure gen title still works even if user stops the generation
 }
 
 function loadStorageConversations(conversations, conversationsOrder = [], searchValue = '') {
@@ -389,7 +440,8 @@ function updateNewChatButtonSynced() {
     const textAreaElement = document.querySelector('main form textarea');
     const nav = document.querySelector('nav');
     const newChatButton = nav?.querySelector('a');
-    newChatButton.classList = 'flex py-3 px-3 w-full items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
+    newChatButton.classList =
+      'flex py-3 px-3 w-full items-center gap-3 transition-colors duration-200 text-white cursor-pointer text-sm rounded-md border border-white/20 hover:bg-gray-500/10 mb-1 flex-shrink-0';
     // clone newChatButton
     if (conversationsAreSynced) {
       const newChatButtonClone = newChatButton.cloneNode(true);
@@ -421,14 +473,25 @@ function updateNewChatButtonSynced() {
         }
       });
       if (selectedConversations?.length > 0) {
-        newChatButtonClone.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Clear selection';
+        newChatButtonClone.innerHTML =
+          '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Clear selection';
       } else {
-        newChatButtonClone.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New chat';
+        newChatButtonClone.innerHTML =
+          '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>New chat';
       }
     }
   });
 }
-function submitChat(userInput, conversation, messageId, parentId, settings, models, continueGenerating = false, regenerateResponse = false) {
+function submitChat(
+  userInput,
+  conversation,
+  messageId,
+  parentId,
+  settings,
+  models,
+  continueGenerating = false,
+  regenerateResponse = false,
+) {
   // check window. localstorage every 200ms until arkoseToken is set
   let arkoseToken;
   const startTime = Date.now();
@@ -442,10 +505,14 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
       clearInterval(interval);
 
       scrolUpDetected = false;
-      const curSubmitButton = document.querySelector('main').querySelector('form').querySelector('textarea ~ button');
+      const curSubmitButton = document
+        .querySelector('main')
+        .querySelector('form')
+        .querySelector('textarea ~ button');
       curSubmitButton.disabled = true;
       curSubmitButton.style.backgroundColor = 'transparent';
-      curSubmitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg>';
+      curSubmitButton.innerHTML =
+        '<svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"></circle> <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path> </svg>';
       const syncDiv = document.getElementById('sync-div');
       if (syncDiv) syncDiv.style.opacity = '0.3';
       if (!regenerateResponse) initializeRegenerateResponseButton();
@@ -454,15 +521,30 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
       let existingWordCount = 0;
       let existingCharCount = 0;
       if (continueGenerating) {
-        const incompleteAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
+        const incompleteAssistant = [
+          ...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]'),
+        ].pop();
         existingInnerHTML = incompleteAssistant.querySelector('[id^=message-text-]').innerHTML;
-        existingWordCount = incompleteAssistant.querySelector('[id^=message-text-]').innerText.split(/[ /]/).length;
-        existingCharCount = incompleteAssistant.querySelector('[id^=message-text-]').innerText.length;
+        existingWordCount = incompleteAssistant
+          .querySelector('[id^=message-text-]')
+          .innerText.split(/[ /]/).length;
+        existingCharCount =
+          incompleteAssistant.querySelector('[id^=message-text-]').innerText.length;
       }
       const suggestionsWrapper = document.querySelector('#suggestions-wrapper');
       if (suggestionsWrapper) suggestionsWrapper.remove();
       const saveHistory = conversation?.id ? conversation.saveHistory : settings.saveHistory;
-      generateChat(userInput, conversation?.id, messageId, parentId, arkoseToken, lastPromptSuggestions, saveHistory, 'user', continueGenerating ? 'continue' : 'next').then((chatStream) => {
+      generateChat(
+        userInput,
+        conversation?.id,
+        messageId,
+        parentId,
+        arkoseToken,
+        lastPromptSuggestions,
+        saveHistory,
+        'user',
+        continueGenerating ? 'continue' : 'next',
+      ).then((chatStream) => {
         userChatIsActuallySaved = regenerateResponse || continueGenerating;
         let userChatSavedLocally = regenerateResponse || continueGenerating; // false by default unless regenerateResponse is true
         let assistantChatSavedLocally = false;
@@ -478,7 +560,8 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
             const textAreaElement = inputForm.querySelector('textarea');
             textAreaElement.focus();
             // submitButton.disabled = false;
-            submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
+            submitButton.innerHTML =
+              '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
             if (chatStreamIsClosed && e.data !== '[DONE]') {
               const data = JSON.parse(e.data);
               if (data.error) throw new Error(data.error);
@@ -499,21 +582,42 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
               if (userChatIsActuallySaved) {
                 clearInterval(tempId);
                 // don't generate title if tmpChatStreamIsClosed
-                updateOrCreateConversation(finalConversationId, finalMessage, messageId, settings, !tmpChatStreamIsClosed, tmpChatStreamIsClosed).then(() => {
-                  if (!tmpChatStreamIsClosed) { // if not clicked on stop generating button
+                updateOrCreateConversation(
+                  finalConversationId,
+                  finalMessage,
+                  messageId,
+                  settings,
+                  !tmpChatStreamIsClosed,
+                  tmpChatStreamIsClosed,
+                ).then(() => {
+                  if (!tmpChatStreamIsClosed) {
+                    // if not clicked on stop generating button
                     chrome.storage.local.get(['account'], (result) => {
                       const { account } = result;
-                      const isPaid = account?.account_plan?.is_paid_subscription_active || account?.accounts?.default?.entitlement?.has_active_subscription || false;
-                      if (runningPromptChainSteps && runningPromptChainSteps.length > 1 && runningPromptChainIndex < runningPromptChainSteps.length - 1) {
-                        setTimeout(() => {
-                          insertNextChain(runningPromptChainSteps, runningPromptChainIndex + 1);
-                        }, isPaid ? 700 : 2000);
+                      const isPaid =
+                        account?.account_plan?.is_paid_subscription_active ||
+                        account?.accounts?.default?.entitlement?.has_active_subscription ||
+                        false;
+                      if (
+                        runningPromptChainSteps &&
+                        runningPromptChainSteps.length > 1 &&
+                        runningPromptChainIndex < runningPromptChainSteps.length - 1
+                      ) {
+                        setTimeout(
+                          () => {
+                            insertNextChain(runningPromptChainSteps, runningPromptChainIndex + 1);
+                          },
+                          isPaid ? 700 : 2000,
+                        );
                       } else {
                         runningPromptChainSteps = undefined;
                         runningPromptChainIndex = 0;
-                        setTimeout(() => {
-                          insertNextChunk(settings, finalMessage);
-                        }, isPaid ? 700 : 2000);
+                        setTimeout(
+                          () => {
+                            insertNextChunk(settings, finalMessage);
+                          },
+                          isPaid ? 700 : 2000,
+                        );
                       }
                     });
                   } else {
@@ -540,38 +644,59 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                 isGenerating = true;
               }
               if (finalMessage === '') {
-                const pluginDropdownButton = document.querySelector('#navbar-plugins-dropdown-button');
+                const pluginDropdownButton = document.querySelector(
+                  '#navbar-plugins-dropdown-button',
+                );
                 if (pluginDropdownButton) {
                   pluginDropdownButton.disabled = true;
                   pluginDropdownButton.style.opacity = 0.75;
-                  pluginDropdownButton.title = 'Changing plugins in the middle of the conversation is not allowed';
+                  pluginDropdownButton.title =
+                    'Changing plugins in the middle of the conversation is not allowed';
                 }
                 initializeStopGeneratingResponseButton();
                 // update gpt4 counter
                 if (!continueGenerating) {
-                  chrome.storage.local.get(['gpt4Timestamps', 'settings', 'conversationLimit'], (result) => {
-                    const { gpt4Timestamps } = result;
-                    if (!result.settings.selectedModel.tags.includes('gpt4') && result.settings.selectedModel.slug !== 'gpt-4') return;
-                    const now = new Date().getTime();
-                    const gpt4CounterElement = document.querySelector('#gpt4-counter');
-                    gpt4CounterElement.style.display = result.settings.showGpt4Counter ? 'block' : 'none';
-                    const messageCap = result?.conversationLimit?.message_cap || 50;
-                    const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
-                    if (gpt4Timestamps) {
-                      gpt4Timestamps.push(now);
-                      const hoursAgo = now - (messageCapWindow / 60) * 60 * 60 * 1000;
-                      const gpt4TimestampsFiltered = gpt4Timestamps.filter((timestamp) => timestamp > hoursAgo);
-                      chrome.storage.local.set({ gpt4Timestamps: gpt4TimestampsFiltered, capExpiresAt: '' });
-                      if (gpt4CounterElement) {
-                        gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap}`;
+                  chrome.storage.local.get(
+                    ['gpt4Timestamps', 'settings', 'conversationLimit'],
+                    (result) => {
+                      const { gpt4Timestamps } = result;
+                      if (
+                        !result.settings.selectedModel.tags.includes('gpt4') &&
+                        result.settings.selectedModel.slug !== 'gpt-4'
+                      )
+                        return;
+                      const now = new Date().getTime();
+                      const gpt4CounterElement = document.querySelector('#gpt4-counter');
+                      gpt4CounterElement.style.display = result.settings.showGpt4Counter
+                        ? 'block'
+                        : 'none';
+                      const messageCap = result?.conversationLimit?.message_cap || 50;
+                      const messageCapWindow = result?.conversationLimit?.message_cap_window || 180;
+                      if (gpt4Timestamps) {
+                        gpt4Timestamps.push(now);
+                        const hoursAgo = now - (messageCapWindow / 60) * 60 * 60 * 1000;
+                        const gpt4TimestampsFiltered = gpt4Timestamps.filter(
+                          (timestamp) => timestamp > hoursAgo,
+                        );
+                        chrome.storage.local.set({
+                          gpt4Timestamps: gpt4TimestampsFiltered,
+                          capExpiresAt: '',
+                        });
+                        if (gpt4CounterElement) {
+                          gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(
+                            messageCapWindow,
+                          )}): ${gpt4TimestampsFiltered.length}/${messageCap}`;
+                        }
+                      } else {
+                        chrome.storage.local.set({ gpt4Timestamps: [now] });
+                        if (gpt4CounterElement) {
+                          gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(
+                            messageCapWindow,
+                          )}): 1/${messageCap}`;
+                        }
                       }
-                    } else {
-                      chrome.storage.local.set({ gpt4Timestamps: [now] });
-                      if (gpt4CounterElement) {
-                        gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 1/${messageCap}`;
-                      }
-                    }
-                  });
+                    },
+                  );
                 }
               }
 
@@ -584,12 +709,22 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
 
               finalConversationId = conversationId;
               const { pathname } = new URL(window.location.toString());
-              const urlConversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-              if (pathname === '/') { // https://chat.openai.com/
+              const urlConversationId = pathname
+                .split('/')
+                .pop()
+                .replace(/[^a-z0-9-]/gi, '');
+              if (pathname === '/') {
+                // https://chat.openai.com/
                 // only change url if there are any user messages. if user switch to new page while generating, don't change url when done generating
-                const anyUserMessageWrappers = document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]').length > 0;
+                const anyUserMessageWrappers =
+                  document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]').length >
+                  0;
                 if (anyUserMessageWrappers) {
-                  window.history.pushState({}, '', `https://chat.openai.com/c/${finalConversationId}`);
+                  window.history.pushState(
+                    {},
+                    '',
+                    `https://chat.openai.com/c/${finalConversationId}`,
+                  );
                 }
               }
               // save user chat locally
@@ -600,9 +735,20 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                 }
                 if (role === 'user') {
                   initialUserMessage = message;
-                  initialUserMessage.metadata = { ...initialUserMessage.metadata, model_slug: settings.selectedModel.slug };
+                  initialUserMessage.metadata = {
+                    ...initialUserMessage.metadata,
+                    model_slug: settings.selectedModel.slug,
+                  };
                   // set forcerefresh=true when adding user chat, and set it to false when stream ends. This way if something goes wrong in between, the conversation will be refreshed later
-                  updateOrCreateConversation(finalConversationId, initialUserMessage, parentId, settings, false, true, systemMessage);
+                  updateOrCreateConversation(
+                    finalConversationId,
+                    initialUserMessage,
+                    parentId,
+                    settings,
+                    false,
+                    true,
+                    systemMessage,
+                  );
                   return;
                 }
               } else if (!userChatSavedLocally) {
@@ -617,18 +763,34 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                 };
 
                 // set forcerefresh=true when adding user chat, and set it to false when stream ends. This way if something goes wrong in between, the conversation will be refreshed later
-                updateOrCreateConversation(finalConversationId, userMessage, parentId, settings, false, true);
+                updateOrCreateConversation(
+                  finalConversationId,
+                  userMessage,
+                  parentId,
+                  settings,
+                  false,
+                  true,
+                );
                 userChatSavedLocally = true;
               }
               if (!conversation?.id || userChatSavedLocally) {
                 // save assistant chat locally
                 finalMessage = message;
-                if (!assistantChatSavedLocally && message.author.role === 'assistant' && message.recipient === 'all') {
+                if (
+                  !assistantChatSavedLocally &&
+                  message.author.role === 'assistant' &&
+                  message.recipient === 'all'
+                ) {
                   assistantChatSavedLocally = true;
                   const tempId = setInterval(() => {
                     if (userChatIsActuallySaved) {
                       clearInterval(tempId);
-                      updateOrCreateConversation(finalConversationId, finalMessage, messageId, settings);
+                      updateOrCreateConversation(
+                        finalConversationId,
+                        finalMessage,
+                        messageId,
+                        settings,
+                      );
                     }
                   }, 1000);
                 }
@@ -640,19 +802,28 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
               if (role !== 'assistant' && role !== 'user') return;
               if (recipient !== 'all') return;
 
-              const lastRowAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
-              const existingRowAssistant = continueGenerating ? lastRowAssistant : document.querySelector(`[id="message-wrapper-${message.id}"][data-role="assistant"]`);
+              const lastRowAssistant = [
+                ...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]'),
+              ].pop();
+              const existingRowAssistant = continueGenerating
+                ? lastRowAssistant
+                : document.querySelector(
+                    `[id="message-wrapper-${message.id}"][data-role="assistant"]`,
+                  );
 
               if (existingRowAssistant) {
                 if (!scrolUpDetected) {
                   document.querySelector('#conversation-bottom').scrollIntoView();
                 }
 
-                const existingRowAssistantTextWrapper = existingRowAssistant.querySelector('[id^=message-text-]');
+                const existingRowAssistantTextWrapper =
+                  existingRowAssistant.querySelector('[id^=message-text-]');
 
                 const resultCounter = existingRowAssistant.querySelector('[id^=result-counter-]');
                 const searchValue = document.querySelector('#conversation-search')?.value;
-                let messageContentParts = searchValue ? highlight(finalMessage.content.parts.join('\n'), searchValue) : finalMessage.content.parts.join('\n');
+                let messageContentParts = searchValue
+                  ? highlight(finalMessage.content.parts.join('\n'), searchValue)
+                  : finalMessage.content.parts.join('\n');
                 const { citations } = finalMessage.metadata;
                 if (citations?.length > 0) {
                   citations.reverse().forEach((citation, index) => {
@@ -666,7 +837,10 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                       citationText = '';
                     }
 
-                    messageContentParts = messageContentParts.replace(messageContentParts.substring(startIndex, endIndex), citationText);
+                    messageContentParts = messageContentParts.replace(
+                      messageContentParts.substring(startIndex, endIndex),
+                      citationText,
+                    );
                   });
                 }
 
@@ -677,7 +851,8 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
                     engine: katex,
                     delimiters: 'brackets',
                     katexOptions: { macros: { '\\RR': '\\mathbb{R}' } },
-                  }).render(messageContentParts);
+                  })
+                  .render(messageContentParts);
                 const wordCount = messageContentParts.split(/[ /]/).length + existingWordCount;
                 const charCount = messageContentParts.replace(/\n/g, '').length + existingCharCount;
 
@@ -685,13 +860,28 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
 
                 resultCounter.innerHTML = `${charCount} chars / ${wordCount} words`;
               } else {
-                const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
+                const lastMessageWrapper = [
+                  ...document.querySelectorAll('[id^="message-wrapper-"]'),
+                ].pop();
                 if (lastMessageWrapper?.dataset?.role !== 'assistant') {
-                  const existingRowUser = document.querySelector(`[id="message-wrapper-${messageId}"][data-role="user"]`);
+                  const existingRowUser = document.querySelector(
+                    `[id="message-wrapper-${messageId}"][data-role="user"]`,
+                  );
                   if (existingRowUser) {
-                    let threadCount = Object.keys(conversation).length > 0 ? conversation?.mapping[messageId]?.children?.length || 1 : 1;
+                    let threadCount =
+                      Object.keys(conversation).length > 0
+                        ? conversation?.mapping[messageId]?.children?.length || 1
+                        : 1;
                     if (regenerateResponse) threadCount += 1;
-                    const assistantRow = rowAssistant(conversation, data, threadCount, threadCount, models, settings.customConversationWidth, settings.conversationWidth);
+                    const assistantRow = rowAssistant(
+                      conversation,
+                      data,
+                      threadCount,
+                      threadCount,
+                      models,
+                      settings.customConversationWidth,
+                      settings.conversationWidth,
+                    );
                     const conversationBottom = document.querySelector('#conversation-bottom');
                     conversationBottom.insertAdjacentHTML('beforebegin', assistantRow);
                     if (!scrolUpDetected) {
@@ -720,13 +910,15 @@ function submitChat(userInput, conversation, messageId, parentId, settings, mode
           const inputForm = main.querySelector('form');
           const submitButton = inputForm.querySelector('textarea ~ button');
           // submitButton.disabled = false;
-          submitButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
+          submitButton.innerHTML =
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="none" class="h-4 w-4" stroke-width="2"><path d="M.5 1.163A1 1 0 0 1 1.97.28l12.868 6.837a1 1 0 0 1 0 1.766L1.969 15.72A1 1 0 0 1 .5 14.836V10.33a1 1 0 0 1 .816-.983L8.5 8 1.316 6.653A1 1 0 0 1 .5 5.67V1.163Z" fill="currentColor"></path></svg>';
           // eslint-disable-next-line no-console
           console.warn(err);
           if (err.data) {
             const error = JSON.parse(err.data);
             const errorCode = error?.detail?.code;
-            let errorMessage = typeof error.detail === 'string' ? error.detail : error.detail.message;
+            let errorMessage =
+              typeof error.detail === 'string' ? error.detail : error.detail.message;
             if (errorCode === 'model_cap_exceeded') {
               // seconds until cap is cleared
               const clearsIn = error?.detail?.clears_in;
@@ -799,7 +991,10 @@ function insertNextChunk(settings, previousMessage) {
   if (!textAreaElement) return;
   const submitButton = document.querySelector('main form textarea ~ button');
   if (!submitButton) return;
-  const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
+  const lastNewLineIndexBeforeLimit =
+    settings.autoSplitLimit > remainingText.length
+      ? settings.autoSplitLimit
+      : getLastIndexOf(remainingText, settings.autoSplitLimit);
 
   textAreaElement.value = `[START CHUNK ${chunkNumber}/${totalChunks}]
 ${remainingText.slice(0, lastNewLineIndexBeforeLimit)}
@@ -815,7 +1010,8 @@ ${settings.autoSplitChunkPrompt}`;
 
 function getLastIndexOf(text, position) {
   // if text down't include \n or . or ? or ! return position
-  if (!text.includes('\n') && !text.includes('.') && !text.includes('?') && !text.includes('!')) return position;
+  if (!text.includes('\n') && !text.includes('.') && !text.includes('?') && !text.includes('!'))
+    return position;
   // last index of space before position
   const space = text.lastIndexOf(' ', position);
   // last index of \n before position
@@ -841,164 +1037,222 @@ function overrideSubmitForm() {
     e.stopPropagation();
     if (isGenerating) return;
     // get all words wrapped in {{ and }}
-    chrome.storage.local.get(['settings', 'conversations', 'models'], ({
-      settings, conversations, models,
-    }) => {
-      if (settings.selectedModel.slug.includes('gpt-4')) {
-        if (!inputForm.querySelector('#enforcement-trigger')) {
-          addEnforcementTriggerElement();
+    chrome.storage.local.get(
+      ['settings', 'conversations', 'models'],
+      ({ settings, conversations, models }) => {
+        if (settings.selectedModel.slug.includes('gpt-4')) {
+          if (!inputForm.querySelector('#enforcement-trigger')) {
+            addEnforcementTriggerElement();
+          }
+          inputForm.querySelector('#enforcement-trigger').click();
         }
-        inputForm.querySelector('#enforcement-trigger').click();
-      }
-      const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
-      if (settings.promptTemplate && templateWords?.length > 0) {
-        // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
-        createTemplateWordsModal(templateWords);
-        const firstTemplateWordInput = document.querySelector('[id^=template-input-]');
-        if (firstTemplateWordInput) {
-          firstTemplateWordInput.focus();
-          setTimeout(() => {
-            firstTemplateWordInput.value = '';
-          }, 100);
-        }
-      } else {
-        const { pathname } = new URL(window.location.toString());
-        // const isSharedConversation = pathname.startsWith('/share/') && window.location.href.endsWith('/continue');
-        const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-        const anyUserMessageWrappers = document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]').length > 0;
-        if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId) && anyUserMessageWrappers) {
-          const conversation = conversations[conversationId];
-          chrome.storage.sync.get(['name', 'avatar'], (result) => {
-            let text = textAreaElement.value.trim();
-            if (chunkNumber === 1) {
-              finalSummary = '';
-              if (settings.autoSplit && text.length > settings.autoSplitLimit && !runningPromptChainSteps) {
-                totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
-                const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
-                remainingText = text.substring(lastNewLineIndexBeforeLimit);
-                text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
-${text.substring(0, lastNewLineIndexBeforeLimit)}
-[END CHUNK ${chunkNumber}/${totalChunks}]
-${settings.autoSplitChunkPrompt}`;
-                chunkNumber += 1;
-              } else {
-                text = generateInstructions(conversation, settings, textAreaElement.value.trim());
-              }
-            } else if (chunkNumber === totalChunks) {
-              if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
-              chunkNumber = 1;
-              totalChunks = 1;
-              remainingText = '';
-            } else {
-              chunkNumber += 1;
-              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
-              remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
-            }
-            const messageId = self.crypto.randomUUID();
-            const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
-            const lastMessage = allMessages[allMessages.length - 1];
-            const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
-            const conversationBottom = document.querySelector('#conversation-bottom');
-            if (text && settings.useCustomInstruction) {
-              text += settings.customInstruction;
-            }
-            const node = { message: { id: messageId, content: { parts: [text] } } };
-            const userRow = rowUser(conversation, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
-            // if last message data-role !== user, insert user row before conversation bottom
-            if (lastMessage?.dataset?.role !== 'user') {
-              conversationBottom.insertAdjacentHTML('beforebegin', userRow);
-            }
-            conversationBottom.scrollIntoView({ behavior: 'smooth' });
-            if (text) {
-              isGenerating = true;
-              submitChat(text, conversation, messageId, parentId, settings, models);
-              textAreaElement.value = '';
-              textAreaElement.style.height = '24px';
-              updateInputCounter('');
-            }
-          });
+        const templateWords = textAreaElement.value.match(/{{(.*?)}}/g);
+        if (settings.promptTemplate && templateWords?.length > 0) {
+          // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
+          createTemplateWordsModal(templateWords);
+          const firstTemplateWordInput = document.querySelector('[id^=template-input-]');
+          if (firstTemplateWordInput) {
+            firstTemplateWordInput.focus();
+            setTimeout(() => {
+              firstTemplateWordInput.value = '';
+            }, 100);
+          }
         } else {
-          chrome.storage.sync.get(['name', 'avatar'], (result) => {
-            let text = textAreaElement.value.trim();
-            if (chunkNumber === 1) {
-              finalSummary = '';
-              if (settings.autoSplit && text.length > settings.autoSplitLimit) {
-                totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
-                const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > text.length ? settings.autoSplitLimit : getLastIndexOf(text, settings.autoSplitLimit);
-                remainingText = text.substring(lastNewLineIndexBeforeLimit);
-                text = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
+          const { pathname } = new URL(window.location.toString());
+          // const isSharedConversation = pathname.startsWith('/share/') && window.location.href.endsWith('/continue');
+          const conversationId = pathname
+            .split('/')
+            .pop()
+            .replace(/[^a-z0-9-]/gi, '');
+          const anyUserMessageWrappers =
+            document.querySelectorAll('[id^="message-wrapper-"][data-role="user"]').length > 0;
+          if (
+            /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+              conversationId,
+            ) &&
+            anyUserMessageWrappers
+          ) {
+            const conversation = conversations[conversationId];
+            chrome.storage.sync.get(['name', 'avatar'], (result) => {
+              let text = textAreaElement.value.trim();
+              if (chunkNumber === 1) {
+                finalSummary = '';
+                if (
+                  settings.autoSplit &&
+                  text.length > settings.autoSplitLimit &&
+                  !runningPromptChainSteps
+                ) {
+                  totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
+                  const lastNewLineIndexBeforeLimit =
+                    settings.autoSplitLimit > text.length
+                      ? settings.autoSplitLimit
+                      : getLastIndexOf(text, settings.autoSplitLimit);
+                  remainingText = text.substring(lastNewLineIndexBeforeLimit);
+                  text = `${
+                    settings.autoSplitInitialPrompt
+                  }[START CHUNK ${chunkNumber}/${totalChunks}]
 ${text.substring(0, lastNewLineIndexBeforeLimit)}
 [END CHUNK ${chunkNumber}/${totalChunks}]
 ${settings.autoSplitChunkPrompt}`;
-                chunkNumber += 1;
+                  chunkNumber += 1;
+                } else {
+                  text = generateInstructions(conversation, settings, textAreaElement.value.trim());
+                }
+              } else if (chunkNumber === totalChunks) {
+                if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
+                chunkNumber = 1;
+                totalChunks = 1;
+                remainingText = '';
               } else {
-                text = generateInstructions({}, settings, textAreaElement.value.trim());
+                chunkNumber += 1;
+                const lastNewLineIndexBeforeLimit =
+                  settings.autoSplitLimit > remainingText.length
+                    ? settings.autoSplitLimit
+                    : getLastIndexOf(remainingText, settings.autoSplitLimit);
+                remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
               }
-            } else if (chunkNumber === totalChunks) {
-              if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
-              chunkNumber = 1;
-              totalChunks = 1;
-              remainingText = '';
-            } else {
-              chunkNumber += 1;
-              const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
-              remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
-            }
+              const messageId = self.crypto.randomUUID();
+              const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
+              const lastMessage = allMessages[allMessages.length - 1];
+              const parentId =
+                lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
+              const conversationBottom = document.querySelector('#conversation-bottom');
+              if (text && settings.useCustomInstruction) {
+                text += settings.customInstruction;
+              }
+              const node = {
+                message: { id: messageId, content: { parts: [text] } },
+              };
+              const userRow = rowUser(
+                conversation,
+                node,
+                1,
+                1,
+                result.name,
+                result.avatar,
+                settings.customConversationWidth,
+                settings.conversationWidth,
+              );
+              // if last message data-role !== user, insert user row before conversation bottom
+              if (lastMessage?.dataset?.role !== 'user') {
+                conversationBottom.insertAdjacentHTML('beforebegin', userRow);
+              }
+              conversationBottom.scrollIntoView({ behavior: 'smooth' });
+              if (text) {
+                isGenerating = true;
+                submitChat(text, conversation, messageId, parentId, settings, models);
+                textAreaElement.value = '';
+                textAreaElement.style.height = '24px';
+                updateInputCounter('');
+              }
+            });
+          } else {
+            chrome.storage.sync.get(['name', 'avatar'], (result) => {
+              let text = textAreaElement.value.trim();
+              if (chunkNumber === 1) {
+                finalSummary = '';
+                if (settings.autoSplit && text.length > settings.autoSplitLimit) {
+                  totalChunks = Math.ceil(text.length / settings.autoSplitLimit);
+                  const lastNewLineIndexBeforeLimit =
+                    settings.autoSplitLimit > text.length
+                      ? settings.autoSplitLimit
+                      : getLastIndexOf(text, settings.autoSplitLimit);
+                  remainingText = text.substring(lastNewLineIndexBeforeLimit);
+                  text = `${
+                    settings.autoSplitInitialPrompt
+                  }[START CHUNK ${chunkNumber}/${totalChunks}]
+${text.substring(0, lastNewLineIndexBeforeLimit)}
+[END CHUNK ${chunkNumber}/${totalChunks}]
+${settings.autoSplitChunkPrompt}`;
+                  chunkNumber += 1;
+                } else {
+                  text = generateInstructions({}, settings, textAreaElement.value.trim());
+                }
+              } else if (chunkNumber === totalChunks) {
+                if (totalChunks > 1 && settings.autoSummarize) shouldSubmitFinalSummary = true;
+                chunkNumber = 1;
+                totalChunks = 1;
+                remainingText = '';
+              } else {
+                chunkNumber += 1;
+                const lastNewLineIndexBeforeLimit =
+                  settings.autoSplitLimit > remainingText.length
+                    ? settings.autoSplitLimit
+                    : getLastIndexOf(remainingText, settings.autoSplitLimit);
+                remainingText = remainingText.slice(lastNewLineIndexBeforeLimit);
+              }
 
-            const messageId = self.crypto.randomUUID();
-            if (text && settings.useCustomInstruction) {
-              text += settings.customInstruction;
-            }
-            const node = { message: { id: messageId, content: { parts: [text] } } };
-            const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
-            const lastMessage = allMessages[allMessages.length - 1];
-            const parentId = lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
-            // remove main first child
-            const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
-            main.firstChild.removeChild(contentWrapper);
+              const messageId = self.crypto.randomUUID();
+              if (text && settings.useCustomInstruction) {
+                text += settings.customInstruction;
+              }
+              const node = {
+                message: { id: messageId, content: { parts: [text] } },
+              };
+              const allMessages = document.querySelectorAll('[id^="message-wrapper-"]');
+              const lastMessage = allMessages[allMessages.length - 1];
+              const parentId =
+                lastMessage?.id?.split('message-wrapper-')[1] || self.crypto.randomUUID();
+              // remove main first child
+              const contentWrapper = main.querySelector('.flex-1.overflow-hidden');
+              main.firstChild.removeChild(contentWrapper);
 
-            const outerDiv = document.createElement('div');
-            outerDiv.classList = 'flex-1 overflow-hidden';
-            const innerDiv = document.createElement('div');
-            innerDiv.classList = 'h-full overflow-y-auto';
-            innerDiv.style = 'scroll-behavior: smooth;';
-            innerDiv.id = 'conversation-inner-div';
-            addScrollDetector(innerDiv);
-            const conversationDiv = document.createElement('div');
-            conversationDiv.classList = 'flex flex-col items-center text-sm h-full dark:bg-gray-800';
-            const userRow = rowUser({}, node, 1, 1, result.name, result.avatar, settings.customConversationWidth, settings.conversationWidth);
-            conversationDiv.innerHTML = userRow;
-            const topDiv = '<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:0;">New chat</div>';
-            conversationDiv.insertAdjacentHTML('afterbegin', topDiv);
-            const bottomDiv = document.createElement('div');
-            bottomDiv.id = 'conversation-bottom';
-            bottomDiv.classList = 'w-full h-32 md:h-48 flex-shrink-0';
-            conversationDiv.appendChild(bottomDiv);
-            const bottomDivContent = document.createElement('div');
-            bottomDivContent.classList = 'relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-0';
-            if (settings.customConversationWidth) {
-              bottomDivContent.style = `max-width: ${settings.conversationWidth}%`;
-            }
-            bottomDiv.appendChild(bottomDivContent);
-            const totalCounter = document.createElement('div');
-            totalCounter.id = 'total-counter';
-            totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
-            bottomDivContent.appendChild(totalCounter);
+              const outerDiv = document.createElement('div');
+              outerDiv.classList = 'flex-1 overflow-hidden';
+              const innerDiv = document.createElement('div');
+              innerDiv.classList = 'h-full overflow-y-auto';
+              innerDiv.style = 'scroll-behavior: smooth;';
+              innerDiv.id = 'conversation-inner-div';
+              addScrollDetector(innerDiv);
+              const conversationDiv = document.createElement('div');
+              conversationDiv.classList =
+                'flex flex-col items-center text-sm h-full dark:bg-gray-800';
+              const userRow = rowUser(
+                {},
+                node,
+                1,
+                1,
+                result.name,
+                result.avatar,
+                settings.customConversationWidth,
+                settings.conversationWidth,
+              );
+              conversationDiv.innerHTML = userRow;
+              const topDiv =
+                '<div id="conversation-top" class="w-full flex items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;z-index:0;">New chat</div>';
+              conversationDiv.insertAdjacentHTML('afterbegin', topDiv);
+              const bottomDiv = document.createElement('div');
+              bottomDiv.id = 'conversation-bottom';
+              bottomDiv.classList = 'w-full h-32 md:h-48 flex-shrink-0';
+              conversationDiv.appendChild(bottomDiv);
+              const bottomDivContent = document.createElement('div');
+              bottomDivContent.classList =
+                'relative text-base gap-4 md:gap-6 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl flex lg:px-0';
+              if (settings.customConversationWidth) {
+                bottomDivContent.style = `max-width: ${settings.conversationWidth}%`;
+              }
+              bottomDiv.appendChild(bottomDivContent);
+              const totalCounter = document.createElement('div');
+              totalCounter.id = 'total-counter';
+              totalCounter.style =
+                'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
+              bottomDivContent.appendChild(totalCounter);
 
-            innerDiv.appendChild(conversationDiv);
-            outerDiv.appendChild(innerDiv);
-            main.firstChild.prepend(outerDiv);
-            if (text) {
-              isGenerating = true;
-              submitChat(text, {}, messageId, parentId, settings, models);
-              textAreaElement.value = '';
-              textAreaElement.style.height = '24px';
-              updateInputCounter('');
-            }
-          });
+              innerDiv.appendChild(conversationDiv);
+              outerDiv.appendChild(innerDiv);
+              main.firstChild.prepend(outerDiv);
+              if (text) {
+                isGenerating = true;
+                submitChat(text, {}, messageId, parentId, settings, models);
+                textAreaElement.value = '';
+                textAreaElement.style.height = '24px';
+                updateInputCounter('');
+              }
+            });
+          }
         }
-      }
-    });
+      },
+    );
   });
   // textAreaElement.addEventListener('keydown', (e) => {
   //   if (e.key === 'Enter' && e.which === 13 && !e.shiftKey) {
@@ -1051,14 +1305,21 @@ ${settings.autoSplitChunkPrompt}`;
 function setBackButtonDetection() {
   window.addEventListener('popstate', () => {
     const { pathname } = new URL(window.location.toString());
-    const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
-    if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+    const conversationId = pathname
+      .split('/')
+      .pop()
+      .replace(/[^a-z0-9-]/gi, '');
+    if (
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)
+    ) {
       chrome.storage.local.get(['conversations'], (result) => {
         const { conversations } = result;
         if (conversations && conversations[conversationId]) {
           const searchbox = document.querySelector('#conversation-search');
           const searchValue = searchbox.value;
-          const conversationElement = document.querySelector(`#conversation-button-${conversationId}`);
+          const conversationElement = document.querySelector(
+            `#conversation-button-${conversationId}`,
+          );
           const focusedConversations = document.querySelectorAll('.selected');
           focusedConversations.forEach((c) => {
             c.classList = notSelectedClassList;
@@ -1101,12 +1362,24 @@ function loadConversationList(skipInputFormReload = false) {
         //     loadSharedConversation(conversationId, conversation);
         //   }
         // } else {
-        const conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+        const conversationId = pathname
+          .split('/')
+          .pop()
+          .replace(/[^a-z0-9-]/gi, '');
         const conversationList = document.querySelector('#conversation-list');
-        if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
-          if (!result.conversations[conversationId].archived && !result.conversations[conversationId].skipped) {
+        if (
+          /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+            conversationId,
+          )
+        ) {
+          if (
+            !result.conversations[conversationId].archived &&
+            !result.conversations[conversationId].skipped
+          ) {
             setTimeout(() => {
-              const focusedConversation = conversationList.querySelector(`#conversation-button-${conversationId}`);
+              const focusedConversation = conversationList.querySelector(
+                `#conversation-button-${conversationId}`,
+              );
 
               if (focusedConversation) {
                 focusedConversation.scrollIntoView({ block: 'nearest' });
@@ -1120,7 +1393,8 @@ function loadConversationList(skipInputFormReload = false) {
           } else {
             showNewChatPage();
           }
-        } else { // } if (url === 'https://chat.openai.com/') {
+        } else {
+          // } if (url === 'https://chat.openai.com/') {
           showNewChatPage();
         }
         // }

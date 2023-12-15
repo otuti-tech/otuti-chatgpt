@@ -1,9 +1,9 @@
-/* global allAsistantChats, getConversation,getConversations, getSelectedConversations, toast, JSZip, saveAs, canSubmitPrompt, resetSelection, getBrowser */
+/* global allAssistantChats, getConversation,getConversations, getSelectedConversations, toast, JSZip, saveAs, canSubmitPrompt, resetSelection, getBrowser */
 let exportAllCanceled = false;
 let exportFailed = false;
 let interval;
 let timeout;
-function getSingelConversation(conversationId, title) {
+function getSingleConversation(conversationId, title) {
   getConversation(conversationId).then((conversation) => {
     const conversationTitle = conversation.title.replace(/[^a-zA-Z0-9]/g, '_');
     const createDate = new Date(conversation.create_time * 1000);
@@ -26,8 +26,14 @@ function getSingelConversation(conversationId, title) {
       if (title.toLowerCase() === 'json') {
         const conversationJson = conversation;
         const element = document.createElement('a');
-        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(conversationJson))}`);
-        element.setAttribute('download', `${filePrefix}-${conversationTitle}.${fileFormatConverter(title.toLowerCase())}`);
+        element.setAttribute(
+          'href',
+          `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(conversationJson))}`,
+        );
+        element.setAttribute(
+          'download',
+          `${filePrefix}-${conversationTitle}.${fileFormatConverter(title.toLowerCase())}`,
+        );
         element.style.display = 'none';
         document.body.appendChild(element);
         element.click();
@@ -37,10 +43,33 @@ function getSingelConversation(conversationId, title) {
       }
       // download as .txt file
       if (title.toLowerCase() === 'text') {
-        const conversationText = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content.parts.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
+        const conversationText = messages
+          .reverse()
+          .filter(
+            (m) =>
+              ['user', 'assistant'].includes(m.role) ||
+              ['user', 'assistant'].includes(m.author?.role),
+          )
+          .map(
+            (m) =>
+              `${
+                exportMode === 'both'
+                  ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: `
+                  : ''
+              }${m.content.parts
+                .join('\n')
+                .replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`,
+          )
+          .join('\n\n');
         const element = document.createElement('a');
-        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(conversationText)}`);
-        element.setAttribute('download', `${filePrefix}-${conversationTitle}.${fileFormatConverter(title.toLowerCase())}`);
+        element.setAttribute(
+          'href',
+          `data:text/plain;charset=utf-8,${encodeURIComponent(conversationText)}`,
+        );
+        element.setAttribute(
+          'download',
+          `${filePrefix}-${conversationTitle}.${fileFormatConverter(title.toLowerCase())}`,
+        );
         element.style.display = 'none';
         document.body.appendChild(element);
         element.click();
@@ -50,11 +79,34 @@ function getSingelConversation(conversationId, title) {
       }
       // download as .md file
       if (title.toLowerCase() === 'markdown') {
-        const conversationMarkdown = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content.parts.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
+        const conversationMarkdown = messages
+          .reverse()
+          .filter(
+            (m) =>
+              ['user', 'assistant'].includes(m.role) ||
+              ['user', 'assistant'].includes(m.author?.role),
+          )
+          .map(
+            (m) =>
+              `${
+                exportMode === 'both'
+                  ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n`
+                  : ''
+              }${m.content.parts
+                .join('\n')
+                .replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`,
+          )
+          .join('\n\n');
         const element = document.createElement('a');
-        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(conversationMarkdown)}`);
+        element.setAttribute(
+          'href',
+          `data:text/plain;charset=utf-8,${encodeURIComponent(conversationMarkdown)}`,
+        );
         // add timestamp to conversation title to make file name
-        element.setAttribute('download', `${filePrefix}-${conversationTitle}.${fileFormatConverter(title.toLowerCase())}`);
+        element.setAttribute(
+          'download',
+          `${filePrefix}-${conversationTitle}.${fileFormatConverter(title.toLowerCase())}`,
+        );
         element.style.display = 'none';
         document.body.appendChild(element);
         element.click();
@@ -67,7 +119,10 @@ function getSingelConversation(conversationId, title) {
         if (getBrowser() === 'Firefox') {
           toast('This feature is only available on Chrome browser', 'error');
         } else {
-          chrome.runtime.sendMessage({ type: 'readMhtml', title: `${filePrefix}-${conversationTitle}` });
+          chrome.runtime.sendMessage({
+            type: 'readMhtml',
+            title: `${filePrefix}-${conversationTitle}`,
+          });
         }
       }
     });
@@ -102,21 +157,29 @@ function addExportAsButton(title) {
 
   exportAsButton.addEventListener('click', () => {
     const { pathname } = new URL(window.location.toString());
-    let conversationId = pathname.split('/').pop().replace(/[^a-z0-9-]/gi, '');
+    let conversationId = pathname
+      .split('/')
+      .pop()
+      .replace(/[^a-z0-9-]/gi, '');
     //  if conversation id is not valid uuid v4
-    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
+    if (
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)
+    ) {
       // happens when auto-sync is off and create a new chat. there is no id in url initially
-      getConversations(0, 1).then((conversations) => {
-        const lastConversation = conversations.items[0];
-        if (lastConversation) {
-          conversationId = lastConversation.id;
-        }
-        getSingelConversation(conversationId, title);
-      }, () => {
-        toast('Error while getting conversation');
-      });
+      getConversations(0, 1).then(
+        (conversations) => {
+          const lastConversation = conversations.items[0];
+          if (lastConversation) {
+            conversationId = lastConversation.id;
+          }
+          getSingleConversation(conversationId, title);
+        },
+        () => {
+          toast('Error while getting conversation');
+        },
+      );
     } else {
-      getSingelConversation(conversationId, title);
+      getSingleConversation(conversationId, title);
     }
   });
   return exportAsButton;
@@ -151,7 +214,8 @@ function addExportButton() {
 
   // export menu
   const exportMenu = document.createElement('div');
-  exportMenu.style = 'position:absolute;right:0px;bottom:44px;border:1px solid #565869;border-radius:4px;display:none;z-index:200;';
+  exportMenu.style =
+    'position:absolute;right:0px;bottom:44px;border:1px solid #565869;border-radius:4px;display:none;z-index:200;';
   exportMenu.id = 'export-menu';
   const divider = document.createElement('div');
   divider.style = 'height:1px;background-color:#565869;margin:0px 4px;';
@@ -166,7 +230,8 @@ function addExportButton() {
   // add exportMenu as sibling of exportButton
   exportButton.appendChild(exportMenu);
   const connector = document.createElement('div');
-  connector.style = 'position:absolute;right:-10px;bottom:34px;width:100px;height:12px;display:none;';
+  connector.style =
+    'position:absolute;right:-10px;bottom:34px;width:100px;height:12px;display:none;';
   exportButton.appendChild(connector);
 
   // add hover style to button
@@ -209,7 +274,8 @@ function addExportButton() {
         // create new div
         const newDiv = document.createElement('div');
         newDiv.id = 'input-form-action-wrapper';
-        newDiv.classList = 'h-full flex ml-1 md:w-full md:m-auto md:mb-4 gap-0 md:gap-2 justify-center items-end';
+        newDiv.classList =
+          'h-full flex ml-1 md:w-full md:m-auto md:mb-4 gap-0 md:gap-2 justify-center items-end';
         // prepent inputform with new div
         inputFormFirstChild.prepend(newDiv);
         inputFormActionWrapper = newDiv;
@@ -248,123 +314,201 @@ async function exportCountDownAsync() {
 }
 
 function exportAllConversations(exportFormat) {
-  const exportAllModalProgressBarLabel = document.getElementById('export-all-modal-progress-bar-label');
-  const exportAllModalProgressBarFill = document.getElementById('export-all-modal-progress-bar-fill');
-  const exportAllModalProgressBarFilename = document.getElementById('export-all-modal-progress-bar-filename');
-  getSelectedConversations().then((convs) => {
-    const zip = new JSZip();
-    // fetch every conversation
-    const fetchConversation = async (conversationId, exportMode) => {
-      if (exportAllCanceled || exportFailed) {
-        return;
-      }
-      await getConversation(conversationId).then((conversation) => {
-        const conversationTitle = conversation.title.replace(/[^a-zA-Z0-9]/g, '_');
-        let currentNode = conversation.current_node;
-        const createDate = new Date(conversation.create_time * 1000);
-        //  folderName = conversation.create_time in local time in the format of YYYY-MM-DD
-        const folderName = `${createDate.getFullYear()}-${createDate.getMonth() + 1}-${createDate.getDate()}`;
-        // create filePrefix  from conversation.create_time in user local time in the format of HH-MM-SS
-        const filePrefix = `${createDate.getHours()}-${createDate.getMinutes()}-${createDate.getSeconds()}`;
-        // create zip folder with date as name if it doesn't exist
-        zip.folder(folderName);
-        let messages = [];
-        while (currentNode) {
-          const { message, parent } = conversation.mapping[currentNode];
-          if (message) messages.push(message);
-          currentNode = parent;
-        }
-
-        if (exportMode === 'assistant') {
-          messages = messages.filter((m) => m.role === 'assistant' || m.author?.role === 'assistant');
-        }
-        // download as .txt file
-        if (exportFormat === 'text') {
-          const conversationText = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
-          zip.file(`${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(exportFormat)}`, conversationText);
-        }
-        // download as .json file
-        if (exportFormat === 'json') {
-          const conversationJson = conversation;
-          zip.file(`${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(exportFormat)}`, JSON.stringify(conversationJson));
-        }
-        // download as .md file
-        if (exportFormat === 'markdown') {
-          const conversationMarkdown = messages.reverse().filter((m) => ['user', 'assistant'].includes(m.role) || ['user', 'assistant'].includes(m.author?.role)).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content?.parts?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
-          zip.file(`${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(exportFormat)}`, conversationMarkdown);
-        }
-
-        // update exportAllModalProgressBar.style
-        const fileCount = Object.values(zip.files).filter((f) => !f.dir).length;
-        const percentage = Math.round((fileCount / convs.length) * 100);
-        exportAllModalProgressBarLabel.textContent = `${fileCount} / ${convs.length}`;
-        exportAllModalProgressBarFill.style.width = `${percentage}%`;
-        exportAllModalProgressBarFilename.textContent = `${conversationTitle}.${fileFormatConverter(exportFormat)}`;
-      })
-        .catch((_err) => {
-          exportAllModalProgressBarFilename.textContent = 'Something went wrong. Please try again in a few minutes.';
-          exportAllModalProgressBarFilename.style.color = '#ff4a4a';
-          exportFailed = true;
-        });
-    };
-
-    const fetchAllConversationsAsync = async (conversations, exportMode) => {
-      for (let i = 0; i < conversations.length; i += 1) {
-        // eslint-disable-next-line no-await-in-loop
-        await fetchConversation(conversations[i].id, exportMode, i);
-        const fileCount = Object.values(zip.files).filter((f) => !f.dir).length;
-        if (fileCount > 0 && fileCount % 1 === 0) {
-          // eslint-disable-next-line no-await-in-loop
-          await chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings']).then(async (res) => {
-            const { conversationsAreSynced, settings } = res;
-            const { autoSync } = settings;
-            if (!conversationsAreSynced || !autoSync) {
-              await exportCountDownAsync();
-            }
-          });
-        }
-      }
-    };
-    chrome.storage.local.get('settings', ({ settings }) => {
-      const { exportMode } = settings;
-      fetchAllConversationsAsync(convs, exportMode).then(() => {
-        if (exportAllCanceled) {
-          exportAllCanceled = false;
+  const exportAllModalProgressBarLabel = document.getElementById(
+    'export-all-modal-progress-bar-label',
+  );
+  const exportAllModalProgressBarFill = document.getElementById(
+    'export-all-modal-progress-bar-fill',
+  );
+  const exportAllModalProgressBarFilename = document.getElementById(
+    'export-all-modal-progress-bar-filename',
+  );
+  getSelectedConversations().then(
+    (convs) => {
+      const zip = new JSZip();
+      // fetch every conversation
+      const fetchConversation = async (conversationId, exportMode) => {
+        if (exportAllCanceled || exportFailed) {
           return;
         }
-        clearInterval(interval);
-        clearTimeout(timeout);
-        zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }).then((content) => {
-          saveAs(content, `${new Date().toISOString().slice(0, 10)}-conversations.zip`);
-          if (!exportFailed) {
-            const exportAllModal = document.getElementById('export-all-modal');
-            const exportAllButton = document.querySelector('#export-all-button');
-            exportAllButton.innerHTML = exportAllButton.innerHTML.replace(`Export ${convs.length} Selected`, 'Export All');
-            resetSelection();
-            setTimeout(() => {
-              exportAllModal.remove();
-            }, 500);
+        await getConversation(conversationId)
+          .then((conversation) => {
+            const conversationTitle = conversation.title.replace(/[^a-zA-Z0-9]/g, '_');
+            let currentNode = conversation.current_node;
+            const createDate = new Date(conversation.create_time * 1000);
+            //  folderName = conversation.create_time in local time in the format of YYYY-MM-DD
+            const folderName = `${createDate.getFullYear()}-${
+              createDate.getMonth() + 1
+            }-${createDate.getDate()}`;
+            // create filePrefix  from conversation.create_time in user local time in the format of HH-MM-SS
+            const filePrefix = `${createDate.getHours()}-${createDate.getMinutes()}-${createDate.getSeconds()}`;
+            // create zip folder with date as name if it doesn't exist
+            zip.folder(folderName);
+            let messages = [];
+            while (currentNode) {
+              const { message, parent } = conversation.mapping[currentNode];
+              if (message) messages.push(message);
+              currentNode = parent;
+            }
+
+            if (exportMode === 'assistant') {
+              messages = messages.filter(
+                (m) => m.role === 'assistant' || m.author?.role === 'assistant',
+              );
+            }
+            // download as .txt file
+            if (exportFormat === 'text') {
+              const conversationText = messages
+                .reverse()
+                .filter(
+                  (m) =>
+                    ['user', 'assistant'].includes(m.role) ||
+                    ['user', 'assistant'].includes(m.author?.role),
+                )
+                .map(
+                  (m) =>
+                    `${
+                      exportMode === 'both'
+                        ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: `
+                        : ''
+                    }${m.content?.parts
+                      ?.join('\n')
+                      .replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`,
+                )
+                ?.join('\n\n');
+              zip.file(
+                `${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(
+                  exportFormat,
+                )}`,
+                conversationText,
+              );
+            }
+            // download as .json file
+            if (exportFormat === 'json') {
+              const conversationJson = conversation;
+              zip.file(
+                `${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(
+                  exportFormat,
+                )}`,
+                JSON.stringify(conversationJson),
+              );
+            }
+            // download as .md file
+            if (exportFormat === 'markdown') {
+              const conversationMarkdown = messages
+                .reverse()
+                .filter(
+                  (m) =>
+                    ['user', 'assistant'].includes(m.role) ||
+                    ['user', 'assistant'].includes(m.author?.role),
+                )
+                .map(
+                  (m) =>
+                    `${
+                      exportMode === 'both'
+                        ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n`
+                        : ''
+                    }${m.content?.parts
+                      ?.join('\n')
+                      .replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`,
+                )
+                ?.join('\n\n');
+              zip.file(
+                `${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(
+                  exportFormat,
+                )}`,
+                conversationMarkdown,
+              );
+            }
+
+            // update exportAllModalProgressBar.style
+            const fileCount = Object.values(zip.files).filter((f) => !f.dir).length;
+            const percentage = Math.round((fileCount / convs.length) * 100);
+            exportAllModalProgressBarLabel.textContent = `${fileCount} / ${convs.length}`;
+            exportAllModalProgressBarFill.style.width = `${percentage}%`;
+            exportAllModalProgressBarFilename.textContent = `${conversationTitle}.${fileFormatConverter(
+              exportFormat,
+            )}`;
+          })
+          .catch((_err) => {
+            exportAllModalProgressBarFilename.textContent =
+              'Something went wrong. Please try again in a few minutes.';
+            exportAllModalProgressBarFilename.style.color = '#ff4a4a';
+            exportFailed = true;
+          });
+      };
+
+      const fetchAllConversationsAsync = async (conversations, exportMode) => {
+        for (let i = 0; i < conversations.length; i += 1) {
+          // eslint-disable-next-line no-await-in-loop
+          await fetchConversation(conversations[i].id, exportMode, i);
+          const fileCount = Object.values(zip.files).filter((f) => !f.dir).length;
+          if (fileCount > 0 && fileCount % 1 === 0) {
+            // eslint-disable-next-line no-await-in-loop
+            await chrome.storage.local
+              .get(['conversations', 'conversationsAreSynced', 'settings'])
+              .then(async (res) => {
+                const { conversationsAreSynced, settings } = res;
+                const { autoSync } = settings;
+                if (!conversationsAreSynced || !autoSync) {
+                  await exportCountDownAsync();
+                }
+              });
           }
+        }
+      };
+      chrome.storage.local.get('settings', ({ settings }) => {
+        const { exportMode } = settings;
+        fetchAllConversationsAsync(convs, exportMode).then(() => {
+          if (exportAllCanceled) {
+            exportAllCanceled = false;
+            return;
+          }
+          clearInterval(interval);
+          clearTimeout(timeout);
+          zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }).then((content) => {
+            saveAs(content, `${new Date().toISOString().slice(0, 10)}-conversations.zip`);
+            if (!exportFailed) {
+              const exportAllModal = document.getElementById('export-all-modal');
+              const exportAllButton = document.querySelector('#export-all-button');
+              exportAllButton.innerHTML = exportAllButton.innerHTML.replace(
+                `Export ${convs.length} Selected`,
+                'Export All',
+              );
+              resetSelection();
+              setTimeout(() => {
+                exportAllModal.remove();
+              }, 500);
+            }
+          });
         });
       });
-    });
-  }, () => {
-  });
+    },
+    () => {},
+  );
 }
 
 function openExportAllModal() {
   const exportAllModal = document.createElement('div');
-  exportAllModal.style = 'position:fixed;top:0px;left:0px;width:100%;height:100%;background-color:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;color:lightslategray;';
+  exportAllModal.style =
+    'position:fixed;top:0px;left:0px;width:100%;height:100%;background-color:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;color:lightslategray;';
   exportAllModal.id = 'export-all-modal';
   exportAllModal.addEventListener('click', (e) => {
     // export-all-modal-progress-bar-fill
-    const exportAllModalProgressBarFill = document.getElementById('export-all-modal-progress-bar-fill');
-    if (e.target.id === 'export-all-modal' && (exportAllModalProgressBarFill.style.width === '0%' || exportAllModalProgressBarFill.style.width === '100%')) {
+    const exportAllModalProgressBarFill = document.getElementById(
+      'export-all-modal-progress-bar-fill',
+    );
+    if (
+      e.target.id === 'export-all-modal' &&
+      (exportAllModalProgressBarFill.style.width === '0%' ||
+        exportAllModalProgressBarFill.style.width === '100%')
+    ) {
       exportAllModal.remove();
     }
   });
   const exportAllModalContent = document.createElement('div');
-  exportAllModalContent.style = 'width:400px;min-height:300px;background-color:#0b0d0e;border-radius:4px;padding:16px;display:flex;flex-direction:column;align-items:flex-start;justify-content:start;';
+  exportAllModalContent.style =
+    'width:400px;min-height:300px;background-color:#0b0d0e;border-radius:4px;padding:16px;display:flex;flex-direction:column;align-items:flex-start;justify-content:start;';
   exportAllModal.appendChild(exportAllModalContent);
   const exportAllModalTitle = document.createElement('div');
   exportAllModalTitle.style = 'font-size:1.25rem;font-weight:500;';
@@ -388,7 +532,8 @@ function openExportAllModal() {
   exportAllModalFormatTitle.textContent = 'In what format do you want to export?';
   exportAllModalContent.appendChild(exportAllModalFormatTitle);
   const exportAllModalRadioButtonsWrapper = document.createElement('div');
-  exportAllModalRadioButtonsWrapper.style = 'display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:8px;';
+  exportAllModalRadioButtonsWrapper.style =
+    'display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:8px;';
   exportAllModalContent.appendChild(exportAllModalRadioButtonsWrapper);
   const exportAllModalRadioButtons = [
     {
@@ -418,7 +563,8 @@ function openExportAllModal() {
   };
   exportAllModalRadioButtons.forEach((radioButton) => {
     const exportAllModalRadioButtonWrapper = document.createElement('div');
-    exportAllModalRadioButtonWrapper.style = 'display:flex;align-items:center;justify-content:center;';
+    exportAllModalRadioButtonWrapper.style =
+      'display:flex;align-items:center;justify-content:center;';
     exportAllModalRadioButtonsWrapper.appendChild(exportAllModalRadioButtonWrapper);
     const exportAllModalRadioButton = document.createElement('input');
     exportAllModalRadioButton.type = 'radio';
@@ -446,12 +592,14 @@ function openExportAllModal() {
   // progress bar
   const exportAllModalProgressBar = document.createElement('div');
   exportAllModalProgressBar.id = 'export-all-modal-progress-bar';
-  exportAllModalProgressBar.style = 'position:relative;width:100%;height:12px;min-height:12px;background-color:#565869;border-radius:4px;overflow:hidden;';
+  exportAllModalProgressBar.style =
+    'position:relative;width:100%;height:12px;min-height:12px;background-color:#565869;border-radius:4px;overflow:hidden;';
   exportAllModalContent.appendChild(exportAllModalProgressBar);
 
   const exportAllModalProgressBarFill = document.createElement('div');
   exportAllModalProgressBarFill.id = 'export-all-modal-progress-bar-fill';
-  exportAllModalProgressBarFill.style = 'position:absolute;top:0px;left:0px;width:0%;height:12px;min-height:12px;background-color:gold;border-radius:4px;';
+  exportAllModalProgressBarFill.style =
+    'position:absolute;top:0px;left:0px;width:0%;height:12px;min-height:12px;background-color:gold;border-radius:4px;';
   exportAllModalProgressBar.appendChild(exportAllModalProgressBarFill);
   // progress bar filename
   const exportAllModalProgressBarFilename = document.createElement('div');
@@ -462,17 +610,19 @@ function openExportAllModal() {
 
   // modal action wrapper
   const exportAllModalActionWrapper = document.createElement('div');
-  exportAllModalActionWrapper.style = 'display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:auto;';
+  exportAllModalActionWrapper.style =
+    'display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:auto;';
   exportAllModalContent.appendChild(exportAllModalActionWrapper);
 
   // cancel button
   const exportAllModalCancelButton = document.createElement('button');
-  exportAllModalCancelButton.style = 'width:100%;height:40px;border-radius:4px;border:1px solid #565869;background-color:#40414f;color:white;font-size:0.875rem;margin-top:auto; margin-right: 8px;';
+  exportAllModalCancelButton.style =
+    'width:100%;height:40px;border-radius:4px;border:1px solid #565869;background-color:#40414f;color:white;font-size:0.875rem;margin-top:auto; margin-right: 8px;';
   exportAllModalCancelButton.textContent = 'Cancel';
   exportAllModalCancelButton.addEventListener('click', () => {
     exportAllCanceled = true;
     // Get a reference to the last interval + 1
-    const intervalId = setInterval(() => { }, Number.MAX_SAFE_INTEGER);
+    const intervalId = setInterval(() => {}, Number.MAX_SAFE_INTEGER);
     // Clear any timeout/interval up to that id
     for (let i = 1; i < intervalId; i += 1) {
       clearInterval(i);
@@ -484,7 +634,8 @@ function openExportAllModal() {
   exportAllModalActionWrapper.appendChild(exportAllModalCancelButton);
   // export button
   const exportAllModalExportButton = document.createElement('button');
-  exportAllModalExportButton.style = 'width:100%;height:40px;border-radius:4px;border:1px solid #565869;background-color:#40414f;color:white;font-size:0.875rem;margin-top:auto; margin-left: 8px;opacity:0.5;';
+  exportAllModalExportButton.style =
+    'width:100%;height:40px;border-radius:4px;border:1px solid #565869;background-color:#40414f;color:white;font-size:0.875rem;margin-top:auto; margin-left: 8px;opacity:0.5;';
   exportAllModalExportButton.textContent = 'Export';
   exportAllModalExportButton.disabled = true;
   exportAllModalExportButton.addEventListener('click', () => {
@@ -493,7 +644,9 @@ function openExportAllModal() {
     exportAllModalExportButton.disabled = true;
     exportAllModalExportButton.textContent = 'Exporting...';
     exportAllModalExportButton.style.opacity = '0.5';
-    const formatRadioButtons = document.querySelectorAll('input[name="export-all-modal-radio-button"]');
+    const formatRadioButtons = document.querySelectorAll(
+      'input[name="export-all-modal-radio-button"]',
+    );
     formatRadioButtons.forEach((radioButton) => {
       radioButton.disabled = true;
     });
@@ -508,26 +661,33 @@ function openExportAllModal() {
       exportAllModalExportButton.style.opacity = '1';
       exportAllModalProgressBarLabel.textContent = `0 / ${selectedConversations?.length}`;
     } else {
-      chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings']).then((res) => {
-        const { conversations: storageConversations, conversationsAreSynced, settings } = res;
-        const { autoSync } = settings;
-        if (conversationsAreSynced && autoSync) {
-          const allConversations = Object.values(storageConversations).filter((conversation) => !conversation.skipped);
+      chrome.storage.local
+        .get(['conversations', 'conversationsAreSynced', 'settings'])
+        .then((res) => {
+          const { conversations: storageConversations, conversationsAreSynced, settings } = res;
+          const { autoSync } = settings;
+          if (conversationsAreSynced && autoSync) {
+            const allConversations = Object.values(storageConversations).filter(
+              (conversation) => !conversation.skipped,
+            );
 
-          exportAllModalProgressBarLabel.textContent = `0 / ${allConversations.length}`;
-          exportAllModalExportButton.disabled = allConversations.length === 0;
-          exportAllModalExportButton.style.opacity = allConversations.length === 0 ? '0.5' : '1';
-        } else {
-          getConversations(0, 1).then((conversations) => {
-            const { total } = conversations;
-            exportAllModalProgressBarLabel.textContent = `0 / ${total}`;
-            exportAllModalExportButton.disabled = total === 0;
-            exportAllModalExportButton.style.opacity = total === 0 ? '0.5' : '1';
-          }, () => {
-            exportAllModalProgressBarLabel.textContent = '0 / --';
-          });
-        }
-      });
+            exportAllModalProgressBarLabel.textContent = `0 / ${allConversations.length}`;
+            exportAllModalExportButton.disabled = allConversations.length === 0;
+            exportAllModalExportButton.style.opacity = allConversations.length === 0 ? '0.5' : '1';
+          } else {
+            getConversations(0, 1).then(
+              (conversations) => {
+                const { total } = conversations;
+                exportAllModalProgressBarLabel.textContent = `0 / ${total}`;
+                exportAllModalExportButton.disabled = total === 0;
+                exportAllModalExportButton.style.opacity = total === 0 ? '0.5' : '1';
+              },
+              () => {
+                exportAllModalProgressBarLabel.textContent = '0 / --';
+              },
+            );
+          }
+        });
     }
   });
   document.body.appendChild(exportAllModal);
@@ -540,7 +700,8 @@ function addExportAllButton() {
   if (document.querySelector('#export-all-button')) return;
   // create the export all button by copying the nav button
   const exportAllButton = document.createElement('a');
-  exportAllButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
+  exportAllButton.classList =
+    'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
   exportAllButton.id = 'export-all-button';
   chrome.storage.local.get(['selectedConversations'], (result) => {
     const { selectedConversations } = result;
@@ -583,7 +744,10 @@ function initializeExport() {
       addExportButton();
     }, 100);
   });
-  observer.observe(main.parentElement.parentElement, { childList: true, subtree: true });
+  observer.observe(main.parentElement.parentElement, {
+    childList: true,
+    subtree: true,
+  });
 
   addExportAllButton();
   // add event listener to dark mode button

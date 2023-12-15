@@ -9,13 +9,19 @@ function newChatPage(planName) {
   outerDiv.appendChild(innerDiv);
 
   const body = document.createElement('div');
-  body.classList = 'text-gray-800 w-full md:max-w-2xl lg:max-w-3xl md:h-full md:flex md:flex-col px-6 dark:text-gray-100';
+  body.classList =
+    'text-gray-800 w-full md:max-w-2xl lg:max-w-3xl md:h-full md:flex md:flex-col px-6 dark:text-gray-100';
   innerDiv.appendChild(body);
 
   const header = document.createElement('div');
-  header.classList = 'text-4xl font-semibold text-center mt-6 sm:mt-[20vh] ml-auto mr-auto mb-10 sm:mb-16 flex gap-2 items-center justify-center';
-  header.innerHTML = `ChatGPT ${planName === 'chatgptplusplan' ? `<span
-  class="bg-yellow-200 text-yellow-900 py-0.5 px-1.5 text-xs md:text-sm rounded-md uppercase">Plus</span>` : ''}`;
+  header.classList =
+    'text-4xl font-semibold text-center mt-6 sm:mt-[20vh] ml-auto mr-auto mb-10 sm:mb-16 flex gap-2 items-center justify-center';
+  header.innerHTML = `ChatGPT ${
+    planName === 'chatgptplusplan'
+      ? `<span
+  class="bg-yellow-200 text-yellow-900 py-0.5 px-1.5 text-xs md:text-sm rounded-md uppercase">Plus</span>`
+      : ''
+  }`;
   body.appendChild(header);
 
   const content = document.createElement('div');
@@ -24,7 +30,8 @@ function newChatPage(planName) {
 
   const settings = document.createElement('div');
   settings.id = 'new-page-settings';
-  settings.classList = 'flex flex-col items-start justify-end border border-gray-500 rounded-md p-4';
+  settings.classList =
+    'flex flex-col items-start justify-end border border-gray-500 rounded-md p-4';
   settings.style = 'width: 600px;';
   content.appendChild(settings);
   settings.style.minHeight = '260px';
@@ -38,7 +45,12 @@ function newChatPage(planName) {
   divider.style = 'width: 70%; height: 1px; background-color: #e5e7eb; margin: 16px auto;';
   settings.appendChild(divider);
 
-  const saveHistorySwitch = createSwitch('<span style="color:#8e8ea0 !important;">Chat History & Training</span>', '<div class="text-left">Save new chats to your history and allow them to be used to improve ChatGPT via model training. Unsaved chats will be deleted from our systems within 30 days. <a href="https://help.openai.com/en/articles/7730893" target="_blank" class="underline" rel="noreferrer">Learn more</a></div>', 'saveHistory', true);
+  const saveHistorySwitch = createSwitch(
+    '<span style="color:#8e8ea0 !important;">Chat History & Training</span>',
+    '<div class="text-left">Save new chats to your history and allow them to be used to improve ChatGPT via model training. Unsaved chats will be deleted from our systems within 30 days. <a href="https://help.openai.com/en/articles/7730893" target="_blank" class="underline" rel="noreferrer">Learn more</a></div>',
+    'saveHistory',
+    true,
+  );
   settings.appendChild(saveHistorySwitch);
   const bottom = document.createElement('div');
   bottom.classList = 'w-full h-32 md:h-48 flex-shrink-0';
@@ -57,16 +69,33 @@ function customInstructionSettingsElement() {
   customInstructionSettings.appendChild(customInstructionSettingsLeft);
   customInstructionSettings.appendChild(customInstructionSettingsRight);
   getUserSystemMessage().then((systemMessage) => {
-    const customInstructionSwitch = createSwitch('<span style="color:#8e8ea0 !important;">Custom Instruction</span>', '<div class="text-left"><a href="https://help.openai.com/en/articles/8096356-custom-instructions-for-chatgpt" target="_blank" class="underline" rel="noreferrer">Learn more</a> about Custom instructions and how they’re used to help ChatGPT provide better responses.</div>', null, systemMessage.enabled, (checked) => setUserSystemMessageCallback(checked, systemMessage));
+    const customInstructionSwitch = createSwitch(
+      '<span style="color:#8e8ea0 !important;">Custom Instruction</span>',
+      '<div class="text-left"><a href="https://help.openai.com/en/articles/8096356-custom-instructions-for-chatgpt" target="_blank" class="underline" rel="noreferrer">Learn more</a> about Custom instructions and how they’re used to help ChatGPT provide better responses.</div>',
+      null,
+      systemMessage.enabled,
+      (checked) => setUserSystemMessageCallback(checked, systemMessage),
+    );
     customInstructionSettingsLeft.appendChild(customInstructionSwitch);
     chrome.storage.local.get(['customInstructionProfiles'], (result) => {
       const { customInstructionProfiles } = result;
       let newCustomInstructionProfiles = customInstructionProfiles;
       const selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
 
-      if (!selectedProfile || selectedProfile.aboutUser.replace(/[^a-zA-Z]/g, '') !== systemMessage.about_user_message.replace(/[^a-zA-Z]/g, '') || selectedProfile.aboutModel.replace(/[^a-zA-Z]/g, '') !== systemMessage.about_model_message.replace(/[^a-zA-Z]/g, '')) {
+      if (
+        !selectedProfile ||
+        selectedProfile.aboutUser.replace(/[^a-zA-Z]/g, '') !==
+          systemMessage.about_user_message.replace(/[^a-zA-Z]/g, '') ||
+        selectedProfile.aboutModel.replace(/[^a-zA-Z]/g, '') !==
+          systemMessage.about_model_message.replace(/[^a-zA-Z]/g, '')
+      ) {
         newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
-          if (p.aboutModel.replace(/[^a-zA-Z]/g, '') === systemMessage.about_model_message.replace(/[^a-zA-Z]/g, '') && p.aboutUser.replace(/[^a-zA-Z]/g, '') === systemMessage.about_user_message.replace(/[^a-zA-Z]/g, '')) {
+          if (
+            p.aboutModel.replace(/[^a-zA-Z]/g, '') ===
+              systemMessage.about_model_message.replace(/[^a-zA-Z]/g, '') &&
+            p.aboutUser.replace(/[^a-zA-Z]/g, '') ===
+              systemMessage.about_user_message.replace(/[^a-zA-Z]/g, '')
+          ) {
             return { ...p, isSelected: true };
           }
           if (p.isSelected) {
@@ -75,7 +104,9 @@ function customInstructionSettingsElement() {
           return p;
         });
 
-        chrome.storage.local.set({ customInstructionProfiles: newCustomInstructionProfiles });
+        chrome.storage.local.set({
+          customInstructionProfiles: newCustomInstructionProfiles,
+        });
       }
 
       const profileButtonWrapper = document.createElement('div');
@@ -86,14 +117,18 @@ function customInstructionSettingsElement() {
         profileButtonWrapper.style.opacity = '0.5';
       }
       profileButtonWrapper.appendChild(profileDropdown(newCustomInstructionProfiles, 'new-page'));
-      profileButtonWrapper.appendChild(profileDropdownButton(newCustomInstructionProfiles, 'new-page'));
+      profileButtonWrapper.appendChild(
+        profileDropdownButton(newCustomInstructionProfiles, 'new-page'),
+      );
       customInstructionSettingsRight.appendChild(profileButtonWrapper);
     });
   });
   return customInstructionSettings;
 }
 function setUserSystemMessageCallback(checked, systemMessage) {
-  const profileButtonWrapper = document.getElementById('custom-instructions-profile-button-wrapper-new-page');
+  const profileButtonWrapper = document.getElementById(
+    'custom-instructions-profile-button-wrapper-new-page',
+  );
   if (checked) {
     profileButtonWrapper.style.pointerEvents = 'unset';
     profileButtonWrapper.style.opacity = '1';
@@ -101,5 +136,9 @@ function setUserSystemMessageCallback(checked, systemMessage) {
     profileButtonWrapper.style.pointerEvents = 'none';
     profileButtonWrapper.style.opacity = '0.5';
   }
-  setUserSystemMessage(systemMessage.about_user_message, systemMessage.about_model_message, checked);
+  setUserSystemMessage(
+    systemMessage.about_user_message,
+    systemMessage.about_model_message,
+    checked,
+  );
 }

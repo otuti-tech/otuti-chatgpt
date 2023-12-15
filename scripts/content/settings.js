@@ -2,20 +2,51 @@
 /* global createModal, updateEmailNewsletter, createReleaseNoteModal, languageList, writingStyleList, toneList, toast, loadConversationList, modelSwitcher, addModelSwitcherEventListener, API_URL:true */
 const defaultPrompts = [
   { title: 'Continue', text: 'Please continue', isDefault: true },
-  { title: 'Rewrite', text: 'Please rewrite your last response', isDefault: false },
-  { title: 'Paraphrase', text: 'Please paraphrase your last response', isDefault: false },
-  { title: 'Explain', text: 'Please explain your last response', isDefault: false },
-  { title: 'Clarify', text: 'Please clarify your last response', isDefault: false },
-  { title: 'Expand', text: 'Please expand your last response', isDefault: false },
-  { title: 'Summarize', text: 'Please summarize your last response', isDefault: false },
+  {
+    title: 'Rewrite',
+    text: 'Please rewrite your last response',
+    isDefault: false,
+  },
+  {
+    title: 'Paraphrase',
+    text: 'Please paraphrase your last response',
+    isDefault: false,
+  },
+  {
+    title: 'Explain',
+    text: 'Please explain your last response',
+    isDefault: false,
+  },
+  {
+    title: 'Clarify',
+    text: 'Please clarify your last response',
+    isDefault: false,
+  },
+  {
+    title: 'Expand',
+    text: 'Please expand your last response',
+    isDefault: false,
+  },
+  {
+    title: 'Summarize',
+    text: 'Please summarize your last response',
+    isDefault: false,
+  },
 ];
 function createSettingsModal(initialTab = 0) {
   const bodyContent = settingsModalContent(initialTab);
   const actionsBarContent = settingsModalActions();
-  createModal('Settings', 'Your can change the Superpower settings here', bodyContent, actionsBarContent);
+  createModal(
+    'Settings',
+    'Your can change the Superpower settings here',
+    bodyContent,
+    actionsBarContent,
+  );
 }
-const inactiveTabElementStyles = 'border: 1px solid lightslategray;border-bottom:0; border-top-right-radius: 8px;border-top-left-radius: 8px; font-size: 0.8em;  padding:8px 12px;color: lightslategray;margin:-1px;min-height:100%;';
-const activeTabElementStyles = 'background-color: #0b0d0e;border: 1px solid lightslategray; border-bottom:0; border-top-right-radius: 8px;border-top-left-radius: 8px; font-size: 0.8em;  padding:8px 12px;color: lightslategray;margin:-1px;min-height:100%;';
+const inactiveTabElementStyles =
+  'border: 1px solid lightslategray;border-bottom:0; border-top-right-radius: 8px;border-top-left-radius: 8px; font-size: 0.8em;  padding:8px 12px;color: lightslategray;margin:-1px;min-height:100%;';
+const activeTabElementStyles =
+  'background-color: #0b0d0e;border: 1px solid lightslategray; border-bottom:0; border-top-right-radius: 8px;border-top-left-radius: 8px; font-size: 0.8em;  padding:8px 12px;color: lightslategray;margin:-1px;min-height:100%;';
 function selectedTabContent(selectedTab) {
   switch (selectedTab) {
     case 0:
@@ -39,13 +70,24 @@ function selectedTabContent(selectedTab) {
   }
 }
 function settingsModalContent(initialTab = 0) {
-  const settingsTabs = ['General', 'Auto Sync', 'Models', 'Custom Prompts', 'Export', 'Splitter', 'Newsletter', 'Supporters'];
+  const settingsTabs = [
+    'General',
+    'Auto Sync',
+    'Models',
+    'Custom Prompts',
+    'Export',
+    'Splitter',
+    'Newsletter',
+    'Supporters',
+  ];
   let activeTab = initialTab;
   // create history modal content
   const content = document.createElement('div');
-  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;width:100%; height: 100%;';
+  content.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start;width:100%; height: 100%;';
   const tabs = document.createElement('div');
-  tabs.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; background-color: #1e1e2f;z-index:1000;border-bottom: 1px solid lightslategray;';
+  tabs.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; background-color: #1e1e2f;z-index:1000;border-bottom: 1px solid lightslategray;';
   settingsTabs.forEach((tab, index) => {
     const tabButton = document.createElement('button');
     if (activeTab === settingsTabs.indexOf(tab)) {
@@ -53,7 +95,8 @@ function settingsModalContent(initialTab = 0) {
     } else {
       tabButton.removeAttribute('class');
     }
-    tabButton.style = activeTab === settingsTabs.indexOf(tab) ? activeTabElementStyles : inactiveTabElementStyles;
+    tabButton.style =
+      activeTab === settingsTabs.indexOf(tab) ? activeTabElementStyles : inactiveTabElementStyles;
     tabButton.textContent = tab;
     tabButton.addEventListener('click', () => {
       activeTab = index;
@@ -75,20 +118,30 @@ function settingsModalContent(initialTab = 0) {
 function generalTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
-  content.style = 'display: flex; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; height: 100%;padding-bottom:80px;';
+  content.style =
+    'display: flex; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; height: 100%;padding-bottom:80px;';
   const leftContent = document.createElement('div');
-  leftContent.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 50%;padding-right: 8px;';
+  leftContent.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 50%;padding-right: 8px;';
   const rightContent = document.createElement('div');
-  rightContent.style = 'display: flex; flex-direction: column; justify-content: start; align-items: end; width: 50%;padding-left: 8px;';
+  rightContent.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: end; width: 50%;padding-left: 8px;';
   // input history
-  const promptHistorySwitch = createSwitch('Input History Shortkey', 'Enable/disable the up and down arrow to cycle through input history.', 'promptHistory', true);
+  const promptHistorySwitch = createSwitch(
+    'Input History Shortkey',
+    'Enable/disable the up and down arrow to cycle through input history.',
+    'promptHistory',
+    true,
+  );
   leftContent.appendChild(promptHistorySwitch);
 
   // dark mode
   const darkModeSwitchWrapper = document.createElement('div');
-  darkModeSwitchWrapper.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
+  darkModeSwitchWrapper.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
   const darkModeSwitch = document.createElement('div');
-  darkModeSwitch.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;color:white;';
+  darkModeSwitch.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;color:white;';
   darkModeSwitch.textContent = 'Dark mode';
   const darkModeLabel = document.createElement('label');
   darkModeLabel.className = 'switch';
@@ -120,21 +173,38 @@ function generalTabContent() {
   // leftContent.appendChild(safeModeSwitch);
 
   // copy mode
-  const copyModeSwitch = createSwitch('Copy mode', 'OFF: only copy response / ON: copy both request and response', 'copyMode', false);
+  const copyModeSwitch = createSwitch(
+    'Copy mode',
+    'OFF: only copy response / ON: copy both request and response',
+    'copyMode',
+    false,
+  );
   leftContent.appendChild(copyModeSwitch);
 
   // prompt template
-  const promptTemplateSwitch = createSwitch('Prompt Template', 'Enable/disable the doube {{curly}} brackets replacement (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#d744b8220a374af394b0bcf82274e290" target="blank">Learn More</a>)', 'promptTemplate', true);
+  const promptTemplateSwitch = createSwitch(
+    'Prompt Template',
+    'Enable/disable the doube {{curly}} brackets replacement (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#d744b8220a374af394b0bcf82274e290" target="blank">Learn More</a>)',
+    'promptTemplate',
+    true,
+  );
   leftContent.appendChild(promptTemplateSwitch);
 
   // conversation width
-  const customConversationWidthSwitch = createSwitch('Custom Conversation Width', 'OFF: Use default / ON: Set Conversation Width (30%-90%)', 'customConversationWidth', false, toggleCustomWidthInput);
+  const customConversationWidthSwitch = createSwitch(
+    'Custom Conversation Width',
+    'OFF: Use default / ON: Set Conversation Width (30%-90%)',
+    'customConversationWidth',
+    false,
+    toggleCustomWidthInput,
+  );
   leftContent.appendChild(customConversationWidthSwitch);
 
   const conversationWidthInput = document.createElement('input');
   conversationWidthInput.id = 'conversation-width-input';
   conversationWidthInput.type = 'number';
-  conversationWidthInput.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40 text-white';
+  conversationWidthInput.classList =
+    'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40 text-white';
   chrome.storage.local.get(['settings'], (result) => {
     conversationWidthInput.disabled = !result.settings.customConversationWidth;
     conversationWidthInput.value = result.settings.conversationWidth;
@@ -149,7 +219,13 @@ function generalTabContent() {
         document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
       }
       document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
-      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue, customConversationWidth: true } });
+      chrome.storage.local.set({
+        settings: {
+          ...result.settings,
+          conversationWidth: newValue,
+          customConversationWidth: true,
+        },
+      });
     });
     conversationWidthInput.addEventListener('input', () => {
       const curConversationWidthInput = document.querySelector('#conversation-width-input');
@@ -162,23 +238,33 @@ function generalTabContent() {
         document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
       }
       document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
-      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue, customConversationWidth: true } });
+      chrome.storage.local.set({
+        settings: {
+          ...result.settings,
+          conversationWidth: newValue,
+          customConversationWidth: true,
+        },
+      });
     });
   });
   leftContent.appendChild(conversationWidthInput);
 
   const importExportWrapper = document.createElement('div');
-  importExportWrapper.style = 'display: flex; flex-direction: row; flex-wrap: wrap; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
+  importExportWrapper.style =
+    'display: flex; flex-direction: row; flex-wrap: wrap; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
   const importExportLabel = document.createElement('div');
   importExportLabel.style = 'width: 100%; margin: 8px 0;';
-  importExportLabel.innerHTML = 'Import / Export Settings, Custom Prompts, and Folders (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#efc8c6a6004142b189412e8e6785956d" target="blank">Learn More</a>)';
+  importExportLabel.innerHTML =
+    'Import / Export Settings, Custom Prompts, and Folders (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#efc8c6a6004142b189412e8e6785956d" target="blank">Learn More</a>)';
   importExportWrapper.appendChild(importExportLabel);
 
   const importExportButtonWrapper = document.createElement('div');
-  importExportButtonWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;';
+  importExportButtonWrapper.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;';
 
   const importButton = document.createElement('button');
-  importButton.className = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
+  importButton.className =
+    'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
   importButton.textContent = 'Import';
   importButton.addEventListener('click', () => {
     // open file picker
@@ -194,18 +280,31 @@ function generalTabContent() {
         }
         const importedData = JSON.parse(e.target.result);
         const {
-          settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles,
+          settings,
+          customModels,
+          customPrompts,
+          conversationsOrder,
+          customInstructionProfiles,
         } = importedData;
-        chrome.storage.local.set({
-          settings, customModels, customPrompts, customInstructionProfiles,
-        }, () => {
-          chrome.storage.sync.set({
-            conversationsOrder,
-          }, () => {
-            window.location.reload();
-          });
-          toast('Imported Settings Successfully');
-        });
+        chrome.storage.local.set(
+          {
+            settings,
+            customModels,
+            customPrompts,
+            customInstructionProfiles,
+          },
+          () => {
+            chrome.storage.sync.set(
+              {
+                conversationsOrder,
+              },
+              () => {
+                window.location.reload();
+              },
+            );
+            toast('Imported Settings Successfully');
+          },
+        );
       };
       reader.readAsText(file);
     });
@@ -214,30 +313,41 @@ function generalTabContent() {
   importExportButtonWrapper.appendChild(importButton);
 
   const exportButton = document.createElement('button');
-  exportButton.className = 'w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
+  exportButton.className =
+    'w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
   exportButton.textContent = 'Export';
   exportButton.addEventListener('click', () => {
     chrome.storage.sync.get(['conversationsOrder'], (res) => {
-      chrome.storage.local.get(['settings', 'customModels', 'customPrompts', 'customInstructionProfiles'], (result) => {
-        const {
-          settings, customModels, customPrompts, customInstructionProfiles,
-        } = result;
-        const { conversationsOrder } = res;
-        const data = {
-          settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles,
-        };
-        const element = document.createElement('a');
-        element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`);
-        const todatDate = new Date();
-        const filePostfix = `${todatDate.getFullYear()}-${todatDate.getMonth() + 1}-${todatDate.getDate()}`;
+      chrome.storage.local.get(
+        ['settings', 'customModels', 'customPrompts', 'customInstructionProfiles'],
+        (result) => {
+          const { settings, customModels, customPrompts, customInstructionProfiles } = result;
+          const { conversationsOrder } = res;
+          const data = {
+            settings,
+            customModels,
+            customPrompts,
+            conversationsOrder,
+            customInstructionProfiles,
+          };
+          const element = document.createElement('a');
+          element.setAttribute(
+            'href',
+            `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`,
+          );
+          const todatDate = new Date();
+          const filePostfix = `${todatDate.getFullYear()}-${
+            todatDate.getMonth() + 1
+          }-${todatDate.getDate()}`;
 
-        element.setAttribute('download', `superpower-chatgpt-settings-${filePostfix}.json`);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-        toast('Settings exported');
-      });
+          element.setAttribute('download', `superpower-chatgpt-settings-${filePostfix}.json`);
+          element.style.display = 'none';
+          document.body.appendChild(element);
+          element.click();
+          document.body.removeChild(element);
+          toast('Settings exported');
+        },
+      );
     });
   });
   importExportButtonWrapper.appendChild(exportButton);
@@ -247,24 +357,29 @@ function generalTabContent() {
 
   // discord widget
   const discordWidget = document.createElement('div');
-  discordWidget.innerHTML = '<iframe style="border-radius:8px;width:350px; max-width:100%;height:400px;" src="https://discord.com/widget?id=1083455984489476220&theme=dark" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>';
+  discordWidget.innerHTML =
+    '<iframe style="border-radius:8px;width:350px; max-width:100%;height:400px;" src="https://discord.com/widget?id=1083455984489476220&theme=dark" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>';
   rightContent.appendChild(discordWidget);
   content.appendChild(leftContent);
   content.appendChild(rightContent);
   // extra links
   const linkWrapper = document.createElement('div');
-  linkWrapper.style = 'display: flex; flex-direction: row; flex-wrap:wrap; justify-content: start; align-items: start; width: 100%; padding: 8px 16px; position:absolute; bottom:0; left:0;background-color:#0b0d0e;border-top:1px solid #565869;';
+  linkWrapper.style =
+    'display: flex; flex-direction: row; flex-wrap:wrap; justify-content: start; align-items: start; width: 100%; padding: 8px 16px; position:absolute; bottom:0; left:0;background-color:#0b0d0e;border-top:1px solid #565869;';
   // upgrade plan
   const originalUpgradePlanButton = document.querySelector('#upgrade-plan-button');
   if (originalUpgradePlanButton) {
     const upgradePlanButton = document.createElement('div');
     upgradePlanButton.textContent = 'Upgrade plan ➜';
-    upgradePlanButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
+    upgradePlanButton.style =
+      'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
     upgradePlanButton.addEventListener('mouseover', () => {
-      upgradePlanButton.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
+      upgradePlanButton.style =
+        'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
     });
     upgradePlanButton.addEventListener('mouseout', () => {
-      upgradePlanButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
+      upgradePlanButton.style =
+        'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
     });
     upgradePlanButton.addEventListener('click', () => {
       document.querySelector('button[id=modal-close-button-settings]')?.click();
@@ -277,12 +392,15 @@ function generalTabContent() {
   if (originalUpgradePlusButton) {
     const upgradePlusButton = document.createElement('div');
     upgradePlusButton.textContent = 'Upgrade to Plus ➜';
-    upgradePlusButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
+    upgradePlusButton.style =
+      'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
     upgradePlusButton.addEventListener('mouseover', () => {
-      upgradePlusButton.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
+      upgradePlusButton.style =
+        'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
     });
     upgradePlusButton.addEventListener('mouseout', () => {
-      upgradePlusButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
+      upgradePlusButton.style =
+        'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
     });
     upgradePlusButton.addEventListener('click', () => {
       document.querySelector('button[id=modal-close-button-settings]')?.click();
@@ -295,12 +413,15 @@ function generalTabContent() {
   if (originalMyAccountButton) {
     const myAccountButton = document.createElement('div');
     myAccountButton.textContent = 'My account ➜';
-    myAccountButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
+    myAccountButton.style =
+      'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
     myAccountButton.addEventListener('mouseover', () => {
-      myAccountButton.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
+      myAccountButton.style =
+        'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
     });
     myAccountButton.addEventListener('mouseout', () => {
-      myAccountButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
+      myAccountButton.style =
+        'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
     });
     myAccountButton.addEventListener('click', () => {
       document.querySelector('button[id=modal-close-button-settings]')?.click();
@@ -313,12 +434,15 @@ function generalTabContent() {
   if (originalMyPlanButton) {
     const myPlanButton = document.createElement('div');
     myPlanButton.textContent = 'My plan ➜';
-    myPlanButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
+    myPlanButton.style =
+      'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
     myPlanButton.addEventListener('mouseover', () => {
-      myPlanButton.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
+      myPlanButton.style =
+        'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
     });
     myPlanButton.addEventListener('mouseout', () => {
-      myPlanButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
+      myPlanButton.style =
+        'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
     });
     myPlanButton.addEventListener('click', () => {
       document.querySelector('button[id=modal-close-button-settings]')?.click();
@@ -331,12 +455,15 @@ function generalTabContent() {
   if (originalImproveButton) {
     const improveButton = document.createElement('div');
     improveButton.textContent = 'Improve ChatGPT ➜';
-    improveButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
+    improveButton.style =
+      'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:cursor:pointer;';
     improveButton.addEventListener('mouseover', () => {
-      improveButton.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
+      improveButton.style =
+        'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
     });
     improveButton.addEventListener('mouseout', () => {
-      improveButton.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
+      improveButton.style =
+        'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;cursor:pointer;';
     });
     improveButton.addEventListener('click', () => {
       document.querySelector('button[id=modal-close-button-settings]')?.click();
@@ -349,12 +476,15 @@ function generalTabContent() {
   discordLink.href = 'https://discord.com/channels/974519864045756446/1053182622626492466';
   discordLink.target = '_blank';
   discordLink.textContent = 'OpenAI Discord ➜';
-  discordLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+  discordLink.style =
+    'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   discordLink.addEventListener('mouseover', () => {
-    discordLink.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+    discordLink.style =
+      'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   discordLink.addEventListener('mouseout', () => {
-    discordLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+    discordLink.style =
+      'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   // linkWrapper.appendChild(discordLink);
   // add a link to Updates and FAQ
@@ -362,25 +492,32 @@ function generalTabContent() {
   updatesLink.href = 'https://help.openai.com/en/collections/3742473-chatgpt';
   updatesLink.target = '_blank';
   updatesLink.textContent = 'Get help ➜';
-  updatesLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:';
+  updatesLink.style =
+    'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;padding-right:';
   updatesLink.addEventListener('mouseover', () => {
-    updatesLink.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+    updatesLink.style =
+      'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   updatesLink.addEventListener('mouseout', () => {
-    updatesLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+    updatesLink.style =
+      'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   linkWrapper.appendChild(updatesLink);
   // add link for feedback email
   const feedbackLink = document.createElement('a');
-  feedbackLink.href = 'mailto:m4rkobay@gmail.com?subject=Superpower ChatGPT Feature Request&body=Hi Marko,%0DReporting a bug? Any of the following information would help me figure it out faster: %0D- What version of the extension do you have? (You can find that at the bottom of the "settings" menu) %0D- What browser are you using? %0D- Do you see any errors in the console log? %0D- Do you have a plus account? %0D- How many conversations do you have approximately? %0D- Do you have the Auto Sync feature ON? %0D- Are all of your conversations synced? %0D- Do you see the "settings" menu on the sidebar? %0D- Does your issue go away if you turn the Auto Sync OFF in the settings menu? %0D- Does this issue happen to all prompts? Or only the first prompt? %0D- Are you using any other ChatGPT extensions at the same time? %0D- Can you email me a screenshot or video of the ChatGPT page when the bug happens? (with the extension installed)%0DThanks!';
+  feedbackLink.href =
+    'mailto:m4rkobay@gmail.com?subject=Superpower ChatGPT Feature Request&body=Hi Marko,%0DReporting a bug? Any of the following information would help me figure it out faster: %0D- What version of the extension do you have? (You can find that at the bottom of the "settings" menu) %0D- What browser are you using? %0D- Do you see any errors in the console log? %0D- Do you have a plus account? %0D- How many conversations do you have approximately? %0D- Do you have the Auto Sync feature ON? %0D- Are all of your conversations synced? %0D- Do you see the "settings" menu on the sidebar? %0D- Does your issue go away if you turn the Auto Sync OFF in the settings menu? %0D- Does this issue happen to all prompts? Or only the first prompt? %0D- Are you using any other ChatGPT extensions at the same time? %0D- Can you email me a screenshot or video of the ChatGPT page when the bug happens? (with the extension installed)%0DThanks!';
   feedbackLink.target = '_blank';
   feedbackLink.textContent = 'Feature Request ➜';
-  feedbackLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+  feedbackLink.style =
+    'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   feedbackLink.addEventListener('mouseover', () => {
-    feedbackLink.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+    feedbackLink.style =
+      'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   feedbackLink.addEventListener('mouseout', () => {
-    feedbackLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+    feedbackLink.style =
+      'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   // linkWrapper.appendChild(feedbackLink);
 
@@ -389,12 +526,15 @@ function generalTabContent() {
   sponsorLink.href = 'https://www.passionfroot.me/superpower';
   sponsorLink.target = '_blank';
   sponsorLink.textContent = 'Advertise with us ➜';
-  sponsorLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+  sponsorLink.style =
+    'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   sponsorLink.addEventListener('mouseover', () => {
-    sponsorLink.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+    sponsorLink.style =
+      'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   sponsorLink.addEventListener('mouseout', () => {
-    sponsorLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+    sponsorLink.style =
+      'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   linkWrapper.appendChild(sponsorLink);
 
@@ -403,12 +543,15 @@ function generalTabContent() {
   faqLink.href = 'https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24';
   faqLink.target = '_blank';
   faqLink.textContent = 'FAQ ➜';
-  faqLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+  faqLink.style =
+    'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   faqLink.addEventListener('mouseover', () => {
-    faqLink.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+    faqLink.style =
+      'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   faqLink.addEventListener('mouseout', () => {
-    faqLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
+    faqLink.style =
+      'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   });
   linkWrapper.appendChild(faqLink);
   content.appendChild(linkWrapper);
@@ -425,9 +568,13 @@ function toggleCustomWidthInput(customConversationWidth) {
         el.querySelector('div').style.maxWidth = `${settings.conversationWidth}%`;
       });
       if (document.querySelector('#conversation-bottom')) {
-        document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${settings.conversationWidth}%`;
+        document.querySelector(
+          '#conversation-bottom',
+        ).firstChild.style.maxWidth = `${settings.conversationWidth}%`;
       }
-      document.querySelector('main').querySelector('form').style.maxWidth = `${settings.conversationWidth}%`;
+      document
+        .querySelector('main')
+        .querySelector('form').style.maxWidth = `${settings.conversationWidth}%`;
     } else {
       Array.from(document.querySelectorAll('[id^=message-wrapper]')).forEach((el) => {
         el.querySelector('div').style.removeProperty('max-width');
@@ -442,43 +589,109 @@ function toggleCustomWidthInput(customConversationWidth) {
 function autoSyncTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
-  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+  content.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
   // Auto Sync
-  const autoSyncSwitch = createSwitch('Auto Sync', 'Automatically download and sync all your conversations to your computer. Auto Sync only works when ChatGPT is open. Disabling Auto Sync will also disable some of the existing features such as the ability to search for messages and many future features that rely on Auto Sync.(Requires Refresh)', 'autoSync', true, refreshPage);
+  const autoSyncSwitch = createSwitch(
+    'Auto Sync',
+    'Automatically download and sync all your conversations to your computer. Auto Sync only works when ChatGPT is open. Disabling Auto Sync will also disable some of the existing features such as the ability to search for messages and many future features that rely on Auto Sync.(Requires Refresh)',
+    'autoSync',
+    true,
+    refreshPage,
+  );
   content.appendChild(autoSyncSwitch);
   chrome.storage.local.get(['settings'], (result) => {
     const { autoSync } = result.settings;
 
-    const quickSyncSwitch = createSwitch('Quick Sync', 'OFF: Sync All Conversations, ON: Sync only the last 100 conversations (Best performance)', 'quickSync', false, resetSync, 'Experimental - Requires Auto-Sync', !autoSync);
+    const quickSyncSwitch = createSwitch(
+      'Quick Sync',
+      'OFF: Sync All Conversations, ON: Sync only the last 100 conversations (Best performance)',
+      'quickSync',
+      false,
+      resetSync,
+      'Experimental - Requires Auto-Sync',
+      !autoSync,
+    );
     content.appendChild(quickSyncSwitch);
 
-    const showExamplePromptsSwitch = createSwitch('Show Example Prompts', 'Show the example prompts when starting a new chat', 'showExamplePrompts', false, null, 'Requires Auto-Sync', !autoSync);
+    const showExamplePromptsSwitch = createSwitch(
+      'Show Example Prompts',
+      'Show the example prompts when starting a new chat',
+      'showExamplePrompts',
+      false,
+      null,
+      'Requires Auto-Sync',
+      !autoSync,
+    );
     content.appendChild(showExamplePromptsSwitch);
 
-    const conversationTimestampSwitch = createSwitch('Conversation Timestamp', 'OFF: Created time, ON: Last updated time', 'conversationTimestamp', false, reloadConversationList, 'Requires Auto-Sync', !autoSync);
+    const conversationTimestampSwitch = createSwitch(
+      'Conversation Timestamp',
+      'OFF: Created time, ON: Last updated time',
+      'conversationTimestamp',
+      false,
+      reloadConversationList,
+      'Requires Auto-Sync',
+      !autoSync,
+    );
     content.appendChild(conversationTimestampSwitch);
 
-    const pinNavSwitch = createSwitch('Pin Navigation', 'Show/hide message pins for quick navigation(only when conversations are fully synced)', 'showPinNav', true, refreshPage, 'Requires Auto-Sync', !autoSync);
+    const pinNavSwitch = createSwitch(
+      'Pin Navigation',
+      'Show/hide message pins for quick navigation(only when conversations are fully synced)',
+      'showPinNav',
+      true,
+      refreshPage,
+      'Requires Auto-Sync',
+      !autoSync,
+    );
     content.appendChild(pinNavSwitch);
 
-    const showGpt4Counter = createSwitch('Show GPT-4 Counter', 'Show the number of GPT-4 messages in the last 3 hours', 'showGpt4Counter', true, toggleGpt4Counter, 'Requires Auto-Sync', !autoSync);
+    const showGpt4Counter = createSwitch(
+      'Show GPT-4 Counter',
+      'Show the number of GPT-4 messages in the last 3 hours',
+      'showGpt4Counter',
+      true,
+      toggleGpt4Counter,
+      'Requires Auto-Sync',
+      !autoSync,
+    );
     content.appendChild(showGpt4Counter);
 
-    const autoHideTopNav = createSwitch('Auto hide Top Navbar', 'Automatically hide the navbar at the top of the page when move the mouse out of it.', 'autoHideTopNav', true, toggleTopNav, 'Requires Auto-Sync', !autoSync);
+    const autoHideTopNav = createSwitch(
+      'Auto hide Top Navbar',
+      'Automatically hide the navbar at the top of the page when move the mouse out of it.',
+      'autoHideTopNav',
+      true,
+      toggleTopNav,
+      'Requires Auto-Sync',
+      !autoSync,
+    );
     content.appendChild(autoHideTopNav);
 
-    const autoResetTopNav = createSwitch('Auto Reset Top Navbar', 'Automatically reset the tone, writing style, and language to default when switching to new chats', 'autoResetTopNav', false, toggleTopNav, 'Requires Auto-Sync', !autoSync);
+    const autoResetTopNav = createSwitch(
+      'Auto Reset Top Navbar',
+      'Automatically reset the tone, writing style, and language to default when switching to new chats',
+      'autoResetTopNav',
+      false,
+      toggleTopNav,
+      'Requires Auto-Sync',
+      !autoSync,
+    );
     content.appendChild(autoResetTopNav);
   });
   return content;
 }
 function resetSync() {
-  chrome.storage.local.set({
-    conversations: {},
-    conversationsAreSynced: false,
-  }, () => {
-    refreshPage();
-  });
+  chrome.storage.local.set(
+    {
+      conversations: {},
+      conversationsAreSynced: false,
+    },
+    () => {
+      refreshPage();
+    },
+  );
 }
 function reloadConversationList() {
   loadConversationList(true);
@@ -502,28 +715,36 @@ function toggleTopNav(autohide) {
 function modelsTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
-  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+  content.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
 
   const modelSwitcherRow = document.createElement('div');
-  modelSwitcherRow.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width:100%;';
+  modelSwitcherRow.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: center; width:100%;';
 
   const modelSwitcherWrapper = document.createElement('div');
-  modelSwitcherWrapper.style = 'position:relative;min-width:200px;z-index:1000; pointer-events: none;';
+  modelSwitcherWrapper.style =
+    'position:relative;min-width:200px;z-index:1000; pointer-events: none;';
   const idPrefix = 'settings';
   modelSwitcherWrapper.id = `model-switcher-wrapper-${idPrefix}`;
   modelSwitcherRow.appendChild(modelSwitcherWrapper);
   content.appendChild(modelSwitcherRow);
   const betaTag = document.createElement('span');
-  betaTag.style = 'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; font-size: 0.7em;margin-top:8px;';
+  betaTag.style =
+    'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; font-size: 0.7em;margin-top:8px;';
   betaTag.textContent = 'Requires Auto-Sync';
   content.appendChild(betaTag);
   chrome.storage.local.get(['settings', 'models', 'unofficialModels', 'customModels'], (result) => {
-    const {
-      models, unofficialModels, customModels, settings,
-    } = result;
+    const { models, unofficialModels, customModels, settings } = result;
     const allModels = [...models, ...unofficialModels, ...customModels];
     const { autoSync } = result.settings;
-    modelSwitcherWrapper.innerHTML = modelSwitcher(allModels, settings.selectedModel, idPrefix, customModels, true);
+    modelSwitcherWrapper.innerHTML = modelSwitcher(
+      allModels,
+      settings.selectedModel,
+      idPrefix,
+      customModels,
+      true,
+    );
     addModelSwitcherEventListener(idPrefix, true);
     if (autoSync) {
       modelSwitcherWrapper.style.pointerEvents = 'all';
@@ -532,20 +753,25 @@ function modelsTabContent() {
     }
     const unofficialNote = document.createElement('div');
     unofficialNote.style = 'color: #eee; font-size: 0.8em; margin-left:8px';
-    unofficialNote.textContent = 'Unofficial and custom models are experimental. They may or may not work. This feature was implemented to make it easy to test other models.';
+    unofficialNote.textContent =
+      'Unofficial and custom models are experimental. They may or may not work. This feature was implemented to make it easy to test other models.';
     modelSwitcherRow.appendChild(unofficialNote);
   });
   const newCustomModelWrapper = document.createElement('div');
   newCustomModelWrapper.id = 'new-custom-model-wrapper';
-  newCustomModelWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-top: 24px; flex-wrap:wrap;padding: 8px; border-radius: 8px;background-color: #1e1e2f;';
+  newCustomModelWrapper.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-top: 24px; flex-wrap:wrap;padding: 8px; border-radius: 8px;background-color: #1e1e2f;';
   const newCustomModelInputWrapper = document.createElement('div');
-  newCustomModelInputWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
+  newCustomModelInputWrapper.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
   const newCustomModelWrapperTitle = document.createElement('div');
   newCustomModelWrapperTitle.style = 'width: 100%; margin: 8px 0;color: #eee;';
-  newCustomModelWrapperTitle.innerHTML = 'Add a Custom Model<span style="background-color: rgb(255, 152, 0); color: black; padding: 2px 4px; border-radius: 8px; font-size: 0.7em; margin-left: 8px;position:relative; bottom:2px;">Experimental</span>';
+  newCustomModelWrapperTitle.innerHTML =
+    'Add a Custom Model<span style="background-color: rgb(255, 152, 0); color: black; padding: 2px 4px; border-radius: 8px; font-size: 0.7em; margin-left: 8px;position:relative; bottom:2px;">Experimental</span>';
 
   const newCustomModelSlug = document.createElement('input');
-  newCustomModelSlug.style = 'width: 160px; height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e;margin-right:8px; color: #eee; padding: 0 8px; font-size: 14px;';
+  newCustomModelSlug.style =
+    'width: 160px; height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e;margin-right:8px; color: #eee; padding: 0 8px; font-size: 14px;';
   newCustomModelSlug.placeholder = 'Model Slug';
   newCustomModelSlug.autocomplete = 'off';
   // only accept alphanumerics and dashes and parentheses and underscores
@@ -558,7 +784,8 @@ function modelsTabContent() {
   });
 
   const newCustomModelText = document.createElement('textarea');
-  newCustomModelText.style = 'width: 100%; height: 34px; min-height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
+  newCustomModelText.style =
+    'width: 100%; height: 34px; min-height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
   newCustomModelText.placeholder = 'Model description';
   newCustomModelText.dir = 'auto';
   newCustomModelText.addEventListener('input', () => {
@@ -570,14 +797,18 @@ function modelsTabContent() {
   repeatedSlugError.style = 'color: #f56565; font-size: 10px;visibility: hidden;';
   repeatedSlugError.textContent = 'Another model with this slug already exist.';
   const newCustomModelButtonWrapper = document.createElement('div');
-  newCustomModelButtonWrapper.style = 'display: flex; flex-direction: row; justify-content: end; align-items: center; width: 100%; margin-bottom: 16px;';
+  newCustomModelButtonWrapper.style =
+    'display: flex; flex-direction: row; justify-content: end; align-items: center; width: 100%; margin-bottom: 16px;';
   const newCustomModelSlugDescription = document.createElement('div');
-  newCustomModelSlugDescription.style = 'width: 100%; margin: 8px 8px 8px 0; font-size: 12px; color: #eee;';
-  newCustomModelSlugDescription.textContent = 'The slug is used to identify the model by OpenAI. Description can be anything, but slug has to be the official name of the model in OpenAI';
+  newCustomModelSlugDescription.style =
+    'width: 100%; margin: 8px 8px 8px 0; font-size: 12px; color: #eee;';
+  newCustomModelSlugDescription.textContent =
+    'The slug is used to identify the model by OpenAI. Description can be anything, but slug has to be the official name of the model in OpenAI';
 
   const newCustomModelCancelButton = document.createElement('button');
   newCustomModelCancelButton.textContent = 'Cancel';
-  newCustomModelCancelButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border mr-2';
+  newCustomModelCancelButton.classList =
+    'btn flex justify-center gap-2 btn-dark border-0 md:border mr-2';
   newCustomModelCancelButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -586,7 +817,8 @@ function modelsTabContent() {
   });
   const newCustomModelSaveButton = document.createElement('button');
   newCustomModelSaveButton.textContent = 'Save';
-  newCustomModelSaveButton.classList = 'btn flex justify-center gap-2 btn-primary border-0 md:border';
+  newCustomModelSaveButton.classList =
+    'btn flex justify-center gap-2 btn-primary border-0 md:border';
   newCustomModelSaveButton.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -600,8 +832,13 @@ function modelsTabContent() {
     if (!newCustomModelSlug.value.trim() || !newCustomModelText.value.trim()) return;
     chrome.storage.local.get(['models', 'unofficialModels', 'customModels', 'settings'], (res) => {
       const allModels = [...res.models, ...res.unofficialModels, ...res.customModels];
-      const newCustomModels = (res.customModels && res.customModels.length > 0) ? res.customModels : [];
-      if (allModels.map((k) => k?.slug?.toLowerCase()).includes(newCustomModelSlug.value.trim().toLowerCase())) {
+      const newCustomModels =
+        res.customModels && res.customModels.length > 0 ? res.customModels : [];
+      if (
+        allModels
+          .map((k) => k?.slug?.toLowerCase())
+          .includes(newCustomModelSlug.value.trim().toLowerCase())
+      ) {
         newCustomModelSlug.style.borderColor = '#ff4a4a';
         repeatedSlugError.style.visibility = 'visible';
         return;
@@ -617,7 +854,13 @@ function modelsTabContent() {
         modelSwitcherWrappers.forEach((wrapper) => {
           const curIdPrefix = wrapper.id.split('model-switcher-wrapper-')[1];
           const newAllModels = [...res.models, ...res.unofficialModels, ...newCustomModels];
-          wrapper.innerHTML = modelSwitcher(newAllModels, res.settings.selectedModel, curIdPrefix, newCustomModels, true);
+          wrapper.innerHTML = modelSwitcher(
+            newAllModels,
+            res.settings.selectedModel,
+            curIdPrefix,
+            newCustomModels,
+            true,
+          );
           addModelSwitcherEventListener(curIdPrefix, true);
         });
         // clear the input fields
@@ -641,12 +884,14 @@ function modelsTabContent() {
 function customPromptTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
-  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+  content.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
 
   chrome.storage.local.get(['customPrompts', 'settings'], (result) => {
     // custom prompts section
     const customPromptSectionWrapper = document.createElement('div');
-    customPromptSectionWrapper.style = 'display: flex; justify-content:space-between; align-items:center; width: 100%; color: lightslategray; font-size: 16px; margin: 24px 0 12px 0;';
+    customPromptSectionWrapper.style =
+      'display: flex; justify-content:space-between; align-items:center; width: 100%; color: lightslategray; font-size: 16px; margin: 24px 0 12px 0;';
     const customPromptSection = document.createElement('div');
     customPromptSection.style = 'color: lightslategray; font-size: 16px; margin: 12px 0;';
     customPromptSection.textContent = 'Custom Prompts';
@@ -659,11 +904,14 @@ function customPromptTabContent() {
       if (existingNewCustomPromptWrapper) return;
       const newCustomPromptWrapper = document.createElement('div');
       newCustomPromptWrapper.id = 'new-custom-prompt-wrapper';
-      newCustomPromptWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; flex-wrap:wrap;padding: 8px; border-radius: 8px;background-color: #1e1e2f;';
+      newCustomPromptWrapper.style =
+        'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; flex-wrap:wrap;padding: 8px; border-radius: 8px;background-color: #1e1e2f;';
       const newCustomPromptInputWrapper = document.createElement('div');
-      newCustomPromptInputWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
+      newCustomPromptInputWrapper.style =
+        'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
       const newCustomPromptTitle = document.createElement('input');
-      newCustomPromptTitle.style = 'width: 120px; height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e;margin-right:8px; color: #eee; padding: 0 8px; font-size: 14px;';
+      newCustomPromptTitle.style =
+        'width: 120px; height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e;margin-right:8px; color: #eee; padding: 0 8px; font-size: 14px;';
       newCustomPromptTitle.placeholder = 'Prompt Title';
       newCustomPromptTitle.autofocus = true;
       newCustomPromptTitle.dir = 'auto';
@@ -672,7 +920,8 @@ function customPromptTabContent() {
         repeatedNameError.style.visibility = 'hidden';
       });
       const newCustomPromptText = document.createElement('textarea');
-      newCustomPromptText.style = 'width: 100%; height: 34px; min-height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
+      newCustomPromptText.style =
+        'width: 100%; height: 34px; min-height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
       newCustomPromptText.placeholder = 'Prompt Text';
       newCustomPromptText.dir = 'auto';
       newCustomPromptText.addEventListener('input', () => {
@@ -681,17 +930,21 @@ function customPromptTabContent() {
 
       const helperText = document.createElement('div');
       helperText.style = 'color: #999; font-size: 12px; margin: 8px 0;';
-      helperText.textContent = 'Tip: You can use @promptTitle anywhere in your prompt input to automatically replace it with the prompt text. For this feature to work make sure you don\'t have any space in the prompt title. Smart replace is not case sensitive.';
+      helperText.textContent =
+        "Tip: You can use @promptTitle anywhere in your prompt input to automatically replace it with the prompt text. For this feature to work make sure you don't have any space in the prompt title. Smart replace is not case sensitive.";
 
       const repeatedNameError = document.createElement('div');
       repeatedNameError.id = 'repeated-name-error';
       repeatedNameError.style = 'color: #f56565; font-size: 12px;visibility: hidden;';
-      repeatedNameError.textContent = 'Another custom prompt with this name already exist. Please use a different name.';
+      repeatedNameError.textContent =
+        'Another custom prompt with this name already exist. Please use a different name.';
       const newCustomPromptButtonWrapper = document.createElement('div');
-      newCustomPromptButtonWrapper.style = 'display: flex; flex-direction: row; justify-content: end; align-items: center; width: 100%; margin-bottom: 16px;';
+      newCustomPromptButtonWrapper.style =
+        'display: flex; flex-direction: row; justify-content: end; align-items: center; width: 100%; margin-bottom: 16px;';
       const newCustomPromptCancelButton = document.createElement('button');
       newCustomPromptCancelButton.textContent = 'Cancel';
-      newCustomPromptCancelButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border mr-2';
+      newCustomPromptCancelButton.classList =
+        'btn flex justify-center gap-2 btn-dark border-0 md:border mr-2';
       newCustomPromptCancelButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -700,7 +953,8 @@ function customPromptTabContent() {
       });
       const newCustomPromptSaveButton = document.createElement('button');
       newCustomPromptSaveButton.textContent = 'Save';
-      newCustomPromptSaveButton.classList = 'btn flex justify-center gap-2 btn-primary border-0 md:border';
+      newCustomPromptSaveButton.classList =
+        'btn flex justify-center gap-2 btn-primary border-0 md:border';
       newCustomPromptSaveButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -712,18 +966,35 @@ function customPromptTabContent() {
         }
         if (!newCustomPromptTitle.value.trim() || !newCustomPromptText.value.trim()) return;
         chrome.storage.local.get(['customPrompts'], (res) => {
-          const newCustomPrompts = (res.customPrompts && res.customPrompts.length > 0) ? res.customPrompts : defaultPrompts;
-          if (newCustomPrompts.map((k) => k.title.toLowerCase()).includes(newCustomPromptTitle.value.trim().toLowerCase())) {
+          const newCustomPrompts =
+            res.customPrompts && res.customPrompts.length > 0 ? res.customPrompts : defaultPrompts;
+          if (
+            newCustomPrompts
+              .map((k) => k.title.toLowerCase())
+              .includes(newCustomPromptTitle.value.trim().toLowerCase())
+          ) {
             newCustomPromptTitle.style.borderColor = '#ff4a4a';
             repeatedNameError.style.visibility = 'visible';
             return;
           }
-          newCustomPrompts.push({ title: newCustomPromptTitle.value.trim(), text: newCustomPromptText.value.trim(), isDefault: false });
+          newCustomPrompts.push({
+            title: newCustomPromptTitle.value.trim(),
+            text: newCustomPromptText.value.trim(),
+            isDefault: false,
+          });
           chrome.storage.local.set({ customPrompts: newCustomPrompts }, () => {
             // add new custom prompt right after curNewCustomPromptWrapper
             const curNewCustomPromptWrapper = document.getElementById('new-custom-prompt-wrapper');
-            const newCustomPromptRow = createPromptRow(newCustomPromptTitle.value.trim(), newCustomPromptText.value.trim(), false, 'customPrompts');
-            curNewCustomPromptWrapper.parentNode.insertBefore(newCustomPromptRow, curNewCustomPromptWrapper.nextSibling);
+            const newCustomPromptRow = createPromptRow(
+              newCustomPromptTitle.value.trim(),
+              newCustomPromptText.value.trim(),
+              false,
+              'customPrompts',
+            );
+            curNewCustomPromptWrapper.parentNode.insertBefore(
+              newCustomPromptRow,
+              curNewCustomPromptWrapper.nextSibling,
+            );
             curNewCustomPromptWrapper.remove();
           });
         });
@@ -737,7 +1008,10 @@ function customPromptTabContent() {
       newCustomPromptWrapper.appendChild(repeatedNameError);
       newCustomPromptWrapper.appendChild(newCustomPromptButtonWrapper);
       // insert after customPromptSectionWrapper
-      customPromptSectionWrapper.parentNode.insertBefore(newCustomPromptWrapper, customPromptSectionWrapper.nextSibling);
+      customPromptSectionWrapper.parentNode.insertBefore(
+        newCustomPromptWrapper,
+        customPromptSectionWrapper.nextSibling,
+      );
     });
     customPromptSectionWrapper.appendChild(customPromptSection);
     customPromptSectionWrapper.appendChild(newCustomPromptButton);
@@ -755,15 +1029,26 @@ function customPromptTabContent() {
     }
     // custom inststruction section
     const customInstructionSection = document.createElement('div');
-    customInstructionSection.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 16px 0;';
+    customInstructionSection.style =
+      'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 16px 0;';
 
-    const customInstructionSwitch = createSwitch('Custom Instruction', 'Custom instruction will be added to the end of each promps. You can use it to add instructions that you like to include in every prompt. For example, you can add "Please repeat the prompt after me.", or "Please refrain from writing warnings about your knowledge cutoff" to the custom instruction, and it will be added to the end of every prompt.(Make sure to add a space or new-line in the beggining!)', 'useCustomInstruction', false, toggleCustomInstructionInput, 'Requires Auto-Sync', !autoSync);
+    const customInstructionSwitch = createSwitch(
+      'Custom Instruction',
+      'Custom instruction will be added to the end of each promps. You can use it to add instructions that you like to include in every prompt. For example, you can add "Please repeat the prompt after me.", or "Please refrain from writing warnings about your knowledge cutoff" to the custom instruction, and it will be added to the end of every prompt.(Make sure to add a space or new-line in the beggining!)',
+      'useCustomInstruction',
+      false,
+      toggleCustomInstructionInput,
+      'Requires Auto-Sync',
+      !autoSync,
+    );
 
     const customInstructionInputWrapper = document.createElement('div');
-    customInstructionInputWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-bottom: 8px;';
+    customInstructionInputWrapper.style =
+      'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-bottom: 8px;';
     const customInstructionInput = document.createElement('textarea');
     customInstructionInput.id = 'custom-instruction-input';
-    customInstructionInput.style = 'width: 100%; height: 100px; border-radius: 4px; border: 1px solid #565869; background-color: #2d2d3a; color: #eee; padding: 8px;';
+    customInstructionInput.style =
+      'width: 100%; height: 100px; border-radius: 4px; border: 1px solid #565869; background-color: #2d2d3a; color: #eee; padding: 8px;';
     customInstructionInput.placeholder = 'Enter your custom instruction here...';
     customInstructionInput.value = customInstruction;
     customInstructionInput.addEventListener('input', (e) => {
@@ -771,7 +1056,12 @@ function customPromptTabContent() {
       e.stopPropagation();
       const newCustomInstruction = e.target.value;
       chrome.storage.local.get(['settings'], (res) => {
-        chrome.storage.local.set({ settings: { ...res.settings, customInstruction: newCustomInstruction } });
+        chrome.storage.local.set({
+          settings: {
+            ...res.settings,
+            customInstruction: newCustomInstruction,
+          },
+        });
       });
     });
     customInstructionInputWrapper.appendChild(customInstructionInput);
@@ -798,14 +1088,17 @@ function toggleCustomInstructionInput(isChecked) {
 }
 function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
   const promptWrapper = document.createElement('div');
-  promptWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;';
+  promptWrapper.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;';
   const promptLabel = document.createElement('div');
-  promptLabel.style = 'min-width: 100px; max-width:100px; margin-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;color:white;text-transform: capitalize;';
+  promptLabel.style =
+    'min-width: 100px; max-width:100px; margin-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;color:white;text-transform: capitalize;';
   promptLabel.innerText = `@${promptTitle}`;
   promptLabel.title = promptTitle;
   promptLabel.dir = 'auto';
   const promptInput = document.createElement('textarea');
-  promptInput.style = 'width: 100%; height: 34px; min-height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #1e1e2f; color: #eee; padding: 4px 8px; font-size: 14px;margin-right: 8px;';
+  promptInput.style =
+    'width: 100%; height: 34px; min-height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #1e1e2f; color: #eee; padding: 4px 8px; font-size: 14px;margin-right: 8px;';
   promptInput.id = `${promptObjectName}-${promptTitle}`;
   promptInput.dir = 'auto';
   promptInput.value = promptText;
@@ -853,7 +1146,9 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
     promptWrapper.appendChild(deleteButton);
 
     const defaultButton = document.createElement('button');
-    defaultButton.classList = `btn flex justify-center gap-2 ${isDefault ? 'btn-primary' : 'btn-dark'} border-0 md:border`;
+    defaultButton.classList = `btn flex justify-center gap-2 ${
+      isDefault ? 'btn-primary' : 'btn-dark'
+    } border-0 md:border`;
     defaultButton.setAttribute('data-default', isDefault ? 'true' : 'false');
     defaultButton.style = 'min-width:72px;height:34px;';
     defaultButton.textContent = 'Default';
@@ -864,7 +1159,9 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
         newPrompts.find((p) => p.title === promptTitle).isDefault = true;
         chrome.storage.local.set({ [promptObjectName]: newPrompts }, () => {
           const curDefaultButton = document.querySelector('[data-default="true"]');
-          const curDeleteButton = [...curDefaultButton.parentNode.querySelectorAll('button')].find((b) => b.textContent === 'Delete');
+          const curDeleteButton = [...curDefaultButton.parentNode.querySelectorAll('button')].find(
+            (b) => b.textContent === 'Delete',
+          );
           curDeleteButton.disabled = false;
           curDefaultButton.setAttribute('data-default', 'false');
           curDefaultButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
@@ -872,7 +1169,9 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
           defaultButton.textContent = 'Default';
           defaultButton.setAttribute('data-default', 'true');
           defaultButton.style = 'min-width:72px;height:34px;';
-          const newDeleteButton = [...promptWrapper.querySelectorAll('button')].find((b) => b.textContent === 'Delete');
+          const newDeleteButton = [...promptWrapper.querySelectorAll('button')].find(
+            (b) => b.textContent === 'Delete',
+          );
           newDeleteButton.disabled = true;
         });
       });
@@ -884,12 +1183,15 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
 function exportTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
-  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+  content.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
   // Export Mode
   const exportModeSwitchWrapper = document.createElement('div');
-  exportModeSwitchWrapper.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
+  exportModeSwitchWrapper.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
   const exportModeSwitch = document.createElement('div');
-  exportModeSwitch.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
+  exportModeSwitch.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
   exportModeSwitch.textContent = 'Export mode';
   const exportModeHelper = document.createElement('div');
   exportModeHelper.style = 'font-size: 12px; color: #999;';
@@ -899,12 +1201,18 @@ function exportTabContent() {
   exportModeInput.type = 'checkbox';
   chrome.storage.local.get('settings', ({ settings }) => {
     exportModeInput.checked = settings.exportMode === 'both';
-    exportModeHelper.textContent = settings.exportMode === 'both' ? 'Export both Assistant and User\'s chats' : 'Export only Assistant\'s chats';
+    exportModeHelper.textContent =
+      settings.exportMode === 'both'
+        ? "Export both Assistant and User's chats"
+        : "Export only Assistant's chats";
   });
   exportModeInput.addEventListener('change', () => {
     chrome.storage.local.get('settings', ({ settings }) => {
       settings.exportMode = exportModeInput.checked ? 'both' : 'assistant';
-      exportModeHelper.textContent = settings.exportMode === 'both' ? 'Export both Assistant and User\'s chats' : 'Export only Assistant\'s chats';
+      exportModeHelper.textContent =
+        settings.exportMode === 'both'
+          ? "Export both Assistant and User's chats"
+          : "Export only Assistant's chats";
       chrome.storage.local.set({ settings });
     });
   });
@@ -919,10 +1227,12 @@ function exportTabContent() {
 
   // export format
   const exportNamingFormatLabel = document.createElement('div');
-  exportNamingFormatLabel.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white; opacity: 0.5;';
+  exportNamingFormatLabel.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white; opacity: 0.5;';
   exportNamingFormatLabel.textContent = 'Export naming format';
   const betaTag = document.createElement('span');
-  betaTag.style = 'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; margin-left: 8px; font-size: 0.7em;';
+  betaTag.style =
+    'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; margin-left: 8px; font-size: 0.7em;';
   betaTag.textContent = 'Coming soon';
   content.appendChild(exportModeSwitchWrapper);
   content.appendChild(exportNamingFormatLabel);
@@ -932,52 +1242,79 @@ function exportTabContent() {
 function splitterTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
-  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+  content.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
 
   // conversation width
   chrome.storage.local.get(['settings'], (result) => {
     const { autoSync } = result.settings;
     const splitterSwitchWrapper = document.createElement('div');
-    splitterSwitchWrapper.style = 'display: flex; gap:16px; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
-    const autoSplitSwitch = createSwitch('Auto Split', 'Automatically split long prompts into smaller chunks (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#4fe6dfb33eea451d92ed4d8c240bac1e" target="blank">Learn More</a>)', 'autoSplit', true, null, 'Requires Auto-Sync', !autoSync);
-    const autoSummarizeSwitch = createSwitch('Auto Summarize', 'Automatically summarize each chunk after auto split (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#edb708ffea3647509d4957765ab0529c" target="blank">Learn More</a>)', 'autoSummarize', false, updateAutoSplitPrompt, 'Requires Auto-Sync', !autoSync);
+    splitterSwitchWrapper.style =
+      'display: flex; gap:16px; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
+    const autoSplitSwitch = createSwitch(
+      'Auto Split',
+      'Automatically split long prompts into smaller chunks (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#4fe6dfb33eea451d92ed4d8c240bac1e" target="blank">Learn More</a>)',
+      'autoSplit',
+      true,
+      null,
+      'Requires Auto-Sync',
+      !autoSync,
+    );
+    const autoSummarizeSwitch = createSwitch(
+      'Auto Summarize',
+      'Automatically summarize each chunk after auto split (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#edb708ffea3647509d4957765ab0529c" target="blank">Learn More</a>)',
+      'autoSummarize',
+      false,
+      updateAutoSplitPrompt,
+      'Requires Auto-Sync',
+      !autoSync,
+    );
 
     const autoSplitChunkSizeLabel = document.createElement('div');
-    autoSplitChunkSizeLabel.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
+    autoSplitChunkSizeLabel.style =
+      'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
     autoSplitChunkSizeLabel.textContent = 'Auto Split Chunk Size (1000-16000)';
 
     const autoSplitChunkSizeInput = document.createElement('input');
     autoSplitChunkSizeInput.id = 'split-prompt-limit-input';
     autoSplitChunkSizeInput.type = 'number';
-    autoSplitChunkSizeInput.classList = 'w-full px-4 py-2 mb-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40';
+    autoSplitChunkSizeInput.classList =
+      'w-full px-4 py-2 mb-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40';
     autoSplitChunkSizeInput.value = result.settings.autoSplitLimit;
     autoSplitChunkSizeInput.addEventListener('change', () => {
       const curAutoSplitChunkSizeInput = document.querySelector('#split-prompt-limit-input');
       const newValue = Math.round(curAutoSplitChunkSizeInput.value);
 
       curAutoSplitChunkSizeInput.value = newValue;
-      chrome.storage.local.set({ settings: { ...result.settings, autoSplitLimit: newValue } });
+      chrome.storage.local.set({
+        settings: { ...result.settings, autoSplitLimit: newValue },
+      });
     });
     autoSplitChunkSizeInput.addEventListener('input', () => {
       const curAutoSplitChunkSizeInput = document.querySelector('#split-prompt-limit-input');
       const newValue = Math.round(curAutoSplitChunkSizeInput.value);
 
       curAutoSplitChunkSizeInput.value = newValue;
-      chrome.storage.local.set({ settings: { ...result.settings, autoSplitLimit: newValue } });
+      chrome.storage.local.set({
+        settings: { ...result.settings, autoSplitLimit: newValue },
+      });
     });
 
     // splitter initial prompt
     const autoSplitInitialPromptLabel = document.createElement('div');
-    autoSplitInitialPromptLabel.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-top: 16px; color:white;';
+    autoSplitInitialPromptLabel.style =
+      'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-top: 16px; color:white;';
     autoSplitInitialPromptLabel.textContent = 'Auto Split Prompt';
 
     const autoSplitInitialPromptHelper = document.createElement('div');
     autoSplitInitialPromptHelper.style = 'font-size: 12px; color: #999;margin-bottom: 8px;';
-    autoSplitInitialPromptHelper.textContent = 'Splitter prompt is a text that will be used when the user prompt in divided into chunkc due to the character limit.';
+    autoSplitInitialPromptHelper.textContent =
+      'Splitter prompt is a text that will be used when the user prompt in divided into chunkc due to the character limit.';
 
     const autoSplitInitialPromptText = document.createElement('textarea');
     autoSplitInitialPromptText.id = 'split-initial-prompt-textarea';
-    autoSplitInitialPromptText.style = 'width: 100%; height: 200px; min-height: 200px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
+    autoSplitInitialPromptText.style =
+      'width: 100%; height: 200px; min-height: 200px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
     autoSplitInitialPromptText.placeholder = 'Enter splitter prompt here...';
     chrome.storage.local.get('settings', ({ settings }) => {
       autoSplitInitialPromptText.value = settings.autoSplitInitialPrompt;
@@ -986,22 +1323,30 @@ function splitterTabContent() {
     autoSplitInitialPromptText.addEventListener('input', () => {
       autoSplitInitialPromptText.style.borderColor = '#565869';
       chrome.storage.local.get('settings', ({ settings }) => {
-        chrome.storage.local.set({ settings: { ...settings, autoSplitInitialPrompt: autoSplitInitialPromptText.value } });
+        chrome.storage.local.set({
+          settings: {
+            ...settings,
+            autoSplitInitialPrompt: autoSplitInitialPromptText.value,
+          },
+        });
       });
     });
 
     // splitter chunk prompt
     const autoSplitChunkPromptLabel = document.createElement('div');
-    autoSplitChunkPromptLabel.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-top: 16px; color:white;';
+    autoSplitChunkPromptLabel.style =
+      'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin-top: 16px; color:white;';
     autoSplitChunkPromptLabel.textContent = 'Auto Split Chunk Prompt';
 
     const autoSplitChunkPromptHelper = document.createElement('div');
     autoSplitChunkPromptHelper.style = 'font-size: 12px; color: #999;margin-bottom: 8px;';
-    autoSplitChunkPromptHelper.textContent = 'Chunk prompt is a text that will be added to the end of each chunk. It can be used to summarize the previous chunk or do other things.';
+    autoSplitChunkPromptHelper.textContent =
+      'Chunk prompt is a text that will be added to the end of each chunk. It can be used to summarize the previous chunk or do other things.';
 
     const autoSplitChunkPromptText = document.createElement('textarea');
     autoSplitChunkPromptText.id = 'split-chunk-prompt-textarea';
-    autoSplitChunkPromptText.style = 'width: 100%; height: 100px; min-height: 100px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
+    autoSplitChunkPromptText.style =
+      'width: 100%; height: 100px; min-height: 100px; border-radius: 4px; border: 1px solid #565869; background-color: #0b0d0e; color: #eee; padding: 4px 8px; font-size: 14px;';
     autoSplitChunkPromptText.placeholder = 'Enter splitter prompt here...';
     chrome.storage.local.get('settings', ({ settings }) => {
       autoSplitChunkPromptText.value = settings.autoSplitChunkPrompt;
@@ -1010,7 +1355,12 @@ function splitterTabContent() {
     autoSplitChunkPromptText.addEventListener('input', () => {
       autoSplitChunkPromptText.style.borderColor = '#565869';
       chrome.storage.local.get('settings', ({ settings }) => {
-        chrome.storage.local.set({ settings: { ...settings, autoSplitChunkPrompt: autoSplitChunkPromptText.value } });
+        chrome.storage.local.set({
+          settings: {
+            ...settings,
+            autoSplitChunkPrompt: autoSplitChunkPromptText.value,
+          },
+        });
       });
     });
 
@@ -1034,18 +1384,36 @@ Don't reply with anything else!`;
   const autoSplitChunkPromptSummarize = `Reply with OK: [CHUNK x/TOTAL]
 Summary: A short summary of the last chunk. Keep important facts and names in the summary. Don't reply with anything else!`;
   chrome.storage.local.get('settings', ({ settings }) => {
-    chrome.storage.local.set({ settings: { ...settings, autoSplitChunkPrompt: autoSummarize ? autoSplitChunkPromptSummarize : autoSplitChunkPrompt } }, () => {
-      const autoSplitInitialPromptText = document.querySelector('#split-chunk-prompt-textarea');
-      autoSplitInitialPromptText.value = autoSummarize ? autoSplitChunkPromptSummarize : autoSplitChunkPrompt;
-    });
+    chrome.storage.local.set(
+      {
+        settings: {
+          ...settings,
+          autoSplitChunkPrompt: autoSummarize
+            ? autoSplitChunkPromptSummarize
+            : autoSplitChunkPrompt,
+        },
+      },
+      () => {
+        const autoSplitInitialPromptText = document.querySelector('#split-chunk-prompt-textarea');
+        autoSplitInitialPromptText.value = autoSummarize
+          ? autoSplitChunkPromptSummarize
+          : autoSplitChunkPrompt;
+      },
+    );
   });
 }
 function newsletterTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
-  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+  content.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
   // daily newsletter
-  const dailyNewsletterSwitch = createSwitch('Hide daily newsletter', 'Automatically hide the daily newsletter popup.', 'hideNewsletter', false);
+  const dailyNewsletterSwitch = createSwitch(
+    'Hide daily newsletter',
+    'Automatically hide the daily newsletter popup.',
+    'hideNewsletter',
+    false,
+  );
   content.appendChild(dailyNewsletterSwitch);
 
   // const sendNewsletterToEmailSwitch = createSwitch('Email newsletter', 'Send the Superpower ChatGPT daily newsletter to my email', 'emailNewsletter', false, updateEmailNewsletter, 'Coming soon');
@@ -1056,21 +1424,25 @@ function newsletterTabContent() {
 function supportersTabContent() {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
-  content.style = 'display: flex; flex-direction:column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;gap:16px;';
+  content.style =
+    'display: flex; flex-direction:column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;gap:16px;';
 
   const goldSupporter = document.createElement('a');
   goldSupporter.href = 'https://buy.stripe.com/dR6g2A7subOigE09AF';
   goldSupporter.target = '_blank';
-  goldSupporter.classList = 'h-64 w-full rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-4xl';
+  goldSupporter.classList =
+    'h-64 w-full rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-4xl';
   goldSupporter.textContent = 'Gold';
 
   const silverSupporterwrapper = document.createElement('div');
-  silverSupporterwrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;gap:16px;';
+  silverSupporterwrapper.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;gap:16px;';
 
   const silverSupporter1 = document.createElement('a');
   silverSupporter1.href = 'https://buy.stripe.com/dR6bMk5km5pU87u5ko';
   silverSupporter1.target = '_blank';
-  silverSupporter1.classList = 'h-32 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-2xl';
+  silverSupporter1.classList =
+    'h-32 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-2xl';
   silverSupporter1.style = 'width: 50%;';
   silverSupporter1.textContent = 'Silver';
   silverSupporterwrapper.appendChild(silverSupporter1);
@@ -1078,18 +1450,21 @@ function supportersTabContent() {
   const silverSupporter2 = document.createElement('a');
   silverSupporter2.href = 'https://buy.stripe.com/dR6bMk5km5pU87u5ko';
   silverSupporter2.target = '_blank';
-  silverSupporter2.classList = 'h-32 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-2xl';
+  silverSupporter2.classList =
+    'h-32 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-2xl';
   silverSupporter2.style = 'width: 50%;';
   silverSupporter2.textContent = 'Silver';
   silverSupporterwrapper.appendChild(silverSupporter2);
 
   const bronzeSupporterwrapper = document.createElement('div');
-  bronzeSupporterwrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;gap:16px;';
+  bronzeSupporterwrapper.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: start; width: 100%; margin: 8px 0;gap:16px;';
 
   const bronzeSupporter1 = document.createElement('a');
   bronzeSupporter1.href = 'https://buy.stripe.com/6oE17G4gibOifzW5kn';
   bronzeSupporter1.target = '_blank';
-  bronzeSupporter1.classList = 'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
+  bronzeSupporter1.classList =
+    'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
   bronzeSupporter1.style = 'width: 33.33%;';
   bronzeSupporter1.textContent = 'Bronze';
   bronzeSupporterwrapper.appendChild(bronzeSupporter1);
@@ -1097,7 +1472,8 @@ function supportersTabContent() {
   const bronzeSupporter2 = document.createElement('a');
   bronzeSupporter2.href = 'https://buy.stripe.com/6oE17G4gibOifzW5kn';
   bronzeSupporter2.target = '_blank';
-  bronzeSupporter2.classList = 'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
+  bronzeSupporter2.classList =
+    'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
   bronzeSupporter2.style = 'width: 33.33%;';
   bronzeSupporter2.textContent = 'Bronze';
   bronzeSupporterwrapper.appendChild(bronzeSupporter2);
@@ -1105,7 +1481,8 @@ function supportersTabContent() {
   const bronzeSupporter3 = document.createElement('a');
   bronzeSupporter3.href = 'https://buy.stripe.com/6oE17G4gibOifzW5kn';
   bronzeSupporter3.target = '_blank';
-  bronzeSupporter3.classList = 'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
+  bronzeSupporter3.classList =
+    'h-16 rounded bg-gray-700 text-gray-300 p-2 flex justify-center items-center text-xl';
   bronzeSupporter3.style = 'width: 33.33%;';
   bronzeSupporter3.textContent = 'Bronze';
   bronzeSupporterwrapper.appendChild(bronzeSupporter3);
@@ -1115,11 +1492,22 @@ function supportersTabContent() {
   content.appendChild(bronzeSupporterwrapper);
   return content;
 }
-function createSwitch(title, subtitle, settingsKey, defaultValue, callback = null, tag = '', disabled = false) {
+function createSwitch(
+  title,
+  subtitle,
+  settingsKey,
+  defaultValue,
+  callback = null,
+  tag = '',
+  disabled = false,
+) {
   const switchWrapper = document.createElement('div');
-  switchWrapper.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
+  switchWrapper.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
   const switchElement = document.createElement('div');
-  switchElement.style = `display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;color:white; ${disabled ? 'opacity: 0.5;' : ''}`;
+  switchElement.style = `display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;color:white; ${
+    disabled ? 'opacity: 0.5;' : ''
+  }`;
   switchElement.innerHTML = title;
   const label = document.createElement('label');
   label.className = 'switch';
@@ -1128,7 +1516,8 @@ function createSwitch(title, subtitle, settingsKey, defaultValue, callback = nul
   input.type = 'checkbox';
   input.disabled = disabled;
   const betaTag = document.createElement('span');
-  betaTag.style = 'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; font-size: 0.7em;border:';
+  betaTag.style =
+    'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; font-size: 0.7em;border:';
   betaTag.textContent = tag;
   const helper = document.createElement('div');
   helper.style = 'font-size: 12px; color: #999;';
@@ -1181,7 +1570,8 @@ function refreshPage() {
 function settingsModalActions() {
   // add actionbar at the bottom of the content
   const actionBar = document.createElement('div');
-  actionBar.style = 'display: flex; flex-direction: row; justify-content: start; align-items: end; margin-top: 8px;width:100%;';
+  actionBar.style =
+    'display: flex; flex-direction: row; justify-content: start; align-items: end; margin-top: 8px;width:100%;';
   const logo = document.createElement('img');
   logo.src = chrome.runtime.getURL('icons/logo.png');
   logo.style = 'width: 40px; height: 40px;';
@@ -1205,21 +1595,26 @@ function settingsModalActions() {
   });
   actionBar.appendChild(logo);
   const textWrapper = document.createElement('div');
-  textWrapper.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; margin-left: 8px;';
+  textWrapper.style =
+    'display: flex; flex-direction: column; justify-content: start; align-items: start; margin-left: 8px;';
   // powere by
   const poweredBy = document.createElement('div');
   poweredBy.textContent = 'Powered by';
   poweredBy.style = 'color: #999; font-size: 12px;';
   const superpowerChatGPT = document.createElement('a');
-  superpowerChatGPT.href = 'https://chrome.google.com/webstore/detail/superpower-chatgpt/amhmeenmapldpjdedekalnfifgnpfnkc';
+  superpowerChatGPT.href =
+    'https://chrome.google.com/webstore/detail/superpower-chatgpt/amhmeenmapldpjdedekalnfifgnpfnkc';
   superpowerChatGPT.target = '_blank';
   superpowerChatGPT.textContent = 'Superpower ChatGPT';
-  superpowerChatGPT.style = 'color: #999; font-size: 12px; margin-left: 4px; text-decoration: underline;';
+  superpowerChatGPT.style =
+    'color: #999; font-size: 12px; margin-left: 4px; text-decoration: underline;';
   superpowerChatGPT.addEventListener('mouseover', () => {
-    superpowerChatGPT.style = 'color: gold; font-size: 12px; margin-left: 4px;text-decoration: underline;';
+    superpowerChatGPT.style =
+      'color: gold; font-size: 12px; margin-left: 4px;text-decoration: underline;';
   });
   superpowerChatGPT.addEventListener('mouseout', () => {
-    superpowerChatGPT.style = 'color: #999; font-size: 12px; margin-left: 4px;text-decoration: underline;';
+    superpowerChatGPT.style =
+      'color: #999; font-size: 12px; margin-left: 4px;text-decoration: underline;';
   });
   poweredBy.appendChild(superpowerChatGPT);
   const versionNumber = document.createElement('span');
@@ -1229,12 +1624,15 @@ function settingsModalActions() {
   poweredBy.appendChild(versionNumber);
   const releaseNote = document.createElement('span');
   releaseNote.textContent = 'Release Note)';
-  releaseNote.style = 'color: #999; font-size: 12px; margin-left: 4px; text-decoration: underline; cursor: pointer;';
+  releaseNote.style =
+    'color: #999; font-size: 12px; margin-left: 4px; text-decoration: underline; cursor: pointer;';
   releaseNote.addEventListener('mouseover', () => {
-    releaseNote.style = 'color: gold; font-size: 12px; margin-left: 4px;text-decoration: underline; cursor: pointer;';
+    releaseNote.style =
+      'color: gold; font-size: 12px; margin-left: 4px;text-decoration: underline; cursor: pointer;';
   });
   releaseNote.addEventListener('mouseout', () => {
-    releaseNote.style = 'color: #999; font-size: 12px; margin-left: 4px;text-decoration: underline; cursor: pointer;';
+    releaseNote.style =
+      'color: #999; font-size: 12px; margin-left: 4px;text-decoration: underline; cursor: pointer;';
   });
   releaseNote.addEventListener('click', () => {
     // click on close settings modal close button
@@ -1268,10 +1666,12 @@ function settingsModalActions() {
   supportLink.textContent = 'Support this extension ➜';
   supportLink.style = 'color: #999; font-size: 12px; margin-left: 4px; text-decoration: underline;';
   supportLink.addEventListener('mouseover', () => {
-    supportLink.style = 'color: gold; font-size: 12px; margin-left: 4px;text-decoration: underline;';
+    supportLink.style =
+      'color: gold; font-size: 12px; margin-left: 4px;text-decoration: underline;';
   });
   supportLink.addEventListener('mouseout', () => {
-    supportLink.style = 'color: #999; font-size: 12px; margin-left: 4px;text-decoration: underline;';
+    supportLink.style =
+      'color: #999; font-size: 12px; margin-left: 4px;text-decoration: underline;';
   });
   madeBy.appendChild(madeByLink);
   support.appendChild(supportLink);
@@ -1282,7 +1682,8 @@ function settingsModalActions() {
   actionBar.appendChild(textWrapper);
 
   const buyMeAPizza = document.createElement('a');
-  buyMeAPizza.classList = 'flex py-3 px-3 items-center gap-3 rounded-md bg-gold hover:bg-gold-dark transition-colors duration-200 text-black cursor-pointer text-sm ml-auto font-bold';
+  buyMeAPizza.classList =
+    'flex py-3 px-3 items-center gap-3 rounded-md bg-gold hover:bg-gold-dark transition-colors duration-200 text-black cursor-pointer text-sm ml-auto font-bold';
   buyMeAPizza.textContent = '🍕 Buy me a pizza';
   // make the button shake every 5 seconds
   setInterval(() => {
@@ -1306,7 +1707,8 @@ function addSettingsButton() {
   if (document.querySelector('#settings-button')) return;
   // create the setting button by copying the nav button
   const settingsButton = document.createElement('a');
-  settingsButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
+  settingsButton.classList =
+    'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
   settingsButton.textContent = 'Settings';
   settingsButton.title = 'CMD/CTRL + SHIFT + S';
 
@@ -1328,71 +1730,162 @@ function addSettingsButton() {
 function initializeSettings() {
   // get dark mode from html tag class="dark"
   // create setting storage
-  chrome.storage.local.get(['settings', 'presetPrompts', 'selectedConversations', 'customPrompts', 'customInstructionProfiles'], (result) => {
-    let newCustomPrompts = Array.isArray(result.customPrompts)
-      ? result.customPrompts
-      : [
-        ...(result.presetPrompts ? Object.keys(result.presetPrompts).map((key) => ({ title: key, text: result.presetPrompts[key], isDefault: false })) : []),
-        ...(result.customPrompts ? Object.keys(result.customPrompts).map((key) => ({ title: key, text: result.customPrompts[key], isDefault: false })) : []),
-      ];
-    if (newCustomPrompts.length === 0) {
-      newCustomPrompts = defaultPrompts;
-    }
-    const hasDefault = newCustomPrompts.find((prompt) => prompt.isDefault);
-    if (!hasDefault) {
-      newCustomPrompts[0].isDefault = true;
-    }
-    chrome.storage.local.set({
-      settings: {
-        ...result.settings,
-        autoSync: result.settings?.autoSync !== undefined ? result.settings.autoSync : true,
-        quickSync: result.settings?.quickSync !== undefined ? result.settings.quickSync : false,
-        quickSyncCount: result.settings?.quickSyncCount !== undefined ? result.settings.quickSyncCount : 100,
-        safeMode: result.settings?.safeMode !== undefined ? result.settings.safeMode : true,
-        promptHistory: result.settings?.promptHistory !== undefined ? result.settings.promptHistory : true,
-        copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
-        autoResetTopNav: result.settings?.autoResetTopNav !== undefined ? result.settings.hideBottomSidebar : false,
-        hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
-        showExamplePrompts: result.settings?.showExamplePrompts !== undefined ? result.settings.showExamplePrompts : false,
-        hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
-        customInstruction: result.settings?.customInstruction !== undefined ? result.settings.customInstruction : '',
-        useCustomInstruction: result.settings?.useCustomInstruction !== undefined ? result.settings.useCustomInstruction : false,
-        customConversationWidth: result.settings?.customConversationWidth !== undefined ? result.settings.customConversationWidth : false,
-        conversationWidth: result.settings?.conversationWidth !== undefined ? result.settings.conversationWidth : 50,
-        saveHistory: result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
-        promptTemplate: result.settings?.promptTemplate !== undefined ? result.settings.promptTemplate : true,
-        emailNewsletter: result.settings?.emailNewsletter !== undefined ? result.settings.emailNewsletter : false,
-        autoClick: result.settings?.autoClick !== undefined ? result.settings.autoClick : false,
-        showGpt4Counter: result.settings?.showGpt4Counter !== undefined ? result.settings.showGpt4Counter : true,
-        autoSummarize: result.settings?.autoSummarize !== undefined ? result.settings.autoSummarize : false,
-        autoSplit: result.settings?.autoSplit !== undefined ? result.settings.autoSplit : true,
-        autoSplitLimit: result.settings?.autoSplitLimit !== undefined ? result.settings.autoSplitLimit : 8000,
-        autoSplitInitialPrompt: result.settings?.autoSplitInitialPrompt !== undefined ? result.settings?.autoSplitInitialPrompt : `Act like a document/text loader until you load and remember the content of the next text/s or document/s.
+  chrome.storage.local.get(
+    [
+      'settings',
+      'presetPrompts',
+      'selectedConversations',
+      'customPrompts',
+      'customInstructionProfiles',
+    ],
+    (result) => {
+      let newCustomPrompts = Array.isArray(result.customPrompts)
+        ? result.customPrompts
+        : [
+            ...(result.presetPrompts
+              ? Object.keys(result.presetPrompts).map((key) => ({
+                  title: key,
+                  text: result.presetPrompts[key],
+                  isDefault: false,
+                }))
+              : []),
+            ...(result.customPrompts
+              ? Object.keys(result.customPrompts).map((key) => ({
+                  title: key,
+                  text: result.customPrompts[key],
+                  isDefault: false,
+                }))
+              : []),
+          ];
+      if (newCustomPrompts.length === 0) {
+        newCustomPrompts = defaultPrompts;
+      }
+      const hasDefault = newCustomPrompts.find((prompt) => prompt.isDefault);
+      if (!hasDefault) {
+        newCustomPrompts[0].isDefault = true;
+      }
+      chrome.storage.local.set(
+        {
+          settings: {
+            ...result.settings,
+            autoSync: result.settings?.autoSync !== undefined ? result.settings.autoSync : true,
+            quickSync: result.settings?.quickSync !== undefined ? result.settings.quickSync : false,
+            quickSyncCount:
+              result.settings?.quickSyncCount !== undefined ? result.settings.quickSyncCount : 100,
+            safeMode: result.settings?.safeMode !== undefined ? result.settings.safeMode : true,
+            promptHistory:
+              result.settings?.promptHistory !== undefined ? result.settings.promptHistory : true,
+            copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
+            autoResetTopNav:
+              result.settings?.autoResetTopNav !== undefined
+                ? result.settings.hideBottomSidebar
+                : false,
+            hideBottomSidebar:
+              result.settings?.hideBottomSidebar !== undefined
+                ? result.settings.hideBottomSidebar
+                : false,
+            showExamplePrompts:
+              result.settings?.showExamplePrompts !== undefined
+                ? result.settings.showExamplePrompts
+                : false,
+            hideNewsletter:
+              result.settings?.hideNewsletter !== undefined
+                ? result.settings.hideNewsletter
+                : false,
+            customInstruction:
+              result.settings?.customInstruction !== undefined
+                ? result.settings.customInstruction
+                : '',
+            useCustomInstruction:
+              result.settings?.useCustomInstruction !== undefined
+                ? result.settings.useCustomInstruction
+                : false,
+            customConversationWidth:
+              result.settings?.customConversationWidth !== undefined
+                ? result.settings.customConversationWidth
+                : false,
+            conversationWidth:
+              result.settings?.conversationWidth !== undefined
+                ? result.settings.conversationWidth
+                : 50,
+            saveHistory:
+              result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
+            promptTemplate:
+              result.settings?.promptTemplate !== undefined ? result.settings.promptTemplate : true,
+            emailNewsletter:
+              result.settings?.emailNewsletter !== undefined
+                ? result.settings.emailNewsletter
+                : false,
+            autoClick: result.settings?.autoClick !== undefined ? result.settings.autoClick : false,
+            showGpt4Counter:
+              result.settings?.showGpt4Counter !== undefined
+                ? result.settings.showGpt4Counter
+                : true,
+            autoSummarize:
+              result.settings?.autoSummarize !== undefined ? result.settings.autoSummarize : false,
+            autoSplit: result.settings?.autoSplit !== undefined ? result.settings.autoSplit : true,
+            autoSplitLimit:
+              result.settings?.autoSplitLimit !== undefined ? result.settings.autoSplitLimit : 8000,
+            autoSplitInitialPrompt:
+              result.settings?.autoSplitInitialPrompt !== undefined
+                ? result.settings?.autoSplitInitialPrompt
+                : `Act like a document/text loader until you load and remember the content of the next text/s or document/s.
 There might be multiple files, each file is marked by name in the format ### DOCUMENT NAME.
 I will send them to you in chunks. Each chunk starts will be noted as [START CHUNK x/TOTAL], and the end of this chunk will be noted as [END CHUNK x/TOTAL], where x is the number of current chunks, and TOTAL is the number of all chunks I will send you.
 I will split the message in chunks, and send them to you one by one. For each message follow the instructions at the end of the message.
 Let's begin:
 
 `,
-        autoSplitChunkPrompt: result.settings?.autoSplitChunkPrompt !== undefined ? result.settings?.autoSplitChunkPrompt : `Reply with OK: [CHUNK x/TOTAL]
+            autoSplitChunkPrompt:
+              result.settings?.autoSplitChunkPrompt !== undefined
+                ? result.settings?.autoSplitChunkPrompt
+                : `Reply with OK: [CHUNK x/TOTAL]
 Don't reply with anything else!`,
-        conversationTimestamp: result.settings?.conversationTimestamp !== undefined ? result.settings.conversationTimestamp : true,
-        autoHideTopNav: result.settings?.autoHideTopNav !== undefined ? result.settings.autoHideTopNav : false,
-        navOpen: result.settings?.navOpen !== undefined ? result.settings.navOpen : true,
-        showPinNav: result.settings?.showPinNav !== undefined ? result.settings.showPinNav : true,
-        selectedLanguage: result.settings?.selectedLanguage || languageList.find((language) => language.code === 'default'),
-        selectedTone: result.settings?.selectedTone || toneList.find((tone) => tone.code === 'default'),
-        selectedWritingStyle: result.settings?.selectedWritingStyle || writingStyleList.find((writingStyle) => writingStyle.code === 'default'),
-        exportMode: result.settings?.exportMode || 'both',
-        historyFilter: result.settings?.historyFilter || 'favorites',
-        selectedLibrarySortBy: result.settings?.selectedLibrarySortBy || { name: 'New', code: 'recent' },
-        selectedLibraryCategory: result.settings?.selectedLibraryCategory || { name: 'All', code: 'all' },
-        selectedLibraryLanguage: result.settings?.selectedLibraryLanguage || { name: 'All', code: 'all' },
-        selectedPromptLanguage: result.settings?.selectedPromptLanguage || { name: 'Select', code: 'select' },
-      },
-      presetPrompts: {},
-      customInstructionProfiles: result.customInstructionProfiles !== undefined ? result.customInstructionProfiles : [],
-      customPrompts: newCustomPrompts,
-    }, () => addSettingsButton());
-  });
+            conversationTimestamp:
+              result.settings?.conversationTimestamp !== undefined
+                ? result.settings.conversationTimestamp
+                : true,
+            autoHideTopNav:
+              result.settings?.autoHideTopNav !== undefined
+                ? result.settings.autoHideTopNav
+                : false,
+            navOpen: result.settings?.navOpen !== undefined ? result.settings.navOpen : true,
+            showPinNav:
+              result.settings?.showPinNav !== undefined ? result.settings.showPinNav : true,
+            selectedLanguage:
+              result.settings?.selectedLanguage ||
+              languageList.find((language) => language.code === 'default'),
+            selectedTone:
+              result.settings?.selectedTone || toneList.find((tone) => tone.code === 'default'),
+            selectedWritingStyle:
+              result.settings?.selectedWritingStyle ||
+              writingStyleList.find((writingStyle) => writingStyle.code === 'default'),
+            exportMode: result.settings?.exportMode || 'both',
+            historyFilter: result.settings?.historyFilter || 'favorites',
+            selectedLibrarySortBy: result.settings?.selectedLibrarySortBy || {
+              name: 'New',
+              code: 'recent',
+            },
+            selectedLibraryCategory: result.settings?.selectedLibraryCategory || {
+              name: 'All',
+              code: 'all',
+            },
+            selectedLibraryLanguage: result.settings?.selectedLibraryLanguage || {
+              name: 'All',
+              code: 'all',
+            },
+            selectedPromptLanguage: result.settings?.selectedPromptLanguage || {
+              name: 'Select',
+              code: 'select',
+            },
+          },
+          presetPrompts: {},
+          customInstructionProfiles:
+            result.customInstructionProfiles !== undefined ? result.customInstructionProfiles : [],
+          customPrompts: newCustomPrompts,
+        },
+        () => addSettingsButton(),
+      );
+    },
+  );
 }
