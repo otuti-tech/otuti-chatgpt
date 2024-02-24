@@ -2,19 +2,19 @@
 /* global isDescendant, getConversations, getConversation, toast, addShareModalEventListener, createShare, shareModal, fileFormatConverter, showConfirmDialog, archiveConversation, deleteConversation, deleteAllConversations, resetSelection, showNewChatPage, emptyFolderElement, showNewChatPage, emptyFolderElement, formatTime, resetSelection, moveToFolder, generateRandomDarkColor, createFolder */
 /* eslint-disable no-unused-vars */
 function conversationSettingsMenu(hasSubscription, side = 'right', forceDark = false) {
-  return `<div style="position:absolute;right:12px;min-width:48px;max-width:48px;z-index:100;"><button id="conversation-setting-menu" class="relative w-full flex items-center cursor-pointer rounded-md border bg-token-main-surface-secondary border-token-border-light p-2 text-center focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 bg-token-main-surface-secondary sm:text-sm" type="button">
+  return `<div style="position:absolute;right:12px;min-width:48px;max-width:48px;z-index:100;"><button id="conversation-setting-menu" class="relative w-full flex items-center cursor-pointer rounded-md border bg-token-main-surface-primary border-token-border-light p-2 text-center focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 sm:text-sm" type="button">
   <span class="flex items-center justify-center w-full truncate font-semibold text-token-text-primary">
 <svg xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="currentColor" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" viewBox="0 0 448 512"><path d="M0 88C0 74.75 10.75 64 24 64H424C437.3 64 448 74.75 448 88C448 101.3 437.3 112 424 112H24C10.75 112 0 101.3 0 88zM0 248C0 234.7 10.75 224 24 224H424C437.3 224 448 234.7 448 248C448 261.3 437.3 272 424 272H24C10.75 272 0 261.3 0 248zM424 432H24C10.75 432 0 421.3 0 408C0 394.7 10.75 384 24 384H424C437.3 384 448 394.7 448 408C448 421.3 437.3 432 424 432z"/></svg>
 </button>
-<ul id="conversation-setting-menu-options" style="max-height:400px;width:250px;" class="hidden transition-all absolute z-10 ${side === 'right' ? 'right-0' : 'left-0'} mt-1 overflow-auto rounded-md p-1 text-base ring-1 ring-opacity-5 focus:outline-none bg-token-main-surface-secondary ${forceDark ? 'ring-white/20 last:border-0' : ''} dark:ring-white/20 dark:last:border-0 sm:text-sm -translate-x-1/4" role="menu" aria-orientation="vertical" tabindex="-1">
-  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-tertiary" id="conversation-setting-menu-option-export-markdown" role="option" tabindex="-1">
+<ul id="conversation-setting-menu-options" style="max-height:400px;width:250px;" class="hidden transition-all absolute z-10 ${side === 'right' ? 'right-0' : 'left-0'} mt-1 overflow-auto rounded-md p-1 text-base ring-1 ring-opacity-5 focus:outline-none bg-token-main-surface-primary ${forceDark ? 'ring-white/20 last:border-0' : ''} dark:ring-white/20 dark:last:border-0 sm:text-sm -translate-x-1/4" role="menu" aria-orientation="vertical" tabindex="-1">
+  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-export-markdown" role="option" tabindex="-1">
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" stroke="currentColor" fill="currentColor" stroke-width="2" stroke-linejoin="round" class="h-4 w-4 mr-2 top-1" height="1em" width="1em"><path d="M568.1 303l-80-80c-9.375-9.375-24.56-9.375-33.94 0s-9.375 24.56 0 33.94L494.1 296H216C202.8 296 192 306.8 192 320s10.75 24 24 24h278.1l-39.03 39.03C450.3 387.7 448 393.8 448 400s2.344 12.28 7.031 16.97c9.375 9.375 24.56 9.375 33.94 0l80-80C578.3 327.6 578.3 312.4 568.1 303zM360 384c-13.25 0-24 10.74-24 24V448c0 8.836-7.164 16-16 16H64.02c-8.836 0-16-7.164-16-16L48 64.13c0-8.836 7.164-16 16-16h160L224 128c0 17.67 14.33 32 32 32h79.1v72c0 13.25 10.74 24 23.1 24S384 245.3 384 232V138.6c0-16.98-6.742-33.26-18.75-45.26l-74.63-74.64C278.6 6.742 262.3 0 245.4 0H63.1C28.65 0-.002 28.66 0 64l.0065 384c.002 35.34 28.65 64 64 64H320c35.2 0 64-28.8 64-64v-40C384 394.7 373.3 384 360 384z"/></svg>
     <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Export As Markdown </span>
   </div>
   </li>
 
-  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-tertiary" id="conversation-setting-menu-option-export-text" role="option" tabindex="-1">
+  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-export-text" role="option" tabindex="-1">
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" stroke="currentColor" fill="currentColor" stroke-width="2" stroke-linejoin="round" class="h-4 w-4 mr-2 top-1" height="1em" width="1em"><path d="M568.1 303l-80-80c-9.375-9.375-24.56-9.375-33.94 0s-9.375 24.56 0 33.94L494.1 296H216C202.8 296 192 306.8 192 320s10.75 24 24 24h278.1l-39.03 39.03C450.3 387.7 448 393.8 448 400s2.344 12.28 7.031 16.97c9.375 9.375 24.56 9.375 33.94 0l80-80C578.3 327.6 578.3 312.4 568.1 303zM360 384c-13.25 0-24 10.74-24 24V448c0 8.836-7.164 16-16 16H64.02c-8.836 0-16-7.164-16-16L48 64.13c0-8.836 7.164-16 16-16h160L224 128c0 17.67 14.33 32 32 32h79.1v72c0 13.25 10.74 24 23.1 24S384 245.3 384 232V138.6c0-16.98-6.742-33.26-18.75-45.26l-74.63-74.64C278.6 6.742 262.3 0 245.4 0H63.1C28.65 0-.002 28.66 0 64l.0065 384c.002 35.34 28.65 64 64 64H320c35.2 0 64-28.8 64-64v-40C384 394.7 373.3 384 360 384z"/></svg>
 
@@ -22,7 +22,7 @@ function conversationSettingsMenu(hasSubscription, side = 'right', forceDark = f
   </div>
   </li>
 
-  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-tertiary" id="conversation-setting-menu-option-export-json" role="option" tabindex="-1">
+  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-export-json" role="option" tabindex="-1">
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" stroke="currentColor" fill="currentColor" stroke-width="2" stroke-linejoin="round" class="h-4 w-4 mr-2 top-1" height="1em" width="1em"><path d="M568.1 303l-80-80c-9.375-9.375-24.56-9.375-33.94 0s-9.375 24.56 0 33.94L494.1 296H216C202.8 296 192 306.8 192 320s10.75 24 24 24h278.1l-39.03 39.03C450.3 387.7 448 393.8 448 400s2.344 12.28 7.031 16.97c9.375 9.375 24.56 9.375 33.94 0l80-80C578.3 327.6 578.3 312.4 568.1 303zM360 384c-13.25 0-24 10.74-24 24V448c0 8.836-7.164 16-16 16H64.02c-8.836 0-16-7.164-16-16L48 64.13c0-8.836 7.164-16 16-16h160L224 128c0 17.67 14.33 32 32 32h79.1v72c0 13.25 10.74 24 23.1 24S384 245.3 384 232V138.6c0-16.98-6.742-33.26-18.75-45.26l-74.63-74.64C278.6 6.742 262.3 0 245.4 0H63.1C28.65 0-.002 28.66 0 64l.0065 384c.002 35.34 28.65 64 64 64H320c35.2 0 64-28.8 64-64v-40C384 394.7 373.3 384 360 384z"/></svg>
 
@@ -30,26 +30,26 @@ function conversationSettingsMenu(hasSubscription, side = 'right', forceDark = f
   </div>
   </li>
 
-  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-tertiary" id="conversation-setting-menu-option-share" role="option" tabindex="-1">
+  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-share" role="option" tabindex="-1">
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
     <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
     <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Share </span>
   </div>
 
-  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-tertiary" id="conversation-setting-menu-option-mose-to-folder" role="option" tabindex="-1">
+  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-mose-to-folder" role="option" tabindex="-1">
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
   <svg xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="currentColor" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2" height="1em" width="1em" stroke-width="2" viewBox="0 0 512 512"><path d="M448 96h-172.1L226.7 50.75C214.7 38.74 198.5 32 181.5 32H64C28.66 32 0 60.66 0 96v320c0 35.34 28.66 64 64 64h384c35.34 0 64-28.66 64-64V160C512 124.7 483.3 96 448 96zM464 416c0 8.824-7.18 16-16 16H64c-8.82 0-16-7.176-16-16V96c0-8.824 7.18-16 16-16h117.5c4.273 0 8.289 1.664 11.31 4.688L256 144h192c8.82 0 16 7.176 16 16V416zM336 264h-56V207.1C279.1 194.7 269.3 184 256 184S232 194.7 232 207.1V264H175.1C162.7 264 152 274.7 152 288c0 13.26 10.73 23.1 23.1 23.1h56v56C232 381.3 242.7 392 256 392c13.26 0 23.1-10.74 23.1-23.1V311.1h56C349.3 311.1 360 301.3 360 288S349.3 264 336 264z"/></svg>
     <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Move to folder </span>
   </div>
 
   </li>
-  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-tertiary" id="conversation-setting-menu-option-archive" role="option" tabindex="-1">
+  <li class="relative cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-archive" role="option" tabindex="-1">
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
   <svg class="h-4 w-4 mr-2" height="1em" width="1em" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.62188 3.07918C3.87597 2.571 4.39537 2.25 4.96353 2.25H13.0365C13.6046 2.25 14.124 2.571 14.3781 3.07918L15.75 5.82295V13.5C15.75 14.7426 14.7426 15.75 13.5 15.75H4.5C3.25736 15.75 2.25 14.7426 2.25 13.5V5.82295L3.62188 3.07918ZM13.0365 3.75H4.96353L4.21353 5.25H13.7865L13.0365 3.75ZM14.25 6.75H3.75V13.5C3.75 13.9142 4.08579 14.25 4.5 14.25H13.5C13.9142 14.25 14.25 13.9142 14.25 13.5V6.75ZM6.75 9C6.75 8.58579 7.08579 8.25 7.5 8.25H10.5C10.9142 8.25 11.25 8.58579 11.25 9C11.25 9.41421 10.9142 9.75 10.5 9.75H7.5C7.08579 9.75 6.75 9.41421 6.75 9Z" fill="currentColor"></path></svg>
     <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Archive chat</span>
   </div>
   </li>
-  <li class="relative text-red-500 cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-tertiary" id="conversation-setting-menu-option-delete" role="option" tabindex="-1">
+  <li class="relative text-red-500 cursor-pointer select-none border-b py-1 pl-3 pr-9 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-delete" role="option" tabindex="-1">
   <div class="flex items-center" style="margin-bottom:6px;">
     <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
     <span class="font-semibold flex h-6 items-center gap-1 truncate text-red-500">Delete chat</span>
@@ -201,12 +201,13 @@ function shareConversation(conversationId) {
         toast('Hidden conversations (purple icon) cannot be shared.', 'warning');
         return;
       }
-      createShare(conversationId, currentNodeId).then((res) => {
+      createShare(conversationId, currentNodeId).then(async (res) => {
         const shareModalWrapper = document.createElement('div');
         shareModalWrapper.id = 'share-modal-wrapper';
         shareModalWrapper.classList = 'absolute inset-0 z-10';
-        shareModalWrapper.innerHTML = shareModal(conversations[conversationId], res, syncResult.name);
+        shareModalWrapper.innerHTML = '<div class="w-full h-full inset-0 bg-black/50 dark:bg-black/80 flex items-center justify-center text-white"><svg x="0" y="0" viewbox="0 0 40 40" class="spinner"><circle fill="transparent" stroke="#ffffff50" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.6" cx="20" cy="20" r="18"></circle></svg></div>';
         document.body.appendChild(shareModalWrapper);
+        shareModalWrapper.innerHTML = await shareModal(conversations[conversationId], res, syncResult.name);
         addShareModalEventListener(res, syncResult.name);
       });
     });

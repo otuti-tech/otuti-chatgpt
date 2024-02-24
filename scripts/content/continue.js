@@ -1,9 +1,11 @@
 /* global toast, defaultPrompts, createSettingsModal */
+let continueButtonCursorPositionStart = 0;
+let continueButtonCursorPositionEnd = 0;
 function promptDropdown() {
   const dropdown = document.createElement('ul');
   dropdown.id = 'continue-conversation-dropdown-list';
   dropdown.style = 'max-height:300px;overflow-y:scroll;width:132px;bottom:40px; left:0;z-index:200;';
-  dropdown.classList = 'hidden absolute z-10 right-0 mt-1 overflow-auto rounded-sm py-1 text-base ring-1 ring-opacity-5 focus:outline-none dark:ring-white/20 dark:last:border-0 sm:text-sm -translate-x-1/4';
+  dropdown.classList = 'hidden absolute z-10 right-0 mt-1 overflow-auto rounded-sm py-1 text-base ring-1 ring-opacity-5 focus:outline-none dark:ring-white/20 dark:last:border-0 sm:text-sm -translate-x-1/4 bg-token-main-surface-primary';
   dropdown.setAttribute('role', 'menu');
   dropdown.setAttribute('aria-orientation', 'vertical');
   dropdown.setAttribute('aria-labelledby', 'continue-conversation-dropdown-button');
@@ -33,18 +35,21 @@ function promptDropdown() {
       dropdownItem.setAttribute('role', 'option');
       dropdownItem.setAttribute('tabindex', '-1');
 
+      // eslint-disable-next-line no-loop-func
       dropdownItem.addEventListener('click', (e) => {
         if (promptTitle === '+ Add more') {
           createSettingsModal(7); // tab 2 is for prompts
           return;
         }
         const textAreaElement = document.querySelector('#prompt-textarea');
-        textAreaElement.value = `${textAreaElement.value} ${promptText}`;
+        textAreaElement.value = `${textAreaElement.value.slice(0, continueButtonCursorPositionStart)}${promptText} ${textAreaElement.value.slice(continueButtonCursorPositionEnd)}`;
         textAreaElement.focus();
         textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
         textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
+        // put cursor at the continueButtonCursorPositionStart + promptText.length
+        textAreaElement.setSelectionRange(continueButtonCursorPositionStart + promptText.length, continueButtonCursorPositionStart + promptText.length);
         if (e.shiftKey) return;
-        const curSubmitButton = document.querySelector('#prompt-textarea ~ button');
+        const curSubmitButton = document.querySelector('[data-testid="send-button"]');
 
         setTimeout(() => {
           curSubmitButton.click();
@@ -78,6 +83,11 @@ function createContinueButton() {
     continueButtonDropdown.type = 'button';
     continueButtonDropdown.style = 'width:38px;border-top-right-radius:0;border-bottom-right-radius:0;z-index:2;';
     continueButtonDropdown.classList = 'btn flex justify-center gap-2 btn-neutral border ';
+    continueButtonWrapper.addEventListener('mouseenter', () => {
+      const textAreaElement = document.querySelector('#prompt-textarea');
+      continueButtonCursorPositionStart = textAreaElement.selectionStart;
+      continueButtonCursorPositionEnd = textAreaElement.selectionEnd;
+    });
     continueButtonDropdown.addEventListener('click', () => {
       const dropdown = document.getElementById('continue-conversation-dropdown-list');
       if (!dropdown) return;
@@ -106,14 +116,15 @@ function createContinueButton() {
       chrome.storage.local.get('customPrompts', ({ customPrompts }) => {
         const textAreaElement = document.querySelector('#prompt-textarea');
         if (!textAreaElement) return;
-        textAreaElement.value = textAreaElement.value
-          ? `${textAreaElement.value} ${Array.isArray(customPrompts) ? customPrompts.find((p) => p.isDefault)?.text || '' : 'Continue please'}`
-          : `${Array.isArray(customPrompts) ? customPrompts.find((p) => p.isDefault)?.text || '' : 'Continue please'}`;
+        const customPromptText = Array.isArray(customPrompts) ? customPrompts.find((p) => p.isDefault)?.text || '' : 'Continue please';
+        textAreaElement.value = `${textAreaElement.value.slice(0, continueButtonCursorPositionStart)}${customPromptText} ${textAreaElement.value.slice(continueButtonCursorPositionEnd)}`;
         textAreaElement.focus();
         textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
         textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
+        // put cursor at the continueButtonCursorPositionStart + customPromptText.length
+        textAreaElement.setSelectionRange(continueButtonCursorPositionStart + customPromptText.length, continueButtonCursorPositionStart + customPromptText.length);
         if (e.shiftKey) return;
-        const curSubmitButton = document.querySelector('#prompt-textarea ~ button');
+        const curSubmitButton = document.querySelector('[data-testid="send-button"]');
         setTimeout(() => {
           curSubmitButton.click();
         }, 300);

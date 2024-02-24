@@ -25,7 +25,7 @@ if (newChatgptAccountId) {
       const defaulConversations = newChatgptAccountId === oldChatgptAccountId ? conversations : {};
       const defaultConversationsOrder = newChatgptAccountId === oldChatgptAccountId ? conversationsOrder : [];
       chrome.storage.local.set({
-        chatgptAccountId: newChatgptAccountId,
+        chatgptAccountId: newChatgptAccountId || 'default',
         conversations: allConversations?.[newChatgptAccountId] || defaulConversations,
         conversationsOrder: allConversationsOrder?.[newChatgptAccountId] || defaultConversationsOrder,
       });
@@ -158,7 +158,7 @@ function generateChat(userInputParts, conversationId, messageId, parentMessageId
       action,
       force_paragen: false,
       force_rate_limit: false,
-      arkose_token: isGPT4 ? token : null,
+      arkose_token: token, // isGPT4 ? token : null,
       model: res.selectedModel.slug,
       parent_message_id: parentMessageId,
       history_and_training_disabled: !saveHistory,
@@ -229,11 +229,11 @@ function generateChat(userInputParts, conversationId, messageId, parentMessageId
     }
     // clear arkose once used
     window.localStorage.removeItem('arkoseToken');
-    if (isGPT4) {
-      defaultHeaders['openai-sentinel-arkose-token'] = token;
-    } else {
-      delete defaultHeaders['openai-sentinel-arkose-token'];
-    }
+    // if (isGPT4) {
+    defaultHeaders['openai-sentinel-arkose-token'] = token;
+    // } else {
+    //   delete defaultHeaders['openai-sentinel-arkose-token'];
+    // }
     const eventSource = new SSE(
       '/backend-api/conversation',
       {
@@ -258,7 +258,7 @@ function generateChatWS(userInputParts, conversationId, messageId, parentMessage
       action,
       force_paragen: false,
       force_rate_limit: false,
-      arkose_token: isGPT4 ? token : null,
+      arkose_token: token, // isGPT4 ? token : null,
       model: res.selectedModel.slug,
       parent_message_id: parentMessageId,
       history_and_training_disabled: !saveHistory,
@@ -329,25 +329,32 @@ function generateChatWS(userInputParts, conversationId, messageId, parentMessage
     }
     // clear arkose once used
     window.localStorage.removeItem('arkoseToken');
-    if (isGPT4) {
-      defaultHeaders['openai-sentinel-arkose-token'] = token;
-    } else {
-      delete defaultHeaders['openai-sentinel-arkose-token'];
-    }
-    fetch('/backend-api/conversation', {
+    // if (isGPT4) {
+    defaultHeaders['openai-sentinel-arkose-token'] = token;
+    // } else {
+    //   delete defaultHeaders['openai-sentinel-arkose-token'];
+    // }
+    return fetch('/backend-api/conversation', {
       method: 'POST',
       headers: {
         ...defaultHeaders,
-        accept: 'text/event-stream',
         Authorization: result.accessToken,
       },
-      payload: JSON.stringify(payload),
+      body: JSON.stringify(payload),
     }).then((response) => {
       if (response.ok) {
         return response.json();
       }
       return Promise.reject(response);
-    }).then((data) => chrome.storage.local.set({ websocket: data }));
+    }).then((data) => {
+      chrome.storage.local.set({
+        websocket: {
+          registeredAt: new Date().toISOString(),
+          ...data,
+        },
+      });
+      return data;
+    }).catch((err) => err.json().then((json) => Promise.reject(json)));
   }));
 }
 function getConversation(conversationId, forceRefresh = false) {
@@ -370,7 +377,7 @@ function getConversation(conversationId, forceRefresh = false) {
       if (response.ok) {
         return response.json();
       }
-      if (response.status.startsWith('5')) {
+      if (response.status?.startsWith('5')) {
         return Promise.resolve(response);
       }
       return Promise.reject(response);
@@ -481,8 +488,9 @@ function getGizmoById(gizmoId, forceRefresh = false) {
   if (!gizmoId) {
     return Promise.resolve(null);
   }
-  return chrome.storage.local.get(['gizmosBootstrap']).then((res) => {
-    const { gizmosBootstrap } = res;
+  return chrome.storage.local.get(['account', 'gizmosBootstrap', 'chatgptAccountId']).then((res) => {
+    const { account, gizmosBootstrap, chatgptAccountId } = res;
+    const isPaid = account?.accounts?.[chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
 
     const gizmoData = gizmosBootstrap?.gizmos?.find((g) => g?.resource?.gizmo?.id === gizmoId);
     if (gizmoData && !forceRefresh) {
@@ -506,7 +514,7 @@ function getGizmoById(gizmoId, forceRefresh = false) {
           },
         });
         toast('GPT inaccessible or not found', 'warning');
-        if (!window.location.pathname.includes('/c/')) {
+        if (isPaid && !window.location.pathname.includes('/c/')) {
           window.location.href = '/';
         }
       }
@@ -1076,6 +1084,7 @@ function createShare(conversationId, currentNodeId, isAnnonymous = true) {
       const jsonData = res.json();
       return jsonData;
     }
+    toast('Sharing conversations with images is not yet supported', 'error');
     return Promise.reject(res);
   }));
 }
@@ -1138,7 +1147,7 @@ function getSelectedConversations(forceRefresh = false) {
   });
 }
 
-function getAllConversations(forceRefresh = false) {
+function getAllConversations(forceRefresh = false, skipLimit = false) {
   return new Promise((resolve) => {
     chrome.storage.local.get(['conversations', 'conversationsAreSynced', 'settings']).then((res) => {
       const {
@@ -1156,10 +1165,11 @@ function getAllConversations(forceRefresh = false) {
           const {
             limit, offset, items,
           } = convs;
-          chrome.storage.local.set({ totalConversations: convs.total });
-
+          if (typeof convs.total !== 'undefined') {
+            chrome.storage.local.set({ totalConversations: convs.total });
+          }
           // eslint-disable-next-line no-nested-ternary
-          const total = settings?.autoSyncCount === 1000 ? (convs.total ? Math.min(convs.total, 10000) : 10000) : Math.min(convs.total, settings?.autoSyncCount); // sync last 10000 conversations
+          const total = (skipLimit || settings?.autoSyncCount === 1000) ? (convs.total ? Math.min(convs.total, 2000) : 2000) : Math.min(convs.total, settings?.autoSyncCount); // sync last 10000 conversations
           if (items.length === 0 || total === 0) {
             resolve([]);
             return;

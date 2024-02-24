@@ -1,4 +1,4 @@
-/* global toast, arkoseTrigger, createFileInServer, isDescendant, uploadFileAPI, uploadedAPI, getThumbnail */
+/* global toast, arkoseTrigger, isGenerating, createFileInServer, isDescendant, uploadFileAPI, uploadedAPI, getThumbnail */
 // eslint-disable-next-line no-unused-vars
 let curImageAssets = [];
 let curFileAttachments = [];
@@ -115,8 +115,10 @@ function fileChangeHandler(files) {
     textAreaElement.insertAdjacentHTML('beforebegin', fileWrapperElement);
   }
   // disable submit button
-  const submitButton = document.querySelector('#prompt-textarea ~ button');
-  submitButton.disabled = true;
+  const submitButton = document.querySelector('[data-testid="send-button"]');
+  if (!isGenerating) {
+    submitButton.disabled = true;
+  }
   // disable submit event in textareaElement
   textAreaElement.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -135,9 +137,11 @@ function fileChangeHandler(files) {
       const dataUrl = reader.result;
       const isImage = fileType === 'Image';
       // add the file right before the textarea
+      // eslint-disable-next-line no-restricted-globals
+      const uuid = self.crypto.randomUUID();
       const fileElementHTML = isImage
-        ? `<div id="file-element-${i + existingFileElements.length}" class="group relative inline-block text-sm text-token-text-primary"><div class="relative overflow-hidden rounded-xl"><div class="h-14 w-14"><button type="button" id="full-size-file-button-${i + existingFileElements.length}" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:r2c:" data-state="closed" class="h-full w-full"><span class="flex items-center h-full w-full justify-center bg-token-main-surface-secondary bg-cover bg-center text-white" style="background-image: url(&quot;${dataUrl}&quot;);"></span></button></div></div><button id="remove-file-button-${i + existingFileElements.length}" class="absolute right-1 top-1 -translate-y-1/2 translate-x-1/2 rounded-full bg-token-main-surface-secondary p-0.5 text-token-text-primary transition-colors hover:opacity-100 group-hover:opacity-100 md:opacity-0"><span class="" data-state="closed"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button><div id="file-upload-spinner-${i}" class="absolute inset-0 flex items-center justify-center bg-black/50 text-white"><svg x="0" y="0" viewbox="0 0 40 40" class="spinner"><circle fill="transparent" stroke="#ffffff50" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.6" cx="20" cy="20" r="18"></circle></svg></div></div>`
-        : `<div id="file-element-${i + existingFileElements.length}" class="group relative inline-block text-sm text-token-text-primary"><div class="relative overflow-hidden rounded-xl"><div class="p-2 bg-token-main-surface-secondary w-60"><div class="flex flex-row items-center gap-2"><div class="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">${getThumbnail(fileType)}</div><div class="overflow-hidden"><div class="truncate font-medium">${file.name}</div><div class="truncate text-token-text-secondary">${fileType}</div></div></div></div></div><button id="remove-file-button-${i + existingFileElements.length}" class="absolute right-1 top-1 -translate-y-1/2 translate-x-1/2 rounded-full border border-token-border-light p-0.5 text-token-text-primary transition-colors bg-token-main-surface-secondary hover:opacity-100 group-hover:opacity-100 md:opacity-0"><span class="" data-state="closed"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button><div id="file-upload-spinner-${i}" class="absolute inset-0 flex items-center justify-center bg-black/50 text-white"><svg x="0" y="0" viewbox="0 0 40 40" class="spinner"><circle fill="transparent" stroke="#ffffff50" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.6" cx="20" cy="20" r="18"></circle></svg></div></div>`;
+        ? `<div id="file-element-${i + existingFileElements.length}" data-uuid=${uuid} class="group relative inline-block text-sm text-token-text-primary"><div class="relative overflow-hidden rounded-xl"><div class="h-14 w-14"><button type="button" id="full-size-file-button-${i + existingFileElements.length}" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:r2c:" data-state="closed" class="h-full w-full"><span class="flex items-center h-full w-full justify-center bg-token-main-surface-secondary bg-cover bg-center text-white" style="background-image: url(&quot;${dataUrl}&quot;);"></span></button></div></div><button id="remove-file-button-${i + existingFileElements.length}" class="absolute right-1 top-1 -translate-y-1/2 translate-x-1/2 rounded-full bg-token-main-surface-secondary p-0.5 text-token-text-primary transition-colors hover:opacity-100 group-hover:opacity-100 md:opacity-0"><span class="" data-state="closed"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button><div id="file-upload-spinner-${i}" class="absolute inset-0 flex items-center justify-center bg-black/50 text-white"><svg x="0" y="0" viewbox="0 0 40 40" class="spinner"><circle fill="transparent" stroke="#ffffff50" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.6" cx="20" cy="20" r="18"></circle></svg></div></div>`
+        : `<div id="file-element-${i + existingFileElements.length}" data-uuid=${uuid} class="group relative inline-block text-sm text-token-text-primary"><div class="relative overflow-hidden rounded-xl"><div class="p-2 bg-token-main-surface-secondary w-60"><div class="flex flex-row items-center gap-2"><div class="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">${getThumbnail(fileType)}</div><div class="overflow-hidden"><div class="truncate font-medium">${file.name}</div><div class="truncate text-token-text-secondary">${fileType}</div></div></div></div></div><button id="remove-file-button-${i + existingFileElements.length}" class="absolute right-1 top-1 -translate-y-1/2 translate-x-1/2 rounded-full border border-token-border-light p-0.5 text-token-text-primary transition-colors bg-token-main-surface-secondary hover:opacity-100 group-hover:opacity-100 md:opacity-0"><span class="" data-state="closed"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></span></button><div id="file-upload-spinner-${i}" class="absolute inset-0 flex items-center justify-center bg-black/50 text-white"><svg x="0" y="0" viewbox="0 0 40 40" class="spinner"><circle fill="transparent" stroke="#ffffff50" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.6" cx="20" cy="20" r="18"></circle></svg></div></div>`;
       const fileWrapperElement = textAreaElement.parentElement.querySelector('#file-wrapper-element');
       if (!fileWrapperElement) return;
       fileWrapperElement.insertAdjacentHTML('beforeend', fileElementHTML);
@@ -160,6 +164,7 @@ function fileChangeHandler(files) {
                     height: img.height,
                     width: img.width,
                     size_bytes: file.size,
+                    uuid,
                   });
                   curFileAttachments.push({
                     id: result.file_id,
@@ -168,6 +173,7 @@ function fileChangeHandler(files) {
                     mimeType: file.type,
                     height: img.height,
                     width: img.width,
+                    uuid,
                   });
                 };
               } else {
@@ -176,6 +182,7 @@ function fileChangeHandler(files) {
                   name: file.name,
                   size_bytes: file.size,
                   mimeType: file.type,
+                  uuid,
                 });
               }
 
@@ -211,7 +218,6 @@ function addFileWrapperEventListener(i, dataUrl, uploadLimit) {
   const fileWrapperElement = inputForm.querySelector('#file-wrapper-element');
   if (!fileWrapperElement) return;
   const fullSizeFileButton = fileWrapperElement.querySelector(`#full-size-file-button-${i}`);
-  const removeButton = fileWrapperElement.querySelector(`#remove-file-button-${i}`);
   if (fullSizeFileButton) {
     fullSizeFileButton.addEventListener('click', (e) => {
       e.preventDefault();
@@ -220,6 +226,7 @@ function addFileWrapperEventListener(i, dataUrl, uploadLimit) {
       createFullSizeFileWrapper(dataUrl);
     });
   }
+  const removeButton = fileWrapperElement.querySelector(`#remove-file-button-${i}`);
   if (removeButton) {
     removeButton.addEventListener('click', (e) => {
       e.preventDefault();
@@ -232,13 +239,23 @@ function addFileWrapperEventListener(i, dataUrl, uploadLimit) {
         curImageAssets = [];
         curFileAttachments = [];
         const textAreaElement = document.querySelector('#prompt-textarea');
-        const submitButton = document.querySelector('#prompt-textarea ~ button');
-        if (textAreaElement.value.length === 0) {
+        const submitButton = document.querySelector('[data-testid="send-button"]');
+        if (textAreaElement.value.length === 0 && !isGenerating) {
           submitButton.disabled = true;
         }
       }
       if (fileWrapperElement.children.length < uploadLimit && !inputForm.querySelector('#upload-file-button')) {
         addUploadFileButton();
+      }
+      // remove the file from curImageAssets and curFileAttachments
+      const { uuid } = fileElement.dataset;
+      const fileIndex = curFileAttachments.findIndex((file) => file.uuid === uuid);
+      if (fileIndex !== -1) {
+        curFileAttachments.splice(fileIndex, 1);
+      }
+      const imageIndex = curImageAssets.findIndex((image) => image.uuid === uuid);
+      if (imageIndex !== -1) {
+        curImageAssets.splice(imageIndex, 1);
       }
     });
   }

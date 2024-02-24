@@ -1,8 +1,8 @@
 /* eslint-disable no-restricted-globals */
 /* global updateButtonsAfterSelection, formatDate, showAllCheckboxes, hideAllButLastCheckboxes, loadConversation, shiftKeyPressed:true, isWindows, arkoseWasInitialized, updateOutOfDateConversation, hideAllEditIcons, formatTime, showConversationElementMenu, closeMenus */
 
-const notSelectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-token-sidebar-surface-secondary cursor-pointer break-all hover:pr-10 group';
-const selectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md cursor-pointer break-all hover:pr-10 bg-token-sidebar-surface-secondary group selected border-l border-gold';
+const notSelectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md hover:bg-token-main-surface-tertiary cursor-pointer break-all hover:pr-10 group';
+const selectedClassList = 'flex py-3 px-3 pr-3 w-full items-center gap-3 relative rounded-md bg-token-main-surface-tertiary cursor-pointer break-all hover:pr-10 group selected';
 
 function getConversationElementClassList(conversation) {
   const { pathname } = new URL(window.location.toString());
@@ -34,25 +34,28 @@ function createConversation(conversation) {
       window.open(`https://chat.openai.com/${gizmoPath}c/${conversation.id}`, '_blank');
       return;
     }
-    if (arkoseWasInitialized()) {
-      const conversationId = pathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
-      if (searchValue || conversationId !== conversation.id) {
-        window.history.pushState({}, '', `https://chat.openai.com/${gizmoPath}c/${conversation.id}`);
-        // set conversations with class selected to not selected
-        const focusedConversations = document.querySelectorAll('.selected');
-        focusedConversations.forEach((c) => {
-          c.classList = notSelectedClassList;
-          c.style.backgroundColor = '';
-        });
-        // set selected conversation
-        conversationElement.classList = selectedClassList;
-        loadConversation(conversation.id, searchValue);
+    chrome.storage.local.get(['account', 'chatgptAccountId'], (r) => {
+      const isPaid = r?.account?.accounts?.[r.chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
+      if (!isPaid || arkoseWasInitialized()) {
+        const conversationId = pathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
+        if (searchValue || conversationId !== conversation.id) {
+          window.history.pushState({}, '', `https://chat.openai.com/${gizmoPath}c/${conversation.id}`);
+          // set conversations with class selected to not selected
+          const focusedConversations = document.querySelectorAll('.selected');
+          focusedConversations.forEach((c) => {
+            c.classList = notSelectedClassList;
+            c.style.backgroundColor = '';
+          });
+          // set selected conversation
+          conversationElement.classList = selectedClassList;
+          loadConversation(conversation.id);
+        }
+      } else {
+        window.location.href = `https://chat.openai.com/${gizmoPath}c/${conversation.id}`;
       }
-    } else {
-      window.location.href = `https://chat.openai.com/${gizmoPath}c/${conversation.id}`;
-    }
-    hideAllEditIcons();
-    updateOutOfDateConversation();
+      hideAllEditIcons();
+      updateOutOfDateConversation();
+    });
   });
   const conversationElementIcon = conversation.saveHistory ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="relative w-4 h-4 text-token-text-primary" style=\'top:-2px\' fill="currentColor"><path d="M360 144h-208C138.8 144 128 154.8 128 168S138.8 192 152 192h208C373.3 192 384 181.3 384 168S373.3 144 360 144zM264 240h-112C138.8 240 128 250.8 128 264S138.8 288 152 288h112C277.3 288 288 277.3 288 264S277.3 240 264 240zM447.1 0h-384c-35.25 0-64 28.75-64 63.1v287.1c0 35.25 28.75 63.1 64 63.1h96v83.1c0 9.836 11.02 15.55 19.12 9.7l124.9-93.7h144c35.25 0 64-28.75 64-63.1V63.1C511.1 28.75 483.2 0 447.1 0zM464 352c0 8.75-7.25 16-16 16h-160l-80 60v-60H64c-8.75 0-16-7.25-16-16V64c0-8.75 7.25-16 16-16h384c8.75 0 16 7.25 16 16V352z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" class="relative w-4 h-4 text-token-text-purple" style=\'top:-2px\' fill="currentColor"><path d="M63.1 351.1c0 35.25 28.75 63.1 63.1 63.1h95.1v83.99c0 9.749 11.25 15.45 19.12 9.7l124.9-93.69l39.37-.0117L63.1 146.9L63.1 351.1zM630.8 469.1l-82.76-64.87c16.77-11.47 27.95-30.46 27.95-52.27V63.1c0-35.25-28.75-63.1-63.1-63.1H127.1c-23.51 0-43.97 12.88-55.07 31.86L38.81 5.128C34.41 1.691 29.19 .0332 24.03 .0332c-7.125 0-14.2 3.137-18.92 9.168c-8.187 10.44-6.365 25.53 4.073 33.7l591.1 463.1c10.5 8.202 25.57 6.333 33.7-4.073C643.1 492.4 641.2 477.3 630.8 469.1z"/></svg>';
   conversationElement.innerHTML = conversationElementIcon;
@@ -60,13 +63,13 @@ function createConversation(conversation) {
   conversationTitle.id = `conversation-title-${conversation.id}`;
   conversationTitle.classList = 'flex-1 overflow-hidden text-ellipsis whitespace-nowrap max-h-5 break-all relative text-token-text-primary';
   conversationTitle.style = 'position: relative; bottom: 5px;';
-  conversationTitle.innerHTML = conversation.title;
-  conversationElement.title = conversation.title;
+  conversationTitle.innerHTML = conversation.title || 'New chat';
+  conversationElement.title = conversation.title || 'New chat';
   conversationElement.appendChild(conversationTitle);
   // add timestamp
   const timestampElement = document.createElement('div');
   timestampElement.id = 'timestamp';
-  timestampElement.classList.add('text-token-text-tertiary');
+  timestampElement.classList.add('text-token-text-secondary');
   timestampElement.style = 'display:flex; align-items:center;font-size: 10px; position: absolute; bottom: 0px; left: 40px;';
   const timestamp = conversation.update_time !== 'force_copy'
     ? new Date(formatTime(conversation.update_time))
@@ -121,7 +124,7 @@ function addCheckboxToConversationElement(conversationElement, conversation) {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
     checkbox.id = 'checkbox';
-    checkbox.style = 'position: absolute; top: 12px; left: 12px; z-index:11; cursor: pointer;';
+    checkbox.style = 'position: absolute; top: 12px; left: 12px; z-index:11; cursor: pointer;border-radius:2px;';
     checkbox.checked = false;
     checkboxWrapper.appendChild(checkbox);
     if (selectedConvs?.length > 0) {

@@ -115,7 +115,7 @@ if (!browserIsFirefox) {
 
         setTimeout(() => {
           window.dispatchEvent(historyLoadedReceivedEvent);
-        }, 500 * delayMultiple);
+        }, 1000 * delayMultiple);
       }
     }
 

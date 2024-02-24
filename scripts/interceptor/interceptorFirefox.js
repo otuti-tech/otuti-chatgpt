@@ -112,7 +112,7 @@ window.fetch = async function (...args) {
 
       setTimeout(() => {
         window.dispatchEvent(historyLoadedReceivedEvent);
-      }, 500 * delayMultiple);
+      }, 1000 * delayMultiple);
     }
   }
 

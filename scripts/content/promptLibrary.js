@@ -334,7 +334,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
       shiftClickText.style = 'font-size:10px;position:absolute;right:0px;bottom:36px;display:none;color:lightslategray;';
     });
     libraryItemUseButton.addEventListener('click', (event) => {
-      const submitButton = document.querySelector('#prompt-textarea ~ button');
+      const submitButton = document.querySelector('[data-testid="send-button"]');
       if (!submitButton) return;
       const textAreaElement = document.querySelector('#prompt-textarea');
       if (!textAreaElement) return;

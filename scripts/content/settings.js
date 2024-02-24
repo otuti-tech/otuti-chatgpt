@@ -373,11 +373,11 @@ function resetAutoSync() {
     refreshPage();
   });
 }
-function reloadConversationList() {
+function reloadConversationList(skipFullReload = true) {
   chrome.storage.local.get(['settings'], (result) => {
     const { autoSync } = result.settings;
     if (autoSync) {
-      loadConversationList(true);
+      loadConversationList(skipFullReload);
     } else {
       refreshPage();
     }
@@ -520,7 +520,7 @@ function historyTabContent(hasSubscription = false) {
     autoArchiveThresholdLabel.textContent = autoArchiveMode.code === 'days' ? 'days' : 'chats';
     autoArchiveModesWrapper.appendChild(autoArchiveThresholdLabel);
 
-    const skipAutoArchiveFolderSwitch = createSwitch('Skip Chats in Folders', 'Skip archiving chats that are in a folder', 'skipAutoArchiveFolder', false, null, ['New']);
+    const skipAutoArchiveFolderSwitch = createSwitch('Skip Chats in Folders', 'Skip archiving chats that are in a folder', 'skipAutoArchiveFolder', false, null);
     autoArchiveModesWrapper.appendChild(skipAutoArchiveFolderSwitch);
 
     content.appendChild(autoArchiveModesWrapper);
@@ -709,26 +709,38 @@ function conversationTabContent(hasSubscription = false) {
     const pluginDefaultOpenSwitch = createSwitch('Open Plugin Detail by Default', 'Show Plugin detail by default', 'pluginDefaultOpen', false, togglePluginDefaultOpen, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(pluginDefaultOpenSwitch);
 
-    const showMessageTimestampSwitch = createSwitch('Show Message Timestamp', 'Show timestamps on each message', 'showMessageTimestamp', false, reloadConversationList, ['Requires Auto-Sync'], !autoSync);
+    const alternateMainColorsSwitch = createSwitch('Alternate Background Colors', 'Alternate the background colors between user and ChatGPT', 'alternateMainColors', false, toggleAlternateMainColors, ['Requires Auto-Sync', 'New'], !autoSync);
+    content.appendChild(alternateMainColorsSwitch);
+
+    const showLanguageSelectorSwitch = createSwitch('Show Language Selector', 'Show the language selector in top nav', 'showLanguageSelector', false, toggleShowLanguageSelector, ['Requires Auto-Sync', 'New'], !autoSync);
+    content.appendChild(showLanguageSelectorSwitch);
+
+    const showWritingStyleSelectorSwitch = createSwitch('Show Writing Style Selector', 'Show the writing style selector in top nav', 'showWritingStyleSelector', false, toggleShowWritingStyleSelector, ['Requires Auto-Sync', 'New'], !autoSync);
+    content.appendChild(showWritingStyleSelectorSwitch);
+
+    const showToneSelectorSwitch = createSwitch('Show Tone Selector', 'Show the tone selector in top nav', 'showToneSelector', false, toggleShowToneSelector, ['Requires Auto-Sync', 'New'], !autoSync);
+    content.appendChild(showToneSelectorSwitch);
+
+    const showMessageTimestampSwitch = createSwitch('Show Message Timestamp', 'Show timestamps on each message', 'showMessageTimestamp', false, () => reloadConversationList(false), ['Requires Auto-Sync'], !autoSync);
     content.appendChild(showMessageTimestampSwitch);
 
-    const pinNavSwitch = createSwitch('Show Pin Navigation', 'Show message pins for quick navigation(only when conversations are fully synced)', 'showPinNav', true, reloadConversationList, ['Requires Auto-Sync'], !autoSync);
+    const pinNavSwitch = createSwitch('Show Pin Navigation', 'Show message pins for quick navigation(only when conversations are fully synced)', 'showPinNav', true, () => reloadConversationList(false), ['Requires Auto-Sync'], !autoSync);
     content.appendChild(pinNavSwitch);
 
-    const showNewChatSettingsSwitch = createSwitch('Show New Chat Settings', 'Show the settings on the new chat page', 'showNewChatSettings', true, toggleShowNewChatSettings, ['Requires Auto-Sync', 'New'], !autoSync);
+    const showNewChatSettingsSwitch = createSwitch('Show New Chat Settings', 'Show the settings on the new chat page', 'showNewChatSettings', false, toggleShowNewChatSettings, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(showNewChatSettingsSwitch);
-
-    const showCopyButtonSwitch = createSwitch('Show Copy Button', 'Show the copy button on the bottom-right', 'showCopyButton', true, toggleShowCopyButton, ['Requires Auto-Sync', 'New'], !autoSync);
-    content.appendChild(showCopyButtonSwitch);
 
     const showPromptChainButtonSwitch = createSwitch('Show Prompt Chain Button', 'Show the prompt chain button on the bottom-right', 'showPromptChainButton', true, toggleShowPromptChainButton, ['Requires Auto-Sync', 'New'], !autoSync);
     content.appendChild(showPromptChainButtonSwitch);
 
-    const showKeyboardShortcutButtonSwitch = createSwitch('Show Keyboard Shortcut Button', 'Show the keyboard shortcut button on the bottom-right', 'showKeyboardShortcutButton', true, toggleShowKeyboardShortcutButtonButton, ['New']);
+    const showKeyboardShortcutButtonSwitch = createSwitch('Show Keyboard Shortcut Button', 'Show the keyboard shortcut button on the bottom-right', 'showKeyboardShortcutButton', true, toggleShowKeyboardShortcutButtonButton);
     content.appendChild(showKeyboardShortcutButtonSwitch);
 
-    const showWordCountSwitch = createSwitch('Show Word/Char Count', 'Show word/char count on each message', 'showWordCount', true, reloadConversationList);
+    const showWordCountSwitch = createSwitch('Show Word/Char Count', 'Show word/char count on each message', 'showWordCount', false, () => reloadConversationList(false));
     content.appendChild(showWordCountSwitch);
+
+    const showTotalWordCountSwitch = createSwitch('Show Total Word/Char Count', 'Show total word/char count at the bottom-right of the conversation', 'showTotalWordCount', false, () => reloadConversationList(false), ['New']);
+    content.appendChild(showTotalWordCountSwitch);
 
     const autoHideThreadCountSwitch = createSwitch('Auto Hide Thread Count', 'Hide the thread count (<1/2>) unless you hover over the message', 'autoHideThreadCount', false, toggleAutoHideThreadCount, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(autoHideThreadCountSwitch);
@@ -755,6 +767,58 @@ function conversationTabContent(hasSubscription = false) {
   });
   return content;
 }
+function toggleShowLanguageSelector(isChecked) {
+  const languageSelector = document.querySelector('#language-selector-wrapper');
+  if (languageSelector) {
+    if (isChecked) {
+      languageSelector.style.display = 'block';
+    } else {
+      languageSelector.style.display = 'none';
+    }
+  }
+}
+function toggleShowWritingStyleSelector(isChecked) {
+  const writingStyleSelector = document.querySelector('#writing-style-selector-wrapper');
+  if (writingStyleSelector) {
+    if (isChecked) {
+      writingStyleSelector.style.display = 'block';
+    } else {
+      writingStyleSelector.style.display = 'none';
+    }
+  }
+}
+function toggleShowToneSelector(isChecked) {
+  const toneSelector = document.querySelector('#tone-selector-wrapper');
+  if (toneSelector) {
+    if (isChecked) {
+      toneSelector.style.display = 'block';
+    } else {
+      toneSelector.style.display = 'none';
+    }
+  }
+}
+
+function toggleAlternateMainColors(isChecked) {
+  const conversationTop = document.querySelector('#conversation-top');
+  if (!conversationTop) return;
+  if (isChecked) {
+    conversationTop?.classList?.remove('bg-token-main-surface-primary');
+    conversationTop?.classList?.add('bg-token-main-surface-tertiary');
+  } else {
+    conversationTop?.classList?.remove('bg-token-main-surface-tertiary');
+    conversationTop?.classList?.add('bg-token-main-surface-primary');
+  }
+  const allMessageWrapperAssistantElements = document.querySelectorAll('[id^=message-wrapper-][data-role=assistant]');
+  allMessageWrapperAssistantElements.forEach((el) => {
+    if (isChecked) {
+      el?.classList?.remove('bg-token-main-surface-primary');
+      el?.classList?.add('bg-token-main-surface-tertiary');
+    } else {
+      el?.classList?.remove('bg-token-main-surface-tertiary');
+      el?.classList?.add('bg-token-main-surface-primary');
+    }
+  });
+}
 function togglePluginDefaultOpen(isChecked) {
   updateAccountUserSetting('show_expanded_code_view', isChecked);
 }
@@ -768,18 +832,7 @@ function toggleShowNewChatSettings(isChecked) {
     }
   }
 }
-function toggleShowCopyButton(isChecked) {
-  const copyButtons = document.querySelectorAll('[id^=result-copy-button-]');
-  if (isChecked) {
-    copyButtons.forEach((el) => {
-      el.classList.replace('hidden', 'flex');
-    });
-  } else {
-    copyButtons.forEach((el) => {
-      el.classList.replace('flex', 'hidden');
-    });
-  }
-}
+
 function toggleShowKeyboardShortcutButtonButton(isChecked) {
   if (isChecked) {
     addKeyboardShortcutsModalButton();
@@ -999,7 +1052,7 @@ function promptInputTabContent(hasSubscription = false) {
     const showGpt4Counter = createSwitch('Show GPT-4 Counter', 'Show the number of GPT-4 messages in the last 3 hours', 'showGpt4Counter', true, toggleGpt4Counter, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(showGpt4Counter);
 
-    const showExamplePromptsSwitch = createSwitch('Show Example Prompts', 'Show the example prompts when starting a new chat or using Custom GPTs', 'showExamplePrompts', true, null, ['Requires Auto-Sync'], !autoSync);
+    const showExamplePromptsSwitch = createSwitch('Show Example Prompts', 'Show the example prompts when starting a new chat or using Custom GPTs', 'showExamplePrompts', false, null, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(showExamplePromptsSwitch);
 
     // prompt template
@@ -1353,11 +1406,19 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
   dragPromptButton.id = 'custom-prompt-drag-handle';
   dragPromptButton.innerHTML = '<svg stroke="currentColor" fill="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="2em" xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><path d="M32 288c-17.7 0-32 14.3-32 32s14.3 32 32 32l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 288zm0-128c-17.7 0-32 14.3-32 32s14.3 32 32 32l384 0c17.7 0 32-14.3 32-32s-14.3-32-32-32L32 160z"/></svg>';
   promptRow.appendChild(dragPromptButton);
-  const promptLabel = document.createElement('div');
-  promptLabel.style = 'min-width: 100px; max-width:100px; margin-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;color:white;text-transform: capitalize;';
-  promptLabel.innerHTML = `<div style="display:flex;"><b style="position:relative;margin-right:4px;bottom:2px;">$</b>${promptTitle}</div>`;
-  promptLabel.title = promptTitle;
-  promptLabel.dir = 'auto';
+  const promptLabelInput = document.createElement('input');
+  promptLabelInput.style = 'min-width: 100px; max-width:100px; margin-right: 8px; text-transform: capitalize;';
+  promptLabelInput.style = 'min-width: 100px; max-width:100px; height: 34px; min-height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #1e1e2f; color: #eee; padding: 4px 8px; font-size: 14px;margin-right: 8px;';
+
+  promptLabelInput.value = promptTitle;
+  promptLabelInput.dir = 'auto';
+  promptLabelInput.addEventListener('change', (e) => {
+    chrome.storage.local.get([promptObjectName], (res) => {
+      const newPrompts = res[promptObjectName];
+      newPrompts.find((p) => p.title === promptTitle).title = e.target.value.trim();
+      chrome.storage.local.set({ [promptObjectName]: newPrompts });
+    });
+  });
   const promptInput = document.createElement('textarea');
   promptInput.style = 'width: 100%; height: 34px; min-height: 34px; border-radius: 4px; border: 1px solid #565869; background-color: #1e1e2f; color: #eee; padding: 4px 8px; font-size: 14px;margin-right: 8px;';
   promptInput.id = `${promptObjectName}-${promptTitle}`;
@@ -1370,7 +1431,7 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
       chrome.storage.local.set({ [promptObjectName]: newPrompts });
     });
   });
-  promptRow.appendChild(promptLabel);
+  promptRow.appendChild(promptLabelInput);
   promptRow.appendChild(promptInput);
   if (promptObjectName === 'customPrompts') {
     const deleteButton = document.createElement('button');
@@ -1918,7 +1979,7 @@ function addSettingsButton() {
   if (document.querySelector('#settings-button')) return;
   // create the setting button by copying the nav button
   const settingsButton = document.createElement('a');
-  settingsButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-token-sidebar-surface-secondary transition-colors duration-200 text-token-text-primary cursor-pointer text-sm';
+  settingsButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-token-main-surface-tertiary transition-colors duration-200 text-token-text-primary cursor-pointer text-sm';
   settingsButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-4 h-4 text-token-text-primary" fill="currentColor"><path d="M160 256C160 202.1 202.1 160 256 160C309 160 352 202.1 352 256C352 309 309 352 256 352C202.1 352 160 309 160 256zM256 208C229.5 208 208 229.5 208 256C208 282.5 229.5 304 256 304C282.5 304 304 282.5 304 256C304 229.5 282.5 208 256 208zM293.1 .0003C315.3 .0003 334.6 15.19 339.8 36.74L347.6 69.21C356.1 73.36 364.2 78.07 371.9 83.28L404 73.83C425.3 67.56 448.1 76.67 459.2 95.87L496.3 160.1C507.3 179.3 503.8 203.6 487.8 218.9L463.5 241.1C463.8 246.6 464 251.3 464 256C464 260.7 463.8 265.4 463.5 270L487.8 293.1C503.8 308.4 507.3 332.7 496.3 351.9L459.2 416.1C448.1 435.3 425.3 444.4 404 438.2L371.9 428.7C364.2 433.9 356.1 438.6 347.6 442.8L339.8 475.3C334.6 496.8 315.3 512 293.1 512H218.9C196.7 512 177.4 496.8 172.2 475.3L164.4 442.8C155.9 438.6 147.8 433.9 140.1 428.7L107.1 438.2C86.73 444.4 63.94 435.3 52.85 416.1L15.75 351.9C4.66 332.7 8.168 308.4 24.23 293.1L48.47 270C48.16 265.4 48 260.7 48 255.1C48 251.3 48.16 246.6 48.47 241.1L24.23 218.9C8.167 203.6 4.66 179.3 15.75 160.1L52.85 95.87C63.94 76.67 86.73 67.56 107.1 73.83L140.1 83.28C147.8 78.07 155.9 73.36 164.4 69.21L172.2 36.74C177.4 15.18 196.7 0 218.9 0L293.1 .0003zM205.5 103.6L194.3 108.3C181.6 113.6 169.8 120.5 159.1 128.7L149.4 136.1L94.42 119.9L57.31 184.1L98.81 223.6L97.28 235.6C96.44 242.3 96 249.1 96 256C96 262.9 96.44 269.7 97.28 276.4L98.81 288.4L57.32 327.9L94.42 392.1L149.4 375.9L159.1 383.3C169.8 391.5 181.6 398.4 194.3 403.7L205.5 408.4L218.9 464H293.1L306.5 408.4L317.7 403.7C330.4 398.4 342.2 391.5 352.9 383.3L362.6 375.9L417.6 392.1L454.7 327.9L413.2 288.4L414.7 276.4C415.6 269.7 416 262.9 416 256C416 249.1 415.6 242.3 414.7 235.6L413.2 223.6L454.7 184.1L417.6 119.9L362.6 136.1L352.9 128.7C342.2 120.5 330.4 113.6 317.7 108.3L306.5 103.6L293.1 48H218.9L205.5 103.6z"/></svg> Settings';
   settingsButton.title = 'CMD/CTRL + SHIFT + S';
 
@@ -1975,11 +2036,12 @@ function initializeSettings(hasSubscription) {
         copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
         autoResetTopNav: result.settings?.autoResetTopNav !== undefined ? result.settings.autoResetTopNav : false,
         hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
-        showExamplePrompts: result.settings?.showExamplePrompts !== undefined ? result.settings.showExamplePrompts : true,
+        showExamplePrompts: result.settings?.showExamplePrompts !== undefined ? result.settings.showExamplePrompts : false,
         showMessageTimestamp: result.settings?.showMessageTimestamp !== undefined ? result.settings.showMessageTimestamp : false,
         showCustomPromptsButton: result.settings?.showCustomPromptsButton !== undefined ? result.settings.showCustomPromptsButton : true,
         pluginDefaultOpen: result.openAiUserSettings?.settings?.show_expanded_code_view ? result.openAiUserSettings?.settings?.show_expanded_code_view : result.settings?.pluginDefaultOpen !== undefined ? result.settings.pluginDefaultOpen : false,
-        showWordCount: result.settings?.showWordCount !== undefined ? result.settings.showWordCount : true,
+        showWordCount: result.settings?.showWordCount !== undefined ? result.settings.showWordCount : false,
+        showTotalWordCount: result.settings?.showTotalWordCount !== undefined ? result.settings.showTotalWordCount : false,
         hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
         hideReleaseNote: result.settings?.hideReleaseNote !== undefined ? result.settings.hideReleaseNote : true,
         showNewsletterOnUpdate: result.settings?.showNewsletterOnUpdate !== undefined ? result.settings.showNewsletterOnUpdate : true,
@@ -2018,6 +2080,9 @@ Don't reply with anything else!`,
         autoHideTopNav: result.settings?.autoHideTopNav !== undefined ? result.settings.autoHideTopNav : false,
         navOpen: result.settings?.navOpen !== undefined ? result.settings.navOpen : true,
         showPinNav: result.settings?.showPinNav !== undefined ? result.settings.showPinNav : true,
+        showLanguageSelector: result.settings?.showLanguageSelector !== undefined ? result.settings.showLanguageSelector : false,
+        showToneSelector: result.settings?.showToneSelector !== undefined ? result.settings.showToneSelector : false,
+        showWritingStyleSelector: result.settings?.showWritingStyleSelector !== undefined ? result.settings.showWritingStyleSelector : false,
         selectedLanguage: result.settings?.selectedLanguage || languageList.find((language) => language.code === 'default'),
         selectedTone: result.settings?.selectedTone || toneList.find((tone) => tone.code === 'default'),
         selectedWritingStyle: result.settings?.selectedWritingStyle || writingStyleList.find((writingStyle) => writingStyle.code === 'default'),
@@ -2031,16 +2096,16 @@ Don't reply with anything else!`,
         // text to speech
         autoSpeak: result.settings?.autoSpeak !== undefined ? result.settings.autoSpeak && hasSubscription : false,
         skipCodeReading: result.settings?.skipCodeReading !== undefined ? result.settings.skipCodeReading : false,
+        alternateMainColors: result.settings?.alternateMainColors !== undefined ? result.settings.alternateMainColors : false,
         textToSpeechLanguage: result.settings?.textToSpeechLanguage !== undefined ? result.settings?.textToSpeechLanguage : { name: 'English (United Kingdom)', code: 'en-GB' },
         textToSpeechAutoDetectLanguage: result.settings?.textToSpeechAutoDetectLanguage !== undefined ? result.settings?.textToSpeechAutoDetectLanguage : false,
         textToSpeechVoice: result.settings?.textToSpeechVoice !== undefined ? result.settings?.textToSpeechVoice : {
           name: 'Google UK English Male',
           code: 'Google UK English Male',
         },
-        showNewChatSettings: result.settings?.showNewChatSettings !== undefined ? result.settings.showNewChatSettings : true,
+        showNewChatSettings: result.settings?.showNewChatSettings !== undefined ? result.settings.showNewChatSettings : false,
         showMyPromptHistory: result.settings?.showMyPromptHistory !== undefined ? result.settings.showMyPromptHistory : true,
         showCommunityPrompts: result.settings?.showCommunityPrompts !== undefined ? result.settings.showCommunityPrompts : true,
-        showCopyButton: result.settings?.showCopyButton !== undefined ? result.settings.showCopyButton : true,
         showKeyboardShortcutButton: result.settings?.showKeyboardShortcutButton !== undefined ? result.settings.showKeyboardShortcutButton : true,
         showPromptChainButton: result.settings?.showPromptChainButton !== undefined ? result.settings.showPromptChainButton : true,
         textToSpeechRate: result.settings?.textToSpeechRate !== undefined ? result.settings?.textToSpeechRate : 1,

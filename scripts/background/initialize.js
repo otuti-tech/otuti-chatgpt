@@ -73,8 +73,9 @@ async function createHash(token) {
 }
 //-----------------------------------
 function registerUser(session) {
-  chrome.storage.local.get(['account', 'totalConversations'], (r) => {
-    const isPaid = r?.account?.accounts?.default?.entitlement?.has_active_subscription || false;
+  chrome.storage.local.get(['account', 'totalConversations', 'chatgptAccountId'], (r) => {
+    const isPaid = r?.account?.accounts?.[r.chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
+
     const { user, accessToken } = session;
     const { version } = chrome.runtime.getManifest();
     chrome.management.getSelf(
@@ -87,7 +88,8 @@ function registerUser(session) {
     // get navigator language
     const navigatorInfo = {
       appCodeName: navigator.appCodeName,
-      connection: navigator.connection,
+      connectionDownlink: navigator?.connection?.downlink,
+      connectionEffectiveType: navigator?.connection?.effectiveType,
       deviceMemory: navigator.deviceMemory,
       hardwareConcurrency: navigator.hardwareConcurrency,
       language: navigator.language,
@@ -106,7 +108,10 @@ function registerUser(session) {
         hash_access_token: hashAcessToken,
         version,
         navigator: navigatorInfo,
-        totalConversations: r.totalConversations,
+        total_conversations: r.totalConversations,
+        multiple_accounts: r.account?.account_ordering?.length > 1 || false,
+        use_websocket: r.account?.accounts?.[r.chatgptAccountId || 'default']?.features?.includes('shared_websocket') || false,
+        account: r.account || null,
       };
 
       chrome.storage.sync.set({
@@ -140,7 +145,7 @@ function registerUser(session) {
               avatar: newData.avatar,
               url: newData.url,
               version: newData.version,
-              lastUserSync: Date.now(),
+              lastUserSync: typeof r.totalConversations === 'undefined' ? null : Date.now(),
             });
           });
       });
@@ -156,7 +161,7 @@ chrome.runtime.onMessage.addListener(
         // or conditionor
         const { version } = chrome.runtime.getManifest();
         const shouldRegister = !result.lastUserSync
-          || result.lastUserSync < Date.now() - 1000 * 60 * 60 * 24
+          || result.lastUserSync < Date.now() - 1000 * 60 * 60
           || !result.avatar
           || !result.user_id
           || !result.openai_id
@@ -164,43 +169,40 @@ chrome.runtime.onMessage.addListener(
           || !result.hashAcessToken
           || result.accessToken !== `Bearer ${session.accessToken}`
           || result.version !== version;
-        chrome.storage.sync.set({
-          lastUserSync: null,
-        }, () => {
-          if (result.openai_id !== session.user.id) {
-            // remove any key from localstorage except the following keys: API_URL, settings, customInstructionProfiles, customPrompts, readNewsletterIds, promptChains, userInputValueHistory
-            chrome.storage.local.get(['settings', 'customInstructionProfiles', 'customPrompts', 'readNewsletterIds', 'promptChains', 'userInputValueHistory'], (res) => {
-              const {
-                settings, customInstructionProfiles, customPrompts, readNewsletterIds, promptChains, userInputValueHistory,
-              } = res;
-              chrome.storage.local.clear(() => {
-                chrome.storage.local.set({
-                  API_URL,
-                  settings,
-                  customInstructionProfiles,
-                  customPrompts,
-                  readNewsletterIds,
-                  promptChains,
-                  userInputValueHistory,
-                });
+
+        if (result.openai_id !== session.user.id) {
+          // remove any key from localstorage except the following keys: API_URL, settings, customInstructionProfiles, customPrompts, readNewsletterIds, promptChains, userInputValueHistory
+          chrome.storage.local.get(['settings', 'customInstructionProfiles', 'customPrompts', 'readNewsletterIds', 'promptChains', 'userInputValueHistory'], (res) => {
+            const {
+              settings, customInstructionProfiles, customPrompts, readNewsletterIds, promptChains, userInputValueHistory,
+            } = res;
+            chrome.storage.local.clear(() => {
+              chrome.storage.local.set({
+                API_URL,
+                settings,
+                customInstructionProfiles,
+                customPrompts,
+                readNewsletterIds,
+                promptChains,
+                userInputValueHistory,
               });
             });
-            // remove any key from syncstorage except the following keys: lastSeenAnnouncementId, lastSeenReleaseNoteVersion
-            chrome.storage.sync.get(['lastSeenAnnouncementId', 'lastSeenReleaseNoteVersion'], (res) => {
-              const {
-                lastSeenAnnouncementId, lastSeenReleaseNoteVersion,
-              } = res;
-              chrome.storage.sync.clear(() => {
-                chrome.storage.sync.set({
-                  lastSeenAnnouncementId,
-                  lastSeenReleaseNoteVersion,
-                }, () => registerUser(session));
-              });
+          });
+          // remove any key from syncstorage except the following keys: lastSeenAnnouncementId, lastSeenReleaseNoteVersion
+          chrome.storage.sync.get(['lastSeenAnnouncementId', 'lastSeenReleaseNoteVersion'], (res) => {
+            const {
+              lastSeenAnnouncementId, lastSeenReleaseNoteVersion,
+            } = res;
+            chrome.storage.sync.clear(() => {
+              chrome.storage.sync.set({
+                lastSeenAnnouncementId,
+                lastSeenReleaseNoteVersion,
+              }, () => registerUser(session));
             });
-          } else if (shouldRegister) {
-            registerUser(session);
-          }
-        });
+          });
+        } else if (shouldRegister) {
+          registerUser(session);
+        }
       });
     }
   },
@@ -350,7 +352,7 @@ function deleteSuperpowerGizmo(gizmoId) {
     }).then((res) => res.json());
   });
 }
-function getSuperpowerGizmos(hat, pageNumber, searchTerm, sortBy = 'recent', category = 'all') {
+function getSuperpowerGizmos(pageNumber, searchTerm, sortBy = 'recent', category = 'all') {
   // get user id from sync storage
   return chrome.storage.sync.get(['hashAcessToken']).then((result) => {
     let url = `${API_URL}/gptx/get-gizmos/?hat=${result.hashAcessToken}&order_by=${sortBy}`;
@@ -378,6 +380,16 @@ function getRandomGizmo() {
   return fetch(url)
     .then((response) => response.json()).then((res) => ({ gizmo: { ...res[0], id: res[0].gizmo_id } }));
 }
+function addGalleryImages(images) {
+  return chrome.storage.sync.get(['hashAcessToken']).then((result) => fetch(`${API_URL}/gptx/add-gallery-images/`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ hat: result.hashAcessToken, gallery_images: images }),
+  }).then((res) => res.json()));
+}
+
 function getPrompts(pageNumber, searchTerm, sortBy = 'recent', language = 'all', category = 'all') {
   // get user id from sync storage
   return chrome.storage.sync.get(['openai_id']).then((result) => {
@@ -511,7 +523,7 @@ chrome.runtime.onMessage.addListener(
           sendResponse(res);
         });
       } else if (request.getSuperpowerGizmos) {
-        getSuperpowerGizmos(data.openAiId, data.pageNumber, data.searchTerm, data.sortBy, data.category).then((res) => {
+        getSuperpowerGizmos(data.pageNumber, data.searchTerm, data.sortBy, data.category).then((res) => {
           sendResponse(res);
         });
       } else if (request.submitSuperpowerGizmos) {
@@ -526,6 +538,18 @@ chrome.runtime.onMessage.addListener(
         deleteSuperpowerGizmo(data.gizmoId).then((res) => {
           sendResponse(res);
         });
+      } else if (request.addGalleryImages) {
+        addGalleryImages(data.images).then((res) => {
+          sendResponse(res);
+        });
+        // } else if (request.updateGlleryImage) {
+        //   updateGlleryImage(data.openAiId, data.imageId, data.imageData).then((res) => {
+        //     sendResponse(res);
+        //   });
+        // } else if (request.getGalleryImages) {
+        //   getGalleryImages(data.openAiId, data.pageNumber, data.searchTerm, data.sortBy, data.category).then((res) => {
+        //     sendResponse(res);
+        // });
       } else if (request.getPrompt) {
         getPrompt(data.promptId).then((res) => {
           sendResponse(res);

@@ -1,4 +1,4 @@
-/* global downloadFileFrmoUrl, openUpgradeModal, hljs, formatDate, formatTime, formatDateDalle, toast, getDownloadUrlFromFileId, debounce */
+/* global downloadFileFrmoUrl, getAllConversations, getConversation, openUpgradeModal, hljs, formatDate, formatTime, formatDateDalle, toast, getDownloadUrlFromFileId, debounce */
 let selectedGalleryImage = null;
 let downloadImageOffset = 0;
 const downloadImageLimit = 12;
@@ -7,7 +7,7 @@ let currentTab = 'dalle'; // dalle or charts
 // eslint-disable-next-line no-unused-vars
 function openImageGallery() {
   selectedGalleryImage = null;
-  const gallery = `<div id="image-gallery" data-state="open" style="z-index:20;" class="fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur-xl radix-state-open:animate-show" style="pointer-events: auto;"><div role="dialog" id="radix-:rl:" aria-describedby="radix-:rn:" aria-labelledby="radix-:rm:" data-state="open" class="relative flex h-screen w-screen justify-stretch divide-x divide-white/10 focus:outline-none radix-state-open:animate-contentShow" tabindex="-1" style="pointer-events: auto;"><div id="image-gallery-image-wrapper" class="flex flex-1 transition-[flex-basis]"><div class="flex flex-1 flex-col md:p-6"><div class="flex items-center justify-between text-white"><div class="flex"><button id="gallery-close-button" class="transition hover:text-gray-300 dark:text-gray-400 dark:hover:text-gray-200" aria-label="Close Modal" type="button"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-md" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div><div class="flex"><button id="toggle-gallery-sidebar" class="btn relative btn-small md:inline-flex" aria-label="Toggle Sidebar"><div class="flex w-full gap-2 items-center justify-center"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-md" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></div></button></div></div><div class="flex items-center justify-between px-6 py-2 pt-6 text-token-text-primary sm:mb-4 md:mt-2 md:px-0 md:py-2"><div class="flex"><input type="search" id="gallery-search" tabindex="0" placeholder="Search gallery" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-token-main-surface-secondary"></div><div id="gallery-tabs-wrapper" role="radiogroup" aria-required="false" dir="ltr" class="flex w-full overflow-hidden rounded-xl bg-token-main-surface-secondary p-1.5 dark:bg-token-main-surface-tertiary md:w-1/3 flex-shrink-0 self-center" tabindex="0" style="outline: none;"><button id="gallery-tab-dalle" type="button" role="radio" data-state="${currentTab === 'dalle' ? 'checked' : 'unchecked'}" value="dalle" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="0" data-radix-collection-item="">Dall·E</button><button id="gallery-tab-charts" type="button" role="radio" data-state="${currentTab === 'charts' ? 'checked' : 'unchecked'}" value="charts" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="-1" data-radix-collection-item="">Charts</button><button id="gallery-tab-public" type="button" role="radio" data-state="${currentTab === 'public' ? 'checked' : 'unchecked'}" value="public" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="-1" data-radix-collection-item="">Public</button></div><div class="flex"><button id="gallery-download-all-button" class="btn btn-dark mr-4">Download All</button></div></div><div id="gallery-image-list" style="display: flex;flex-flow: wrap;justify-content: start;align-items: stretch;overflow-y:scroll;"></div></div></div><div id="image-gallery-sidebar" class="flex overflow-y-scroll hidden items-start justify-start overflow-hidden bg-gray-900 text-token-text-primary transition-[flex-basis] duration-500 md:flex md:basis-[25vw]"><div class="w-[25vw]"><div class="flex flex-col w-full justify-start items-start gap-2 p-4" draggable="false" data-projection-id="38"><img id="gallery-selected-image" style="aspect-ratio:1;background-color: #333;" src="${chrome.runtime.getURL('images/loading.gif')}" class="row-span-4 mx-auto h-full rounded-md object-scale-down" data-projection-id="39"><div id="gallery-selected-image-timestamp" class="w-full text-xs text-gray-500">${formatDate(selectedGalleryImage?.createTime) || '...'}</div></div><div class="flex flex-col items-start gap-3 p-4"><div class="text-sm text-gray-300 sm:text-base" id="gallery-selected-image-prompt-title">${currentTab === 'chart' ? 'Code' : 'Prompt'}</div><div id="gallery-selected-image-prompt" class="w-full text-sm sm:text-lg !whitespace-pre-wrap">${currentTab === 'chart' ? codeWrapper(selectedGalleryImage?.prompt, selectedGalleryImage?.language) || '...' : selectedGalleryImage?.prompt || '...'}</div><button id="gallery-selected-image-prompt-copy-button" class="btn relative btn-dark hidden sm:block"><div class="flex w-full gap-2 items-center justify-center"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy</div></button><div><div class="flex my-1 ${selectedGalleryImage?.genId ? 'visible' : 'invisible'}">Gen ID:&nbsp;<div class="font-bold flex cursor-pointer" id="gallery-selected-image-gen-id-copy-button"><span id="gallery-selected-image-gen-id">${selectedGalleryImage?.genId}</span><button class="flex ml-1 gap-2 items-center rounded-md p-1 text-xs text-gray-400 hover:text-gray-200"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></button></div></div><div class="flex my-1 ${selectedGalleryImage?.seed ? 'visible' : 'invisible'}">Seed:&nbsp;<div class="font-bold flex cursor-pointer" id="gallery-selected-image-seed-copy-button"><span id="gallery-selected-image-seed">${selectedGalleryImage?.seed}</span><button class="flex ml-1 gap-2 items-center rounded-md p-1 text-xs text-gray-400 hover:text-gray-200"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></button></div></div></div><div id="go-to-conversation-${selectedGalleryImage?.conversationId}" class="cursor-pointer no-underline hover:underline" style="color:#3c80f5;">Go to conversation ➜</div></div></div></div></div></div>`;
+  const gallery = `<div id="image-gallery" data-state="open" style="z-index:20;" class="dark fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur-xl radix-state-open:animate-show" style="pointer-events: auto;"><div role="dialog" id="radix-:rl:" aria-describedby="radix-:rn:" aria-labelledby="radix-:rm:" data-state="open" class="relative flex h-screen w-screen justify-stretch divide-x divide-white/10 focus:outline-none radix-state-open:animate-contentShow" tabindex="-1" style="pointer-events: auto;"><div id="image-gallery-image-wrapper" class="flex flex-1 transition-[flex-basis]"><div class="flex flex-1 flex-col md:p-6"><div class="flex items-center justify-between text-token-text-primary"><div class="flex"><button id="gallery-close-button" class="transition text-token-text-secondary hover:text-token-text-primary" aria-label="Close Modal" type="button"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-md" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div><div class="flex"><button id="toggle-gallery-sidebar" class="btn relative btn-small md:inline-flex" aria-label="Toggle Sidebar"><div class="flex w-full gap-2 items-center justify-center"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-md" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></div></button></div></div><div class="flex items-center justify-between px-6 py-2 pt-6 text-token-text-primary sm:mb-4 md:mt-2 md:px-0 md:py-2"><div class="flex"><input type="search" id="gallery-search" tabindex="0" placeholder="Search gallery" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-token-main-surface-secondary"></div><div id="gallery-tabs-wrapper" role="radiogroup" aria-required="false" dir="ltr" class="flex w-full overflow-hidden rounded-xl bg-token-main-surface-secondary p-1.5 dark:bg-token-main-surface-tertiary md:w-1/3 flex-shrink-0 self-center" tabindex="0" style="outline: none;"><button id="gallery-tab-dalle" type="button" role="radio" data-state="${currentTab === 'dalle' ? 'checked' : 'unchecked'}" value="dalle" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="0" data-radix-collection-item="">Dall·E</button><button id="gallery-tab-charts" type="button" role="radio" data-state="${currentTab === 'charts' ? 'checked' : 'unchecked'}" value="charts" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="-1" data-radix-collection-item="">Charts</button><button id="gallery-tab-public" type="button" role="radio" data-state="${currentTab === 'public' ? 'checked' : 'unchecked'}" value="public" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="-1" data-radix-collection-item="">Public</button></div><div class="flex"><button id="gallery-download-all-button" class="btn btn-dark mr-4">Download All</button></div></div><div id="gallery-image-list" style="display: flex;flex-flow: wrap;justify-content: start;align-items: stretch;overflow-y:scroll;"></div></div></div><div id="image-gallery-sidebar" class="flex overflow-y-scroll hidden items-start justify-start overflow-hidden bg-gray-900 text-token-text-primary transition-[flex-basis] duration-500 md:flex md:basis-[25vw]"><div class="w-[25vw]"><div class="flex flex-col w-full justify-start items-start gap-2 p-4" draggable="false" data-projection-id="38"><img id="gallery-selected-image" style="aspect-ratio:1;background-color: #333;" src="${chrome.runtime.getURL('images/loading.gif')}" class="row-span-4 mx-auto h-full rounded-md object-scale-down" data-projection-id="39"><div id="gallery-selected-image-timestamp" class="w-full text-xs text-gray-500">${formatDate(selectedGalleryImage?.createTime) || '...'}</div></div><div class="flex flex-col items-start gap-3 p-4"><div class="text-sm text-gray-300 sm:text-base" id="gallery-selected-image-prompt-title">${currentTab === 'chart' ? 'Code' : 'Prompt'}</div><div id="gallery-selected-image-prompt" class="w-full text-sm sm:text-lg !whitespace-pre-wrap">${currentTab === 'chart' ? codeWrapper(selectedGalleryImage?.prompt) || '...' : selectedGalleryImage?.prompt || '...'}</div><button id="gallery-selected-image-prompt-copy-button" class="btn relative btn-dark hidden sm:block"><div class="flex w-full gap-2 items-center justify-center"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy</div></button><div><div class="flex my-1 ${selectedGalleryImage?.genId ? 'visible' : 'invisible'}">Gen ID:&nbsp;<div class="font-bold flex cursor-pointer" id="gallery-selected-image-gen-id-copy-button"><span id="gallery-selected-image-gen-id">${selectedGalleryImage?.genId}</span><button class="flex ml-1 gap-2 items-center rounded-md p-1 text-xs text-token-text-secondary hover:text-token-text-primary"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></button></div></div><div class="flex my-1 ${selectedGalleryImage?.seed ? 'visible' : 'invisible'}">Seed:&nbsp;<div class="font-bold flex cursor-pointer" id="gallery-selected-image-seed-copy-button"><span id="gallery-selected-image-seed">${selectedGalleryImage?.seed}</span><button class="flex ml-1 gap-2 items-center rounded-md p-1 text-xs text-token-text-secondary hover:text-token-text-primary"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></button></div></div></div><div id="go-to-conversation-${selectedGalleryImage?.conversationId}" class="cursor-pointer no-underline hover:underline" style="color:#3c80f5;">Open conversation in new tab ➜</div></div></div></div></div></div>`;
   // remove existing gallery
   const existingGallery = document.getElementById('image-gallery');
   existingGallery?.remove();
@@ -16,6 +16,91 @@ function openImageGallery() {
   body.insertAdjacentHTML('beforeend', gallery);
   addImageGalleryEventListeners();
   loadImageList();
+}
+// eslint-disable-next-line no-unused-vars
+function syncImages() {
+  chrome.storage.local.get(['syncImagesCompletedAgain', 'syncedConvIds', 'lastMessageFailed', 'account'], (result) => {
+    const {
+      syncImagesCompletedAgain, syncedConvIds, account, chatgptAccountId,
+    } = result;
+    // console.warn('syncImagesCompletedAgain', syncImagesCompletedAgain);
+
+    if (syncImagesCompletedAgain) return;
+    const isPaid = account?.accounts?.[chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
+    if (!isPaid) return;
+    const allSyncImages = [];
+    getAllConversations(true, true).then(async (remoteConversations) => {
+      const remoteConvIds = remoteConversations.map((conv) => conv?.id);
+      for (let i = 0; i < remoteConvIds.length; i += 1) {
+        const remoteConvId = remoteConvIds[i];
+        // console.warn('remoteConvIds', i, remoteConvId);
+        if (syncedConvIds?.includes(remoteConvId)) continue;
+        // eslint-disable-next-line no-loop-func, no-await-in-loop
+        const conversation = await getConversation(remoteConvId);
+        if (!conversation || !conversation?.mapping) continue;
+        const mapping = conversation?.mapping;
+        const messages = Object.values(mapping);
+        for (let j = 0; j < messages.length; j += 1) {
+          const { message } = messages[j];
+          const shouldAddMessage = message?.author?.name === 'dalle.text2im' || message?.content?.text?.includes('<<ImageDisplayed>>');
+          if (!shouldAddMessage) continue;
+
+          const dalleImages = message?.content?.parts?.filter((part) => part?.content_type === 'image_asset_pointer').map((part) => ({ category: 'dalle', ...part })) || [];
+          const chartImages = message?.metadata?.aggregate_result?.messages?.filter((msg) => msg?.message_type === 'image').map((msg) => ({ category: 'chart', ...msg })) || [];
+          const allImages = [...dalleImages, ...chartImages];
+          for (let k = 0; k < allImages.length; k += 1) {
+            const image = allImages[k];
+            const imageId = image.category === 'dalle'
+              ? image?.asset_pointer?.split('file-service://')[1]
+              : image?.image_url?.split('file-service://')[1];
+            if (!imageId) return;
+            const { width, height } = image;
+            const prompt = image.category === 'dalle' ? image?.metadata?.dalle?.prompt : hljs.highlightAuto(message?.metadata?.aggregate_result?.code).value;
+
+            const genId = image?.metadata?.dalle?.gen_id;
+            const seed = image?.metadata?.dalle?.seed;
+            const createTime = new Date(formatTime(message?.create_time));
+            const imageNode = {
+              conversation_id: conversation.id, image_id: imageId, width, height, prompt, gen_id: genId, seed, createTime, category: image.category, is_public: false,
+            };
+            // console.warn('imageNode', imageNode);
+
+            // eslint-disable-next-line no-await-in-loop
+            const response = await getDownloadUrlFromFileId(imageId);
+            // console.warn('response', response);
+
+            imageNode.download_url = response.download_url;
+            allSyncImages.push(imageNode);
+            if (allSyncImages.length % 2 === 0) {
+              chrome.runtime.sendMessage({
+                addGalleryImages: true,
+                detail: {
+                  images: allSyncImages,
+                },
+              });
+              // empty the array
+              allSyncImages.length = 0;
+            }
+          }
+        }
+        if ((i % 10 === 0 || i === remoteConvIds.length - 1) && allSyncImages.length === 0) {
+          chrome.storage.local.set({ syncedConvIds: remoteConvIds.slice(0, i + 1) });
+        }
+        // random between 8000 and 12000
+        const timeoutSec = Math.floor(Math.random() * (12000 - 8000 + 1)) + 8000;
+        // eslint-disable-next-line no-await-in-loop, no-promise-executor-return
+        await new Promise((resolve) => setTimeout(resolve, timeoutSec));
+      }
+      // add the remaining images
+      chrome.runtime.sendMessage({
+        addGalleryImages: true,
+        detail: {
+          images: allSyncImages,
+        },
+      });
+      chrome.storage.local.set({ syncImagesCompletedAgain: true });
+    });
+  });
 }
 function loadImageList() {
   chrome.storage.local.get(['conversationsOrder', 'conversations'], (result) => {
@@ -43,22 +128,20 @@ function loadImageList() {
           const images = currentTab === 'dalle'
             ? message?.content?.parts?.filter((part) => part?.content_type === 'image_asset_pointer')
             : message?.metadata?.aggregate_result?.messages?.filter((msg) => msg?.message_type === 'image');
-          const { language, value: resValue } = currentTab === 'dalle'
-            ? { language: '', value: '' }
-            : hljs.highlightAuto(message?.metadata?.aggregate_result?.code);
+
           images.forEach((image) => {
             const imageId = currentTab === 'dalle'
               ? image?.asset_pointer?.split('file-service://')[1]
               : image?.image_url?.split('file-service://')[1];
             if (!imageId) return;
             const { width, height } = image;
-            const prompt = currentTab === 'dalle' ? image?.metadata?.dalle?.prompt : resValue;
+            const prompt = currentTab === 'dalle' ? image?.metadata?.dalle?.prompt : hljs.highlightAuto(message?.metadata?.aggregate_result?.code).value;
             const genId = image?.metadata?.dalle?.gen_id;
             const seed = image?.metadata?.dalle?.seed;
 
             if (searchValue && !prompt.toLowerCase().includes(searchValue)) return;
             allImageNodes.push({
-              conversationId, messageId, imageId, width, height, prompt, genId, seed, language, createTime,
+              conversationId, messageId, imageId, width, height, prompt, genId, seed, createTime,
             });
           });
         }
@@ -72,14 +155,14 @@ function loadImageList() {
     selectedGalleryImage = firstImageNodes[0];
     const galleryImageList = document.getElementById('gallery-image-list');
     if (currentTab === 'public') {
-      galleryImageList.innerHTML = '<div class="flex flex-col w-full justify-start items-start"><div class="relative flex flex-col w-full h-full justify-center items-center gap-2 p-4 text-gray-500 text-2xl font-bold cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-900 hover:shadow-xl rounded-xl">Coming soon!</div></div>';
+      galleryImageList.innerHTML = '<div class="flex flex-col w-full justify-start items-start"><div class="relative flex flex-col w-full h-full justify-center items-center gap-2 p-4 text-token-text-primary text-2xl font-bold cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-900 hover:shadow-xl rounded-xl">Coming soon!</div></div>';
       return;
     }
     if (firstImageNodes.length === 0) {
-      galleryImageList.innerHTML = '<div class="flex flex-col w-full justify-start items-start"><div class="relative flex flex-col w-full h-full justify-center items-center gap-2 p-4 text-gray-500 text-2xl font-bold cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-900 hover:shadow-xl rounded-xl">No images found!</div></div>';
+      galleryImageList.innerHTML = '<div class="flex flex-col w-full justify-start items-start"><div class="relative flex flex-col w-full h-full justify-center items-center gap-2 p-4 text-token-text-primary text-2xl font-bold cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-900 hover:shadow-xl rounded-xl">No images found!</div></div>';
       return;
     }
-    galleryImageList.innerHTML = `${firstImageNodes.map((imageNode) => `<div class="group/dalle-image relative flex flex-col w-full justify-start items-start gap-2 p-2 cursor-pointer" style="font-size:12px;min-width:20%;max-width: 20%;" draggable="false" data-projection-id="38"><img id="gallery-image-card-${imageNode.imageId}" src="${chrome.runtime.getURL('images/loading.gif')}" alt="${imageNode.prompt?.replace(/[^a-zA-Z0-9 ]/gi, '') || 'Generated by DALL·E'}" style="aspect-ratio:1;background-color:#333;" class="w-full row-span-4 mx-auto h-full rounded-md object-scale-down ${selectedGalleryImage.imageId === imageNode.imageId ? 'ring-2 ring-white ring-offset-4 ring-offset-black' : ''}" data-projection-id="39"><div class="invisible absolute left-3 top-3 group-hover/dalle-image:visible"><button id="image-download-button-${imageNode.imageId}" class="flex h-6 w-6 items-center justify-center rounded bg-black/50"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm text-white"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.70711 10.2929C7.31658 9.90237 6.68342 9.90237 6.29289 10.2929C5.90237 10.6834 5.90237 11.3166 6.29289 11.7071L11.2929 16.7071C11.6834 17.0976 12.3166 17.0976 12.7071 16.7071L17.7071 11.7071C18.0976 11.3166 18.0976 10.6834 17.7071 10.2929C17.3166 9.90237 16.6834 9.90237 16.2929 10.2929L13 13.5858L13 4C13 3.44771 12.5523 3 12 3C11.4477 3 11 3.44771 11 4L11 13.5858L7.70711 10.2929ZM5 19C4.44772 19 4 19.4477 4 20C4 20.5523 4.44772 21 5 21H19C19.5523 21 20 20.5523 20 20C20 19.4477 19.5523 19 19 19L5 19Z" fill="currentColor"></path></svg></button></div></div>`).join('')}${firstImageNodes.length >= downloadImageLimit ? '<div class="flex flex-col w-full justify-start items-start gap-2 p-2" style="min-width:20%;max-width:20%;aspect-ration:1;"><div id="load-more-images-button" class="relative flex flex-col w-full h-full justify-center items-center gap-2 p-4 text-gray-500 text-2xl font-bold cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-900 hover:shadow-xl rounded-xl">Load more...</div></div>' : ''}`;
+    galleryImageList.innerHTML = `${firstImageNodes.map((imageNode) => `<div class="group/dalle-image relative flex flex-col w-full justify-start items-start gap-2 p-2 cursor-pointer" style="font-size:12px;min-width:20%;max-width: 20%;" draggable="false" data-projection-id="38"><img id="gallery-image-card-${imageNode.imageId}" src="${chrome.runtime.getURL('images/loading.gif')}" alt="${imageNode.prompt?.replace(/[^a-zA-Z0-9 ]/gi, '') || 'Generated by DALL·E'}" style="aspect-ratio:1;background-color:#333;" class="w-full row-span-4 mx-auto h-full rounded-md object-scale-down ${selectedGalleryImage.imageId === imageNode.imageId ? 'ring-2 ring-white ring-offset-4 ring-offset-black' : ''}" data-projection-id="39"><div class="invisible absolute left-3 top-3 group-hover/dalle-image:visible"><button id="image-download-button-${imageNode.imageId}" class="flex h-6 w-6 items-center justify-center rounded bg-black/50"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm text-token-text-primary"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.70711 10.2929C7.31658 9.90237 6.68342 9.90237 6.29289 10.2929C5.90237 10.6834 5.90237 11.3166 6.29289 11.7071L11.2929 16.7071C11.6834 17.0976 12.3166 17.0976 12.7071 16.7071L17.7071 11.7071C18.0976 11.3166 18.0976 10.6834 17.7071 10.2929C17.3166 9.90237 16.6834 9.90237 16.2929 10.2929L13 13.5858L13 4C13 3.44771 12.5523 3 12 3C11.4477 3 11 3.44771 11 4L11 13.5858L7.70711 10.2929ZM5 19C4.44772 19 4 19.4477 4 20C4 20.5523 4.44772 21 5 21H19C19.5523 21 20 20.5523 20 20C20 19.4477 19.5523 19 19 19L5 19Z" fill="currentColor"></path></svg></button></div></div>`).join('')}${firstImageNodes.length >= downloadImageLimit ? '<div class="flex flex-col w-full justify-start items-start gap-2 p-2" style="min-width:20%;max-width:20%;aspect-ration:1;"><div id="load-more-images-button" class="relative flex flex-col w-full h-full justify-center items-center gap-2 p-4 text-token-text-primary text-2xl font-bold cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-900 hover:shadow-xl rounded-xl">Load more...</div></div>' : ''}`;
     addGalleryImageCardEventListeners(firstImageNodes);
     addLoadMoreImagesEventListener(allImageNodes);
     // load image src
@@ -92,14 +175,16 @@ function loadImageList() {
 function downloadAllImages() {
   // const zip = new JSZip();
   // const folder = zip.folder('Superpower-ChatGPT-Gallery');
-
   for (let i = 0; i < allImageNodes.length; i += 1) {
     const imageNode = allImageNodes[i];
     const { imageId } = imageNode;
     // eslint-disable-next-line no-loop-func, no-await-in-loop
     getDownloadUrlFromFileId(imageId).then((response) => {
+      const url = decodeURIComponent(response.download_url);
+      const fileName = url?.split('filename=')?.[1]?.split('&')?.[0];
+      const format = fileName?.split('.')?.pop() || 'png';
       const imageElement = document.getElementById(`gallery-image-card-${imageId}`);
-      const filename = currentTab === 'dalle' ? `DALL·E ${formatDateDalle()} - ${imageElement?.alt}.png` : `Data Analytic Image ${formatDateDalle()}.png`;
+      const filename = currentTab === 'dalle' ? `DALL·E ${formatDateDalle()} - ${imageElement?.alt}.${format}` : `Data Analytic Image ${formatDateDalle()}.${format}`;
       downloadFileFrmoUrl(response.download_url, filename);
       // fetch(response.download_url).then((resp) => resp.blob()).then((blob) => {
       //   folder.file(filename, blob);
@@ -110,7 +195,7 @@ function downloadAllImages() {
 }
 function loadMoreImagePlaceholders(imageNodes) {
   const loadMoreImagesButton = document.getElementById('load-more-images-button');
-  const newImagePlaceholders = imageNodes.map((imageNode) => `<div class="group/dalle-image relative flex flex-col w-full justify-start items-start gap-2 p-2 cursor-pointer" style="font-size:12px;min-width:20%;max-width: 20%;" draggable="false" data-projection-id="38"><img id="gallery-image-card-${imageNode.imageId}" src="${chrome.runtime.getURL('images/loading.gif')}" alt="${imageNode.prompt?.replace(/[^a-zA-Z0-9 ]/gi, '') || 'Generated by DALL·E'}" style="aspect-ratio:1;" class="w-full row-span-4 mx-auto h-full rounded-md object-scale-down ${selectedGalleryImage.imageId === imageNode.imageId ? 'ring-2 ring-white ring-offset-4 ring-offset-black' : ''}" data-projection-id="39"><div class="invisible absolute left-3 top-3 group-hover/dalle-image:visible"><button id="image-download-button-${imageNode.imageId}" class="flex h-6 w-6 items-center justify-center rounded bg-black/50"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm text-white"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.70711 10.2929C7.31658 9.90237 6.68342 9.90237 6.29289 10.2929C5.90237 10.6834 5.90237 11.3166 6.29289 11.7071L11.2929 16.7071C11.6834 17.0976 12.3166 17.0976 12.7071 16.7071L17.7071 11.7071C18.0976 11.3166 18.0976 10.6834 17.7071 10.2929C17.3166 9.90237 16.6834 9.90237 16.2929 10.2929L13 13.5858L13 4C13 3.44771 12.5523 3 12 3C11.4477 3 11 3.44771 11 4L11 13.5858L7.70711 10.2929ZM5 19C4.44772 19 4 19.4477 4 20C4 20.5523 4.44772 21 5 21H19C19.5523 21 20 20.5523 20 20C20 19.4477 19.5523 19 19 19L5 19Z" fill="currentColor"></path></svg></button></div></div>`).join('');
+  const newImagePlaceholders = imageNodes.map((imageNode) => `<div class="group/dalle-image relative flex flex-col w-full justify-start items-start gap-2 p-2 cursor-pointer" style="font-size:12px;min-width:20%;max-width: 20%;" draggable="false" data-projection-id="38"><img id="gallery-image-card-${imageNode.imageId}" src="${chrome.runtime.getURL('images/loading.gif')}" alt="${imageNode.prompt?.replace(/[^a-zA-Z0-9 ]/gi, '') || 'Generated by DALL·E'}" style="aspect-ratio:1;" class="w-full row-span-4 mx-auto h-full rounded-md object-scale-down ${selectedGalleryImage.imageId === imageNode.imageId ? 'ring-2 ring-white ring-offset-4 ring-offset-black' : ''}" data-projection-id="39"><div class="invisible absolute left-3 top-3 group-hover/dalle-image:visible"><button id="image-download-button-${imageNode.imageId}" class="flex h-6 w-6 items-center justify-center rounded bg-black/50"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm text-token-text-primary"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.70711 10.2929C7.31658 9.90237 6.68342 9.90237 6.29289 10.2929C5.90237 10.6834 5.90237 11.3166 6.29289 11.7071L11.2929 16.7071C11.6834 17.0976 12.3166 17.0976 12.7071 16.7071L17.7071 11.7071C18.0976 11.3166 18.0976 10.6834 17.7071 10.2929C17.3166 9.90237 16.6834 9.90237 16.2929 10.2929L13 13.5858L13 4C13 3.44771 12.5523 3 12 3C11.4477 3 11 3.44771 11 4L11 13.5858L7.70711 10.2929ZM5 19C4.44772 19 4 19.4477 4 20C4 20.5523 4.44772 21 5 21H19C19.5523 21 20 20.5523 20 20C20 19.4477 19.5523 19 19 19L5 19Z" fill="currentColor"></path></svg></button></div></div>`).join('');
   loadMoreImagesButton.parentElement.insertAdjacentHTML('beforebegin', newImagePlaceholders);
   if (imageNodes.length < downloadImageLimit) {
     loadMoreImagesButton.remove();
@@ -252,8 +337,8 @@ function addImageGalleryEventListeners() {
   const goToConversationButton = document.querySelector('[id^=go-to-conversation-]');
   goToConversationButton?.addEventListener('click', () => {
     // close gallery
-    const galleryElement = document.getElementById('image-gallery');
-    galleryElement.remove();
+    // const galleryElement = document.getElementById('image-gallery');
+    // galleryElement.remove();
     goToConversation(selectedGalleryImage?.conversationId);
   });
 }
@@ -266,8 +351,11 @@ function addGalleryImageCardEventListeners(imageNodes) {
     if (!imageId) return;
     if (!newImageNodeIds.includes(imageId)) return;
     imageDownloadButton?.addEventListener('click', () => {
+      const url = decodeURIComponent(imageElement.src);
+      const fileName = url?.split('filename=')?.[1]?.split('&')?.[0];
+      const format = fileName?.split('.')?.pop() || 'png';
       const imageElement = document.getElementById(`gallery-image-card-${imageId}`);
-      const filename = currentTab === 'dalle' ? `DALL·E ${formatDateDalle()} - ${imageElement?.alt}.png` : `Data Analytic Image ${formatDateDalle()}.png`;
+      const filename = currentTab === 'dalle' ? `DALL·E ${formatDateDalle()} - ${imageElement?.alt}.${format}` : `Data Analytic Image ${formatDateDalle()}.${format}`;
       if (imageElement.src) {
         downloadFileFrmoUrl(imageElement.src, filename);
       }
@@ -303,7 +391,7 @@ function addGalleryImageCardEventListeners(imageNodes) {
       const selectedImagePromptTitle = document.getElementById('gallery-selected-image-prompt-title');
       selectedImagePromptTitle.textContent = currentTab === 'chart' ? 'Code' : 'Prompt';
       const prompt = document.getElementById('gallery-selected-image-prompt');
-      prompt.innerHTML = currentTab === 'chart' ? codeWrapper(selectedGalleryImage.prompt, selectedGalleryImage.language) : selectedGalleryImage.prompt;
+      prompt.innerHTML = currentTab === 'chart' ? codeWrapper(selectedGalleryImage.prompt) : selectedGalleryImage.prompt;
       const genId = document.getElementById('gallery-selected-image-gen-id');
       genId.textContent = selectedGalleryImage.genId;
       genId.parentElement.parentElement.classList = `flex my-1 ${selectedGalleryImage.genId ? 'visible' : 'invisible'}`;
@@ -315,16 +403,20 @@ function addGalleryImageCardEventListeners(imageNodes) {
     });
   });
 }
-function codeWrapper(code, language) {
+function codeWrapper(code) {
+  const { language } = hljs.highlightAuto(code);
   return `<div class="overflow-y-auto" style="background: #333; padding: 8px; border-radius: 8px;"><code hljs language-${language} id="message-plugin-request-html-36053455-5209-4236-901d-a179d861f092" class="!whitespace-pre-wrap" style="font-size:12px;">${code}</code></div>`;
 }
 function goToConversation(conversationId) {
-  const conversationButton = document.querySelector(`[id="conversation-button-${conversationId}"]`);
-  if (!conversationButton) return;
-  conversationButton.click();
+  // open a new tab with the conversation
+  window.open(`https://chat.openai.com/c/${conversationId}`, '_blank');
+  // open in the same tab
+  // const conversationButton = document.querySelector(`[id="conversation-button-${conversationId}"]`);
+  // if (!conversationButton) return;
+  // conversationButton.click();
 }
 function openSubscriptionModal() {
-  const gallery = `<div id="image-gallery" data-state="open" style="z-index:20;" class="fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur-xl radix-state-open:animate-show" style="pointer-events: auto;"><div class="w-full absolute inset-0 flex items-center flex-wrap justify-center text-token-text-primary m-auto p-4 bg-black rounded-md" style="max-width:400px; max-height:240px;"><div>Image gallery requires a Superpower ChatGPT Pro subscription. Upgrade to Pro to see the full list of all of your images. You can search, see the prompts, and download all images! <a href="https://www.youtube.com/watch?v=oU6_wgJLYEM&ab_channel=Superpower" target="_blank" class="underline text-gold" rel="noreferrer">Learn more</a> about Image Gallery!</div><button id="cancel-button" class="btn p-3 relative btn-neutral" as="button"><div class="flex w-full gap-2 items-center justify-center">Cancel</div></button><button id="upgrade-to-pro-button-gallery" class="flex flex-wrap px-3 py-1 items-center rounded-md bg-gold hover:bg-gold-dark transition-colors duration-200 text-black cursor-pointer text-sm m-4 font-bold" style="width: 230px;"><div class="flex w-full"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="width:20px; height:20px; margin-right:6px;position:relative; top:10px;" stroke="purple" fill="purple"><path d="M240.5 224H352C365.3 224 377.3 232.3 381.1 244.7C386.6 257.2 383.1 271.3 373.1 280.1L117.1 504.1C105.8 513.9 89.27 514.7 77.19 505.9C65.1 497.1 60.7 481.1 66.59 467.4L143.5 288H31.1C18.67 288 6.733 279.7 2.044 267.3C-2.645 254.8 .8944 240.7 10.93 231.9L266.9 7.918C278.2-1.92 294.7-2.669 306.8 6.114C318.9 14.9 323.3 30.87 317.4 44.61L240.5 224z"></path></svg> Upgrade to Pro</div><div style="font-size:10px;font-weight:400;margin-left:28px;" class="flex w-full">GPT Store, Image Gallery, Voice & more</div></button></div><img src="${chrome.runtime.getURL('images/gallery.png')}"></div>`;
+  const gallery = `<div id="image-gallery" data-state="open" style="z-index:20;" class="dark fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur-xl radix-state-open:animate-show" style="pointer-events: auto;"><div class="w-full absolute inset-0 flex items-center flex-wrap justify-center text-token-text-primary m-auto p-4 bg-black rounded-md" style="max-width:400px; max-height:240px;"><div>Image gallery requires a Superpower ChatGPT Pro subscription. Upgrade to Pro to see the full list of all of your images. You can search, see the prompts, and download all images! <a href="https://www.youtube.com/watch?v=oU6_wgJLYEM&ab_channel=Superpower" target="_blank" class="underline text-gold" rel="noreferrer">Learn more</a> about Image Gallery!</div><button id="cancel-button" class="btn p-3 relative btn-neutral" as="button"><div class="flex w-full gap-2 items-center justify-center">Cancel</div></button><button id="upgrade-to-pro-button-gallery" class="flex flex-wrap px-3 py-1 items-center rounded-md bg-gold hover:bg-gold-dark transition-colors duration-200 text-black cursor-pointer text-sm m-4 font-bold" style="width: 230px;"><div class="flex w-full"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="width:20px; height:20px; margin-right:6px;position:relative; top:10px;" stroke="purple" fill="purple"><path d="M240.5 224H352C365.3 224 377.3 232.3 381.1 244.7C386.6 257.2 383.1 271.3 373.1 280.1L117.1 504.1C105.8 513.9 89.27 514.7 77.19 505.9C65.1 497.1 60.7 481.1 66.59 467.4L143.5 288H31.1C18.67 288 6.733 279.7 2.044 267.3C-2.645 254.8 .8944 240.7 10.93 231.9L266.9 7.918C278.2-1.92 294.7-2.669 306.8 6.114C318.9 14.9 323.3 30.87 317.4 44.61L240.5 224z"></path></svg> Upgrade to Pro</div><div style="font-size:10px;font-weight:400;margin-left:28px;" class="flex w-full">GPT Store, Image Gallery, Voice & more</div></button></div><img src="${chrome.runtime.getURL('images/gallery.png')}"></div>`;
   // add gallery to body
   const body = document.querySelector('body');
   body.insertAdjacentHTML('beforeend', gallery);
@@ -352,7 +444,7 @@ function addGalleryButton() {
   if (document.querySelector('#gallery-button')) return;
   // create the setting button by copying the nav button
   const galleryButton = document.createElement('a');
-  galleryButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-token-sidebar-surface-secondary transition-colors duration-200 text-token-text-primary cursor-pointer text-sm';
+  galleryButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-token-main-surface-tertiary transition-colors duration-200 text-token-text-primary cursor-pointer text-sm';
   galleryButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" stroke="currentColor" fill="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" ><path d="M512 0C547.3 0 576 28.65 576 64V288C576 323.3 547.3 352 512 352H64C28.65 352 0 323.3 0 288V64C0 28.65 28.65 0 64 0H512zM512 48H64C55.16 48 48 55.16 48 64V288C48 296.8 55.16 304 64 304H512C520.8 304 528 296.8 528 288V64C528 55.16 520.8 48 512 48zM0 448C0 430.3 14.33 416 32 416H64C81.67 416 96 430.3 96 448V480C96 497.7 81.67 512 64 512H32C14.33 512 0 497.7 0 480V448zM224 416C241.7 416 256 430.3 256 448V480C256 497.7 241.7 512 224 512H192C174.3 512 160 497.7 160 480V448C160 430.3 174.3 416 192 416H224zM320 448C320 430.3 334.3 416 352 416H384C401.7 416 416 430.3 416 448V480C416 497.7 401.7 512 384 512H352C334.3 512 320 497.7 320 480V448zM544 416C561.7 416 576 430.3 576 448V480C576 497.7 561.7 512 544 512H512C494.3 512 480 497.7 480 480V448C480 430.3 494.3 416 512 416H544z"/></svg> Gallery';
   galleryButton.title = 'CMD/CTRL + ALT + Y';
 

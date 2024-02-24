@@ -68,7 +68,7 @@ function templateWordsModalActions(templateWords) {
       closeButton.click();
     }
     if (!e.shiftKey) {
-      const chatSubmitButton = document.querySelector('#prompt-textarea ~ button');
+      const chatSubmitButton = document.querySelector('[data-testid="send-button"]');
       chatSubmitButton.click();
     }
   });

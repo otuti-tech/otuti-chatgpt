@@ -75,7 +75,7 @@ function updateNewChatButtonNotSynced() {
     const textAreaElement = document.querySelector('#prompt-textarea');
     const newChatButton = document.querySelector('#nav-gap').querySelector('a');
     if (!newChatButton) return;
-    newChatButton.classList = 'flex p-2 w-full items-center gap-3 transition-colors duration-200 text-token-text-primary cursor-pointer text-sm rounded-md border border-token-border-light bg-token-sidebar-surface-primary hover:bg-token-sidebar-surface-secondary mb-1 flex-shrink-0';
+    newChatButton.classList = 'flex p-2 w-full items-center gap-3 transition-colors duration-200 text-token-text-primary cursor-pointer text-sm rounded-md border border-token-border-light bg-token-sidebar-surface-primary hover:bg-token-main-surface-tertiary mb-1 flex-shrink-0';
     newChatButton.id = 'new-chat-button';
     newChatButton.parentElement.parentElement.classList = 'sticky left-0 right-0 top-0 z-20 bg-token-sidebar-surface-primary pt-3.5';
     newChatButton.addEventListener('click', (e) => {
@@ -112,7 +112,9 @@ function hideAllEditIcons() {
   if (newChatButton) {
     const allNewChatButtonButtons = newChatButton.querySelectorAll('button');
     const newChatButtonLastButtonChild = allNewChatButtonButtons[allNewChatButtonButtons.length - 1];
-    newChatButtonLastButtonChild.classList = 'invisible text-token-text-tertiary hover:text-token-text-secondary group-hover:visible';
+    if (newChatButtonLastButtonChild) {
+      newChatButtonLastButtonChild.classList = 'invisible text-token-text-tertiary hover:text-token-text-secondary group-hover:visible';
+    }
   }
   const gptListItems = nav.querySelectorAll('[id^=gpt-list-item-]');
   gptListItems.forEach((item) => {
@@ -152,7 +154,7 @@ function renderGPTList(showAll = false, forceRefresh = false) {
       gizmoItemWrapper.classList = 'pb-0.5 last:pb-0';
       const gizmoItem = document.createElement('a');
       gizmoItem.id = `gpt-list-item-${gizmo?.resource?.gizmo?.id}`;
-      gizmoItem.classList = 'group flex h-10 items-center gap-2 rounded-lg px-2 font-medium hover:bg-token-sidebar-surface-secondary';
+      gizmoItem.classList = 'group flex h-10 items-center gap-2 rounded-lg px-2 font-medium hover:bg-token-main-surface-tertiary';
       gizmoItem.href = `/g/g-${gizmo?.resource?.gizmo?.id}`;
       gizmoItem.innerHTML = `<div class="h-7 w-7 flex-shrink-0"><div class="gizmo-shadow-stroke overflow-hidden rounded-full"><img src="${gizmo?.resource?.gizmo?.display?.profile_picture_url}" class="h-full w-full bg-token-sidebar-surface-secondary" alt="GPT" width="80" height="80"></div></div><div class="grow overflow-hidden text-ellipsis whitespace-nowrap text-sm text-token-text-primary">${gizmo?.resource?.gizmo?.display?.name}</div><div class="flex gap-3"><div class="text-token-text-tertiary"><button id="sidebar-gizmo-menu-button-${gizmo?.resource?.gizmo?.id}" class="flex text-token-text-tertiary invisible group-hover:visible" type="button" aria-haspopup="menu" aria-expanded="false" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M3 12C3 10.8954 3.89543 10 5 10C6.10457 10 7 10.8954 7 12C7 13.1046 6.10457 14 5 14C3.89543 14 3 13.1046 3 12ZM10 12C10 10.8954 10.8954 10 12 10C13.1046 10 14 10.8954 14 12C14 13.1046 13.1046 14 12 14C10.8954 14 10 13.1046 10 12ZM17 12C17 10.8954 17.8954 10 19 10C20.1046 10 21 10.8954 21 12C21 13.1046 20.1046 14 19 14C17.8954 14 17 13.1046 17 12Z" fill="currentColor"></path></svg></button></div><span class="flex items-center" data-state="closed"><button class="${gptIdFromUrl === gizmo?.resource?.gizmo?.id ? 'text-token-text-primary' : 'invisible text-token-text-tertiary'} hover:text-token-text-secondary group-hover:visible"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M16.7929 2.79289C18.0118 1.57394 19.9882 1.57394 21.2071 2.79289C22.4261 4.01184 22.4261 5.98815 21.2071 7.20711L12.7071 15.7071C12.5196 15.8946 12.2652 16 12 16H9C8.44772 16 8 15.5523 8 15V12C8 11.7348 8.10536 11.4804 8.29289 11.2929L16.7929 2.79289ZM19.7929 4.20711C19.355 3.7692 18.645 3.7692 18.2071 4.2071L10 12.4142V14H11.5858L19.7929 5.79289C20.2308 5.35499 20.2308 4.64501 19.7929 4.20711ZM6 5C5.44772 5 5 5.44771 5 6V18C5 18.5523 5.44772 19 6 19H18C18.5523 19 19 18.5523 19 18V14C19 13.4477 19.4477 13 20 13C20.5523 13 21 13.4477 21 14V18C21 19.6569 19.6569 21 18 21H6C4.34315 21 3 19.6569 3 18V6C3 4.34314 4.34315 3 6 3H10C10.5523 3 11 3.44771 11 4C11 4.55228 10.5523 5 10 5H6Z" fill="currentColor"></path></svg></button></span></div>`;
       gizmoItemWrapper.appendChild(gizmoItem);
@@ -210,7 +212,7 @@ function renderGPTList(showAll = false, forceRefresh = false) {
       gptList.appendChild(showMoreButton);
     }
     // add explore button
-    gptList.insertAdjacentHTML('beforeend', '<div id="gpt-list-explore-button"><a class="flex h-10 w-full items-center gap-2 rounded-lg px-2 font-semibold text-token-text-primary hover:bg-token-sidebar-surface-secondary" href="/gpts"><div class="flex h-7 w-7 items-center justify-center text-token-text-secondary"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><circle cx="6.75" cy="6.75" r="3.25" stroke="currentColor" stroke-width="2"></circle><circle cx="17.25" cy="6.75" r="3.25" stroke="currentColor" stroke-width="2"></circle><circle cx="6.75" cy="17.25" r="3.25" stroke="currentColor" stroke-width="2"></circle><circle cx="17.25" cy="17.25" r="3.25" stroke="currentColor" stroke-width="2"></circle></svg></div><span class="text-sm">Explore GPTs</span></a></div>');
+    gptList.insertAdjacentHTML('beforeend', '<div id="gpt-list-explore-button"><a class="flex h-10 w-full items-center gap-2 rounded-lg px-2 font-semibold text-token-text-primary hover:bg-token-main-surface-tertiary" href="/gpts"><div class="flex h-7 w-7 items-center justify-center text-token-text-secondary"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><circle cx="6.75" cy="6.75" r="3.25" stroke="currentColor" stroke-width="2"></circle><circle cx="17.25" cy="6.75" r="3.25" stroke="currentColor" stroke-width="2"></circle><circle cx="6.75" cy="17.25" r="3.25" stroke="currentColor" stroke-width="2"></circle><circle cx="17.25" cy="17.25" r="3.25" stroke="currentColor" stroke-width="2"></circle></svg></div><span class="text-sm">Explore GPTs</span></a></div>');
     // add event listener
     const gptListExploreButton = document.querySelector('#gpt-list-explore-button');
     chrome.storage.local.get(['settings']).then((result) => {
@@ -222,7 +224,7 @@ function renderGPTList(showAll = false, forceRefresh = false) {
           const searchBox = document.querySelector('#conversation-search');
           if (searchBox?.value) {
             searchBox.value = '';
-            searchBox.dispatchEvent(new Event('input'), { bubbles: true });
+            searchBox.dispatchEvent(new Event('input', { bubbles: true }));
           }
           hideAllEditIcons();
           // render the explore page with loading indicator
@@ -256,7 +258,7 @@ function addButtonToNavFooter(title, onClick) {
   if (document.querySelector(`#${title.toLowerCase().replaceAll(' ', '-')}-button`)) return;
   // create the setting button by copying the nav button
   const button = document.createElement('a');
-  button.classList = 'flex py-3 px-3 items-center gap-3 transition-colors duration-200 text-token-text-primary cursor-pointer text-sm rounded-md border border-token-border-light bg-token-sidebar-surface-primary hover:bg-token-sidebar-surface-secondary mb-1 flex-shrink-0';
+  button.classList = 'flex py-3 px-3 items-center gap-3 transition-colors duration-200 text-token-text-primary cursor-pointer text-sm rounded-md border border-token-border-light bg-token-sidebar-surface-primary hover:bg-token-main-surface-tertiary mb-1 flex-shrink-0';
   button.innerHTML = `${buttonIcon(title)} ${title}`;
 
   button.id = `${title.toLowerCase().replaceAll(' ', '-')}-button`;
@@ -268,7 +270,7 @@ function addButtonToNavFooter(title, onClick) {
   });
   // add the setting button to the nav parrent
   const navFooter = document.querySelector('#nav-footer');
-  navFooter.appendChild(button);
+  navFooter?.appendChild(button);
 }
 
 function addExpandButton() {
@@ -281,7 +283,7 @@ function addExpandButton() {
 
   const expandButton = document.createElement('button');
   expandButton.id = 'expand-sidebar-bottom-button';
-  expandButton.classList = 'flex items-center justify-center w-10 h-4 relative rounded-md bg-token-sidebar-surface-tertiary hover:bg-token-sidebar-surface-secondary';
+  expandButton.classList = 'flex items-center justify-center w-10 h-4 relative rounded-md bg-token-sidebar-surface-tertiary hover:bg-token-main-surface-secondary';
   expandButton.style = 'bottom:-8px;margin:auto';
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;

@@ -132,7 +132,7 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
         shiftClickText.style = 'font-size:10px;position:absolute;right:32px;bottom:36px;display:none;color:lightslategray;';
       });
       historyItemUseButton.addEventListener('click', (event) => {
-        const submitButton = document.querySelector('#prompt-textarea ~ button');
+        const submitButton = document.querySelector('[data-testid="send-button"]');
         if (!submitButton) return;
         const textAreaElement = document.querySelector('#prompt-textarea');
         if (!textAreaElement) return;
@@ -495,11 +495,11 @@ function addUserPromptToHistory(inputValue) {
 
 // Add input event listener to text area
 function textAreaElementInputEventListener(event) {
-  const submitButton = document.querySelector('#prompt-textarea ~ button');
+  const submitButton = document.querySelector('[data-testid="send-button"]');
   if (submitButton) {
     const spinners = document.querySelectorAll('[id^=file-upload-spinner-]');
 
-    if ((event.target.value.trim().length > 0 || curFileAttachments?.length > 0) && spinners.length === 0) {
+    if (isGenerating || ((event.target.value.trim().length > 0 || curFileAttachments?.length > 0) && spinners.length === 0)) {
       submitButton.disabled = false;
     } else {
       submitButton.disabled = true;
@@ -603,7 +603,8 @@ function textAreaElementKeydownEventListenerAsync(event) {
       const textAreaValue = textAreaElement.value;
       const words = textAreaValue.split(/[\s\n]+/);
       const lastWord = words[words.length - 2];
-      if (lastWord.startsWith('$')) {
+      // dollar or euro or pound sign
+      if (lastWord?.startsWith('$') || lastWord?.startsWith('€') || lastWord?.startsWith('£')) {
         const prompt = customPrompts.find((p) => p.title.toLowerCase() === lastWord.substring(1).toLowerCase());
         if (prompt) {
           textAreaElement.value = textAreaValue.substring(0, textAreaValue.length - (lastWord.length + 1)) + prompt.text;
@@ -713,7 +714,7 @@ function textAreaElementKeydownEventListenerSync(event) {
       const textAreaValue = textAreaElement.value;
       const words = textAreaValue.split(/[\s\n]+/);
       const lastWord = words[words.length - 2];
-      if (lastWord?.startsWith('$')) {
+      if (lastWord?.startsWith('$') || lastWord?.startsWith('€') || lastWord?.startsWith('£')) {
         const prompt = customPrompts.find((p) => p.title.toLowerCase() === lastWord.substring(1).toLowerCase());
         if (prompt) {
           textAreaElement.value = textAreaValue.substring(0, textAreaValue.length - (lastWord.length + 1)) + prompt.text;
@@ -747,7 +748,7 @@ function textAreaElementKeydownEventListenerSync(event) {
     const cursorPosition = textAreaElement.selectionStart;
     // $
     const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
-    const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
+    const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition) || textAreaElement.value.lastIndexOf('€', cursorPosition) || textAreaElement.value.lastIndexOf('£', cursorPosition);
     const previousHashtagPosition = textAreaElement.value.lastIndexOf('#', cursorPosition);
     const previousTriggerPosition = Math.max(previousAtPosition, previousDollarPosition, previousHashtagPosition);
     const previousTrigger = textAreaElement.value.substring(previousTriggerPosition, previousTriggerPosition + 1);
@@ -781,7 +782,7 @@ function addAsyncInputEvents() {
   addInputCounter();
   const textAreaElement = document.querySelector('#prompt-textarea');
   if (!textAreaElement) return;
-  const submitButton = document.querySelector('#prompt-textarea ~ button');
+  const submitButton = document.querySelector('[data-testid="send-button"]');
   if (!submitButton) return;
   chrome.storage.local.get(['userInputValueHistory'], (result) => {
     chrome.storage.local.set({

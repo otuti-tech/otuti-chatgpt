@@ -94,25 +94,26 @@ function addNavbar(conversation = null) {
 
         const rightSection = document.createElement('div');
         rightSection.style = 'display:flex;z-index:1000;margin-left:auto;';
-
-        // Add writing style selector
+        // Add tone selector
         const toneSelectorWrapper = document.createElement('div');
-        toneSelectorWrapper.style = 'position:relative;width:150px;margin-left:8px;';
+        toneSelectorWrapper.id = 'tone-selector-wrapper';
+        toneSelectorWrapper.style = `position:relative;width:150px;margin-left:8px;display:${settings.showToneSelector ? 'block' : 'none'}`;
         toneSelectorWrapper.innerHTML = dropdown('Tone', toneList, newSelectedTone, 'right');
         rightSection.appendChild(toneSelectorWrapper);
 
-        // Add tone selector
+        // Add writing style selector
         const writingStyleSelectorWrapper = document.createElement('div');
-        writingStyleSelectorWrapper.style = 'position:relative;width:150px;margin-left:8px;';
+        writingStyleSelectorWrapper.id = 'writing-style-selector-wrapper';
+        writingStyleSelectorWrapper.style = `position:relative;width:150px;margin-left:8px;display:${settings.showWritingStyleSelector ? 'block' : 'none'}`;
         writingStyleSelectorWrapper.innerHTML = dropdown('Writing-Style', writingStyleList, newSelectedWritingStyle, 'right');
         rightSection.appendChild(writingStyleSelectorWrapper);
 
         // Add language selector
         const languageSelectorWrapper = document.createElement('div');
-        languageSelectorWrapper.style = 'position:relative;width:150px;margin-left:8px;';
+        languageSelectorWrapper.id = 'language-selector-wrapper';
+        languageSelectorWrapper.style = `position:relative;width:150px;margin-left:8px;display:${settings.showLanguageSelector ? 'block' : 'none'}`;
         languageSelectorWrapper.innerHTML = dropdown('Language', languageList, newSelectedLanguage, 'right');
         rightSection.appendChild(languageSelectorWrapper);
-
         navbar.appendChild(rightSection);
 
         navWrapper.addEventListener('mouseover', () => {

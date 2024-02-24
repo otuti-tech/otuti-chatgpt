@@ -72,7 +72,8 @@ grammarly-extension {
 input[type="checkbox"],
 input[type="checkbox"]:hover,
 input[type="checkbox"]:focus {
-  background-color: lightgray;
+  background-color: #fff;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='%23ddd' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12.207 4.793a1 1 0 0 1 0 1.414l-5 5a1 1 0 0 1-1.414 0l-2-2a1 1 0 0 1 1.414-1.414L6.5 9.086l4.293-4.293a1 1 0 0 1 1.414 0z'/%3E%3C/svg%3E");
 }
 input[type="checkbox"]:checked,
 input[type="checkbox"]:checked:hover,
@@ -156,7 +157,9 @@ input[type="checkbox"]:checked:focus {
 .dark .dark\:bg-[\#444654] {
   background-color: #444654;
 }
-
+.selected {
+  border-left: solid 1px #ffd700;
+}
 /* sortable */
 .sortable-ghost {
   background-color: #ffd70050 !important;

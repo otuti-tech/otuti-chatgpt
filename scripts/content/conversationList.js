@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global isFirefox, arkoseTrigger, addArkoseCallback, TurndownService, generateInstructions, generateChat, formatDate, loadConversation, resetSelection, initializeAutoArchive, ChatGPTIcon, rowUser, rowAssistant, updateOrCreateConversation, sharedWebsocket, isGenerating:true, generateTitle, debounce, initializeStopGeneratingResponseButton, replaceTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, createTemplateWordsModal, initializePromptChain, initializeUpgradeButton, insertNextChain, runningPromptChainSteps:true, runningPromptChainStepIndex:true, lastPromptSuggestions, playSound, toast, curImageAssets:true, curFileAttachments:true, addConversationsEventListeners, addFinalCompletionClassToLastMessageWrapper, addMessagePluginToggleButtonsEventListeners, addNodeToRowAssistant, showDefaultFolderActions, updateLastMessagePluginDropdown, textAreaElementOldValue:true, conversationSettingsMenu, toggleKeepFoldersAtTheTop, addConversationSettingsMenuEventListener, addCustomInstructionInfoIconEventListener, getGizmoById, updateGPTEditIcon, renderGizmoDiscoveryPage, initializeCustomSelectionMenu,getGizmoIdFromUrl, renderGPTList, getMousePosition, updateGizmoSidebar, formatTime, replaceAllConfimationWrappersWithActionStopped, initializeGallery, resetFolders, generateRandomDarkColor, unarchiveConversationById, closeMenus, animateFavicon, stopAnimateFavicon, updateCounter, arkoseDXIsPending, createSettingsModal, addMissingGizmoAvatars, registerWebsocket */
+/* global isFirefox, arkoseTrigger, addArkoseCallback, TurndownService, generateInstructions, generateChat, generateChatWS, formatDate, loadConversation, resetSelection, initializeAutoArchive, ChatGPTIcon, rowUser, rowAssistant, updateOrCreateConversation, sharedWebsocket, isGenerating:true, generateTitle, debounce, replaceTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, createTemplateWordsModal, initializePromptChain, initializeUpgradeButton, insertNextChain, runningPromptChainSteps:true, runningPromptChainStepIndex:true, lastPromptSuggestions, playSound, toast, curImageAssets:true, curFileAttachments:true, addConversationsEventListeners, addFinalCompletionClassToLastMessageWrapper, addMessagePluginToggleButtonsEventListeners, addNodeToRowAssistant, showDefaultFolderActions, updateLastMessagePluginDropdown, textAreaElementOldValue:true, conversationSettingsMenu, toggleKeepFoldersAtTheTop, addConversationSettingsMenuEventListener, addCustomInstructionInfoIconEventListener, getGizmoById, updateGPTEditIcon, renderGizmoDiscoveryPage, initializeCustomSelectionMenu,getGizmoIdFromUrl, renderGPTList, getMousePosition, updateGizmoSidebar, formatTime, replaceAllConfimationWrappersWithActionStopped, initializeGallery, resetFolders, generateRandomDarkColor, unarchiveConversationById, closeMenus, animateFavicon, stopAnimateFavicon, updateCounter, arkoseDXIsPending, createSettingsModal, addMissingGizmoNamesAndAvatars, registerWebsocket */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -127,18 +127,48 @@ function createSearchBox() {
       }
     }
   });
+  searchbox.addEventListener('input', (event) => {
+    const searchValue = event.target.value;
+    if (searchValue.length === 1) {
+      // open all folders
+      const allFolders = document.querySelectorAll('[id^=wrapper-folder-]');
+      allFolders.forEach((f) => {
+        const folderId = f.id.split('wrapper-folder-')[1];
+        const folderContent = document.querySelector(`#folder-content-${folderId}`);
+        if (folderContent) folderContent.style.display = 'block';
+        const folderIcon = document.querySelector(`#folder-icon-${folderId}`);
+        if (folderIcon) {
+          folderIcon.src = chrome.runtime.getURL('icons/folder-open.png');
+          folderIcon.dataset.isOpen = 'true';
+        }
+        const actionsWrapper = document.querySelector(`#folder-actions-wrapper-${folderId}`);
+        if (actionsWrapper.querySelector('button')) {
+          actionsWrapper.querySelector('button').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" stroke="currentColor" fill="currentColor" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" stroke-width="2"><path d="M432.6 209.3l-191.1 183.1C235.1 397.8 229.1 400 224 400s-11.97-2.219-16.59-6.688L15.41 209.3C5.814 200.2 5.502 184.1 14.69 175.4c9.125-9.625 24.38-9.938 33.91-.7187L224 342.8l175.4-168c9.5-9.219 24.78-8.906 33.91 .7187C442.5 184.1 442.2 200.2 432.6 209.3z"/></svg>';
+        }
+      });
+    } else if (searchValue.length === 0) {
+      // close all folders
+      const allFolders = document.querySelectorAll('[id^=wrapper-folder-]');
+      allFolders.forEach((f) => {
+        const folderId = f.id.split('wrapper-folder-')[1];
+        const folderContent = document.querySelector(`#folder-content-${folderId}`);
+        if (folderContent) folderContent.style.display = 'none';
+        const folderIcon = document.querySelector(`#folder-icon-${folderId}`);
+        if (folderIcon) {
+          folderIcon.src = chrome.runtime.getURL('icons/folder.png');
+          folderIcon.dataset.isOpen = 'false';
+        }
+        const actionsWrapper = document.querySelector(`#folder-actions-wrapper-${folderId}`);
+        if (actionsWrapper.querySelector('button')) {
+          actionsWrapper.querySelector('button').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" stroke="currentColor" fill="currentColor" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" stroke-width="2"><path d="M113.3 47.41l183.1 191.1c4.469 4.625 6.688 10.62 6.688 16.59s-2.219 11.97-6.688 16.59l-183.1 191.1c-9.152 9.594-24.34 9.906-33.9 .7187c-9.625-9.125-9.938-24.38-.7187-33.91l168-175.4L78.71 80.6c-9.219-9.5-8.906-24.78 .7187-33.91C88.99 37.5 104.2 37.82 113.3 47.41z"/></svg>';
+        }
+      });
+    }
+  });
   searchbox.addEventListener('input', debounce((event) => {
     const searchValue = event.target.value;
-    chrome.storage.local.get(['conversationsOrder', 'conversations'], (result) => {
-      const { conversations, conversationsOrder } = result;
-      // remove existing conversations
-      const curConversationList = document.querySelector('#conversation-list');
-      const searchWrapper = document.querySelector('#conversation-search-wrapper');
-      // remove conversations list childs other than the search box wrapper (first child)
-      conversationList.innerHTML = '';
-      curConversationList.prepend(searchWrapper);
-      const searchInput = document.querySelector('#conversation-search');
-      searchInput.value = searchValue;
+    chrome.storage.local.get(['conversations'], (result) => {
+      const { conversations } = result;
 
       const allConversations = Object.values(conversations) || [];
       // sort by update_time. if update time is force_copy, show at the top
@@ -147,31 +177,23 @@ function createSearchBox() {
         if (b?.update_time === 'force_copy') return 1;
         return b.update_time - a.update_time;
       });
-
+      let filteredConversationIds = filteredConversations.map((c) => c?.id);
+      // load-more-conversations-button
+      const loadMoreButton = document.querySelector('#load-more-conversations-button');
       resetSelection();
-      if (searchValue) {
+      if (searchValue.length) {
         filteredConversations = allConversations?.filter((c) => (
-          c.title?.toLowerCase()?.includes(searchValue.toLowerCase())
-          || Object.values(c.mapping).map((m) => m?.message?.content?.parts?.filter((p) => typeof p === 'string')?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))
+          [c.title, ...Object.values(c.mapping).map((m) => m?.message?.content?.parts?.filter((p) => typeof p === 'string')?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))]
             .join(' ')?.toLowerCase()
             .includes(searchValue.toLowerCase())));
-        const filteredConversationIds = filteredConversations.map((c) => c?.id);
-        // convert filtered conversations to object with id as key
-        const filteredConversationsObj = filteredConversations.reduce((acc, cur) => {
-          acc[cur.id] = cur;
-          return acc;
-        }, {});
-        loadStorageConversations(filteredConversationsObj, conversationsOrder, filteredConversationIds, searchValue);
+        filteredConversationIds = filteredConversations.map((c) => c?.id);
+        if (loadMoreButton) loadMoreButton.style.display = 'none';
       } else {
-        loadStorageConversations(conversations, conversationsOrder, conversationsOrder, searchValue);
-        const { pathname } = new URL(window.location.toString());
-        const conversationId = pathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
-        if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
-          loadConversation(conversationId, '');
-        }
+        if (loadMoreButton) loadMoreButton.style.display = 'block';
       }
+      loadFilteredConversations(filteredConversationIds);
     });
-  }, 500));
+  }, 200));
 
   const newFolderButton = document.createElement('button');
   newFolderButton.id = 'new-folder-button';
@@ -215,7 +237,7 @@ function addHistorySyncingMessage() {
   const historySyncMessage = document.createElement('div');
   historySyncMessage.id = 'history-sync-message';
   historySyncMessage.classList = 'flex items-center justify-center w-full my-4 text-sm text-token-text-secondary';
-  historySyncMessage.innerHTML = 'Loading conversations...';
+  historySyncMessage.innerHTML = 'Syncing conversations...';
   conversationList?.append(historySyncMessage);
 }
 // eslint-disable-next-line no-unused-vars
@@ -225,7 +247,7 @@ function showSidebarGizmoMenu(event, gizmoId) {
     const translateX = x + 4;
     const translateY = y + 4;
 
-    const menu = `<div id="sidebar-gizmo-menu" data-radix-popper-content-wrapper="" dir="ltr" style="position: fixed; left: 0px; top: 0px; transform: translate3d(${translateX}px, ${translateY}px, 0px); min-width: max-content; z-index: auto; --radix-popper-anchor-width: 20px; --radix-popper-anchor-height: 20px; --radix-popper-available-width: 1173px; --radix-popper-available-height: 825px; --radix-popper-transform-origin: 0% 0px;"><div data-side="bottom" data-align="start" role="menu" aria-orientation="vertical" data-state="open" data-radix-menu-content="" dir="ltr" id="radix-:r25:" aria-labelledby="radix-:r24:" class="mt-2 min-w-[100px] max-w-xs rounded-lg border border-gray-100 bg-token-main-surface-primary py-1.5 shadow-lg dark:border-gray-700" tabindex="-1" data-orientation="vertical" style="outline: none; --radix-dropdown-menu-content-transform-origin: var(--radix-popper-transform-origin); --radix-dropdown-menu-content-available-width: var(--radix-popper-available-width); --radix-dropdown-menu-content-available-height: var(--radix-popper-available-height); --radix-dropdown-menu-trigger-width: var(--radix-popper-anchor-width); --radix-dropdown-menu-trigger-height: var(--radix-popper-anchor-height); pointer-events: auto;">${gizmoData?.flair?.kind !== 'sidebar_keep' ? '<div id="sidebar-gizmo-menu-option-keep-in-sidebar" role="menuitem" class="flex gap-2 m-1.5 rounded px-5 py-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-sidebar-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Keep in sidebar</div>' : ''}<div id="sidebar-gizmo-menu-option-hide-from-sidebar" role="menuitem" class="flex gap-2 m-1.5 rounded px-5 py-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-sidebar-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Hide from sidebar</div></div></div>`;
+    const menu = `<div id="sidebar-gizmo-menu" data-radix-popper-content-wrapper="" dir="ltr" style="position: fixed; left: 0px; top: 0px; transform: translate3d(${translateX}px, ${translateY}px, 0px); min-width: max-content; z-index: auto; --radix-popper-anchor-width: 20px; --radix-popper-anchor-height: 20px; --radix-popper-available-width: 1173px; --radix-popper-available-height: 825px; --radix-popper-transform-origin: 0% 0px;"><div data-side="bottom" data-align="start" role="menu" aria-orientation="vertical" data-state="open" data-radix-menu-content="" dir="ltr" id="radix-:r25:" aria-labelledby="radix-:r24:" class="mt-2 min-w-[100px] max-w-xs rounded-lg border border-gray-100 bg-token-main-surface-primary py-1.5 shadow-lg dark:border-gray-700" tabindex="-1" data-orientation="vertical" style="outline: none; --radix-dropdown-menu-content-transform-origin: var(--radix-popper-transform-origin); --radix-dropdown-menu-content-available-width: var(--radix-popper-available-width); --radix-dropdown-menu-content-available-height: var(--radix-popper-available-height); --radix-dropdown-menu-trigger-width: var(--radix-popper-anchor-width); --radix-dropdown-menu-trigger-height: var(--radix-popper-anchor-height); pointer-events: auto;">${gizmoData?.flair?.kind !== 'sidebar_keep' ? '<div id="sidebar-gizmo-menu-option-keep-in-sidebar" role="menuitem" class="flex gap-2 m-1.5 rounded px-5 py-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-main-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Keep in sidebar</div>' : ''}<div id="sidebar-gizmo-menu-option-hide-from-sidebar" role="menuitem" class="flex gap-2 m-1.5 rounded px-5 py-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-main-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Hide from sidebar</div></div></div>`;
     document.body.insertAdjacentHTML('beforeend', menu);
     // add event listeners to menu options
     const keepInSidebarOption = document.querySelector('#sidebar-gizmo-menu-option-keep-in-sidebar');
@@ -293,41 +315,6 @@ function addToOrCreateCustomGPTFolder(conversation, settings) {
   // scroll conversation element into view
   conversationElement?.scrollIntoView({ block: 'center' });
 }
-function addToTheTopOfConversationList(conversation) {
-  const conversationList = document.querySelector('#conversation-list');
-  const searchBoxWrapper = document.querySelector('#conversation-search-wrapper');
-  const conversationElement = createConversation(conversation);
-  const folderElements = Array.from(conversationList.querySelectorAll('[id^=wrapper-folder-]'));
-  if (folderElements.length > 0) {
-    // insert conversationElement after the last folder
-    conversationList.insertBefore(conversationElement, folderElements[folderElements.length - 1].nextSibling);
-  } else {
-    if (searchBoxWrapper) { // insert after search box wrapper
-      searchBoxWrapper.insertAdjacentElement('afterend', conversationElement);
-    } else {
-      conversationList.prepend(conversationElement);
-    }
-  }
-  chrome.storage.local.get(['conversationsOrder'], (result) => {
-    const { conversationsOrder } = result;
-    conversationsOrder.splice(folderElements.length, 0, conversation.id);
-    chrome.storage.local.set({ conversationsOrder });
-  });
-  // scroll conversation element into view
-  conversationElement?.scrollIntoView({ block: 'center' });
-}
-// eslint-disable-next-line no-unused-vars
-function prependConversation(conversation, settings) {
-  addConversationSettingsMenuEventListener(conversation.id);
-  const existingConversationElement = document.querySelector(`#conversation-button-${conversation.id}`);
-  if (existingConversationElement) existingConversationElement.remove();
-
-  if (settings.customGPTAutoFolder && conversation.gizmo_id) {
-    addToOrCreateCustomGPTFolder(conversation, settings);
-  } else {
-    addToTheTopOfConversationList(conversation);
-  }
-}
 // eslint-disable-next-line no-unused-vars
 function generateTitleForConversation(conversationId, messageId, profile) {
   setTimeout(() => {
@@ -367,7 +354,147 @@ function generateTitleForConversation(conversationId, messageId, profile) {
     });
   }, 500);// a little delay to make sure gen title still works even if user stops the generation
 }
+function addToTheTopOfConversationList(conversation) {
+  const conversationList = document.querySelector('#conversation-list');
+  const searchBoxWrapper = document.querySelector('#conversation-search-wrapper');
+  const conversationElement = createConversation(conversation);
+  const folderElements = Array.from(conversationList.querySelectorAll('[id^=wrapper-folder-]'));
+  if (folderElements.length > 0) {
+    // insert conversationElement after the last folder
+    conversationList.insertBefore(conversationElement, folderElements[folderElements.length - 1].nextSibling);
+  } else {
+    if (searchBoxWrapper) { // insert after search box wrapper
+      searchBoxWrapper.insertAdjacentElement('afterend', conversationElement);
+    } else {
+      conversationList.prepend(conversationElement);
+    }
+  }
+  chrome.storage.local.get(['conversationsOrder'], (result) => {
+    const { conversationsOrder } = result;
+    conversationsOrder.splice(folderElements.length, 0, conversation.id);
+    chrome.storage.local.set({ conversationsOrder });
+  });
+  // scroll conversation element into view
+  conversationElement?.scrollIntoView({ block: 'center' });
+}
+// eslint-disable-next-line no-unused-vars
+function prependConversation(conversation, settings) {
+  addConversationSettingsMenuEventListener(conversation.id);
+  const existingConversationElement = document.querySelector(`#conversation-button-${conversation.id}`);
+  if (existingConversationElement) existingConversationElement.remove();
 
+  if (settings.customGPTAutoFolder && conversation.gizmo_id) {
+    addToOrCreateCustomGPTFolder(conversation, settings);
+  } else {
+    addToTheTopOfConversationList(conversation);
+  }
+}
+// eslint-disable-next-line no-unused-vars
+function updateConversationTitle(conversationId, title) {
+  setTimeout(() => {
+    chrome.storage.local.get('conversations', (result) => {
+      const { conversations } = result;
+      conversations[conversationId].title = title;
+      chrome.storage.local.set({ conversations });
+
+      const mapping = Object.values(conversations[conversationId].mapping);
+      const allSystemMessages = mapping.filter((m) => m.message?.role === 'system' || m.message?.author?.role === 'system');
+      const systemMessageWithCustomInstruction = allSystemMessages.find((node) => node?.message?.metadata?.user_context_message_data);
+      const customInstrucionProfile = systemMessageWithCustomInstruction?.message?.metadata?.user_context_message_data || undefined;
+
+      document.title = title;
+      const conversationElement = document.querySelector(`#conversation-button-${conversationId}`);
+      if (!conversationElement) return;
+      conversationElement.classList.add('animate-flash');
+      const conversationTitle = conversationElement.querySelector(`#conversation-title-${conversationId}`);
+      const topTitle = document.querySelector('#conversation-top-title');
+      // animate writing title one character at a time
+      conversationTitle.innerHTML = '';
+      if (topTitle) topTitle.innerHTML = '';
+      if (!title) return;
+      title.split('').forEach((c, i) => {
+        setTimeout(() => {
+          conversationTitle.innerHTML += c;
+          if (topTitle) topTitle.innerHTML += c;
+          if (i === title.length - 1) {
+            conversationElement.classList.remove('animate-flash');
+          }
+        }, i * 50);
+      });
+      // at the end, add custom instructions icon
+      setTimeout(() => {
+        if (topTitle && customInstrucionProfile?.about_user_message) {
+          topTitle.innerHTML += '<span id="custom-instruction-info-icon" style="display:flex;align-items:center;">&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="none" class="ml-0.5 mt-0.5 h-4 w-4 flex-shrink-0 text-token-text-primary sm:mb-0.5 sm:mt-0 sm:h-5 sm:w-5"><path d="M8.4375 8.4375L8.46825 8.4225C8.56442 8.37445 8.67235 8.35497 8.77925 8.36637C8.88615 8.37776 8.98755 8.41955 9.07143 8.48678C9.15532 8.55402 9.21818 8.64388 9.25257 8.74574C9.28697 8.8476 9.29145 8.95717 9.2655 9.0615L8.7345 11.1885C8.70836 11.2929 8.7127 11.4026 8.74702 11.5045C8.78133 11.6065 8.84418 11.6965 8.9281 11.7639C9.01202 11.8312 9.1135 11.8731 9.2205 11.8845C9.32749 11.8959 9.43551 11.8764 9.53175 11.8282L9.5625 11.8125M15.75 9C15.75 9.88642 15.5754 10.7642 15.2362 11.5831C14.897 12.4021 14.3998 13.1462 13.773 13.773C13.1462 14.3998 12.4021 14.897 11.5831 15.2362C10.7642 15.5754 9.88642 15.75 9 15.75C8.11358 15.75 7.23583 15.5754 6.41689 15.2362C5.59794 14.897 4.85382 14.3998 4.22703 13.773C3.60023 13.1462 3.10303 12.4021 2.76381 11.5831C2.42459 10.7642 2.25 9.88642 2.25 9C2.25 7.20979 2.96116 5.4929 4.22703 4.22703C5.4929 2.96116 7.20979 2.25 9 2.25C10.7902 2.25 12.5071 2.96116 13.773 4.22703C15.0388 5.4929 15.75 7.20979 15.75 9ZM9 6.1875H9.006V6.1935H9V6.1875Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+          addCustomInstructionInfoIconEventListener(conversationId, topTitle.querySelector('#custom-instruction-info-icon'));
+        }
+      }, title.length * 50);
+    });
+  }, 1000);// a little delay to make sure gen title still works even if user stops the generation
+}
+function loadFilteredConversations(conversationIds) {
+  const searchInput = document.querySelector('#conversation-search');
+  const searchValue = searchInput?.value || '';
+  const conversationList = document.querySelector('#conversation-list');
+  if (!conversationList) return;
+  const allConversations = conversationList.querySelectorAll('[id^="conversation-button-"]');
+  allConversations.forEach((c) => {
+    c.classList = notSelectedClassList;
+    if (searchValue) {
+      if (!conversationIds.includes(c.id.split('conversation-button-')[1])) {
+        c.classList.add('hidden');
+      } else {
+        c.classList.remove('hidden');
+      }
+    } else {
+      c.classList.remove('hidden');
+    }
+  });
+  toggleFoldersVisibility();
+  if (conversationIds.length > 0) {
+    const existingNoResult = document.querySelector('#search-no-result');
+    if (existingNoResult) existingNoResult.remove();
+    // update location path to the first conversation
+    const firstConversation = conversationList.querySelectorAll('[id^=conversation-button-]:not(.hidden)')[0];
+    firstConversation.classList = selectedClassList;
+    const firstConversationId = firstConversation?.id?.split('conversation-button-')[1];
+    if (searchValue) {
+      window.history.pushState({}, '', `/c/${firstConversationId}`);
+      loadConversation(firstConversationId);
+    } else {
+      window.history.pushState({}, '', '/');
+      showNewChatPage(null, false);
+    }
+  } else {
+    const existingNoResult = document.querySelector('#search-no-result');
+    if (!existingNoResult) {
+      const noResult = document.createElement('div');
+      noResult.id = 'search-no-result';
+      noResult.classList = 'text-token-text-tertiary text-center';
+      noResult.innerHTML = 'No results';
+      noResult.style.height = '500px';
+      conversationList.appendChild(noResult);
+    }
+    // update location path to the first conversation
+    window.history.pushState({}, '', '/');
+    showNewChatPage(null, false);
+  }
+}
+function toggleFoldersVisibility() {
+  const conversationList = document.querySelector('#conversation-list');
+  if (!conversationList) return;
+  const allFolders = conversationList.querySelectorAll('[id^=wrapper-folder-]');
+  const searchInput = document.querySelector('#conversation-search');
+  const searchValue = searchInput?.value || '';
+  allFolders.forEach((f) => {
+    const folderId = f.id.split('wrapper-folder-')[1];
+    const folderContent = document.querySelector(`#folder-content-${folderId}`);
+    if (searchValue && folderContent && folderContent.querySelectorAll('[id^=conversation-button-]:not(.hidden)').length === 0) {
+      f.classList.add('hidden');
+    } else {
+      f.classList.remove('hidden');
+    }
+  });
+}
 function loadStorageConversations(conversations, conversationsOrder = [], filteredConversationIds = [], searchValue = '') {
   const conversationList = document.querySelector('#conversation-list');
   if (!conversationList) return;
@@ -405,12 +532,9 @@ function loadStorageConversations(conversations, conversationsOrder = [], filter
   if (searchValue) {
     if (Object.values(conversations).length > 0) {
       // click on first conversation
-      const firstConversation = document.querySelector('[id^="conversation-button-"]');
-      if (firstConversation) {
-        firstConversation.click();
-        // focus on searchbox
-        const searchbox = document.querySelector('#conversation-search');
-        searchbox.focus();
+      const firstConversationId = document.querySelector('[id^="conversation-button-"]:not(.hidden)')?.id?.split('conversation-button-')[1];
+      if (firstConversationId) {
+        loadConversation(firstConversationId);
       }
     } else {
       const noResult = document.createElement('div');
@@ -424,7 +548,7 @@ function loadStorageConversations(conversations, conversationsOrder = [], filter
   } else {
     chrome.storage.local.get(['settings', 'totalConversations'], (result) => {
       const { settings, totalConversations } = result;
-      if (parseInt(settings.autoSyncCount, 10) < totalConversations && !conversationList.innerText.includes('Loading conversations...')) {
+      if (parseInt(settings.autoSyncCount, 10) < totalConversations && !conversationList.innerText.includes('Syncing conversations...')) {
         const loadMoreConversationsButton = document.createElement('button');
         loadMoreConversationsButton.id = 'load-more-conversations-button';
         loadMoreConversationsButton.classList = 'w-full py-3 text-sm text-center text-token-text-tertiary cursor-pointer hover:text-token-text-primary';
@@ -445,7 +569,7 @@ function updateNewChatButtonSynced() {
     const textAreaElement = document.querySelector('#prompt-textarea');
     const newChatButton = document.querySelector('#nav-gap')?.querySelector('a');
     if (!newChatButton) return;
-    newChatButton.classList = 'flex p-2 w-full items-center gap-3 transition-colors duration-200 text-token-text-primary cursor-pointer text-sm rounded-md border border-token-border-light bg-token-sidebar-surface-primary hover:bg-token-sidebar-surface-secondary mb-1 flex-shrink-0';
+    newChatButton.classList = 'flex p-2 w-full items-center gap-3 transition-colors duration-200 text-token-text-primary cursor-pointer text-sm rounded-md border border-token-border-light bg-token-sidebar-surface-primary hover:bg-token-main-surface-tertiary mb-1 flex-shrink-0';
     newChatButton.parentElement.parentElement.classList = 'sticky left-0 right-0 top-0 z-20 bg-token-sidebar-surface-primary pt-3.5';
 
     // clone newChatButton
@@ -487,24 +611,24 @@ function updateNewChatButtonSynced() {
     // }
   });
 }
-function submitChat(userInput, conversation, messageId, parentId, settings, account, models, selectedModel, imageAssets = [], fileAttachments = [], continueGenerating = false, regenerateResponse = false, authorRole = 'user', authorName = '', initialMetadata = {}) {
+function submitChat(userInput, conversation, messageId, parentId, settings, account, chatgptAccountId, models, selectedModel, imageAssets = [], fileAttachments = [], continueGenerating = false, regenerateResponse = false, authorRole = 'user', authorName = '', initialMetadata = {}) {
   // const chatgptAccountId = document?.cookie?.split('; ')?.find((row) => row?.startsWith('_account'))?.split('=')?.[1] || 'default';
 
   // const sharedWebsocket = chatgptAccountId ? account?.accounts?.[chatgptAccountId]?.features?.includes('shared_websocket') : false;
   if (sharedWebsocket) {
-    submitChatWS(userInput, conversation, messageId, parentId, settings, account, models, selectedModel, imageAssets, fileAttachments, continueGenerating, regenerateResponse, authorRole, authorName, initialMetadata);
+    submitChatWS(userInput, conversation, messageId, parentId, settings, account, chatgptAccountId, models, selectedModel, imageAssets, fileAttachments, continueGenerating, regenerateResponse, authorRole, authorName, initialMetadata);
   } else {
-    submitChatStream(userInput, conversation, messageId, parentId, settings, account, models, selectedModel, imageAssets, fileAttachments, continueGenerating, regenerateResponse, authorRole, authorName, initialMetadata);
+    submitChatStream(userInput, conversation, messageId, parentId, settings, account, chatgptAccountId, models, selectedModel, imageAssets, fileAttachments, continueGenerating, regenerateResponse, authorRole, authorName, initialMetadata);
   }
 }
-function submitChatStream(userInput, conversation, messageId, parentId, settings, account, models, selectedModel, imageAssets = [], fileAttachments = [], continueGenerating = false, regenerateResponse = false, authorRole = 'user', authorName = '', initialMetadata = {}) {
+function submitChatStream(userInput, conversation, messageId, parentId, settings, account, chatgptAccountId, models, selectedModel, imageAssets = [], fileAttachments = [], continueGenerating = false, regenerateResponse = false, authorRole = 'user', authorName = '', initialMetadata = {}) {
   const lastMessageFailed = conversation?.mapping?.[conversation?.current_node]?.message?.author?.role === 'user';
-
-  const isPaid = account?.accounts?.default?.entitlement?.has_active_subscription || false;
+  const isPaid = account?.accounts?.[chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
   // check window. localstorage every 200ms until arkoseToken is set
-  const isGPT4 = selectedModel.tags.includes('gpt4');
+  // const isGPT4 = selectedModel.tags.includes('gpt4');
   let arkoseToken = window.localStorage.getItem('arkoseToken');
-  if (isGPT4 && !arkoseToken) {
+  // if (isGPT4 && !arkoseToken) {
+  if (!arkoseToken) {
     arkoseTrigger();
   }
   const userMessageId = messageId;
@@ -529,13 +653,16 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
       }
       const syncDiv = document.getElementById('sync-div');
       syncDiv.style.opacity = '1';
-      const submitButton = document.querySelector('#prompt-textarea ~ button');
+      const submitButton = document.querySelector('[data-testid="send-button"]');
       // submitButton.disabled = false;
+      submitButton.classList.replace('rounded-full', 'rounded-lg');
+
       submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
       return;
     }
     // if (arkoseToken || (isPaid && !selectedModel.tags.includes('gpt4'))) {
-    if (!isGPT4 || arkoseToken) {
+    // if (!isGPT4 || arkoseToken) {
+    if (arkoseToken) {
       // if (arkoseToken) {
       clearInterval(interval);
       scrolUpDetected = false;
@@ -543,12 +670,9 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
       // const searchBox = document.querySelector('#conversation-search');
       // if (searchBox?.value) {
       //   searchBox.value = '';
-      //   searchBox.dispatchEvent(new Event('input'), { bubbles: true });
+      //   searchBox.dispatchEvent(new Event('input', { bubbles: true }));
       // }
 
-      const curSubmitButton = document.querySelector('#prompt-textarea ~ button');
-      curSubmitButton.disabled = true;
-      curSubmitButton.innerHTML = '<span class="" data-state="closed"><svg class="animate-spin" width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill="#000" viewBox="0 0 24 24"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="#000" stroke-width="2"></circle> <path class="opacity-75" fill="#000" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></span>';
       const syncDiv = document.getElementById('sync-div');
       if (syncDiv) syncDiv.style.opacity = '0.3';
       chatStreamIsClosed = false;
@@ -573,7 +697,10 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
       const action = regenerateResponse ? 'variant' : continueGenerating ? 'continue' : 'next';
       getGizmoById(gizmoId).then((gizmoData) => {
         generateChat(userInputParts, conversation?.id, userMessageId, parentId, arkoseToken, gizmoData?.resource, metadata, lastPromptSuggestions, saveHistory, authorRole, authorName, action, contentType, lastMessageFailed).then((chatStream) => {
-          initializeStopGeneratingResponseButton(true);
+          const curSubmitButton = document.querySelector('[data-testid="send-button"]');
+          curSubmitButton.classList.replace('rounded-lg', 'rounded-full');
+          curSubmitButton.innerHTML = '<span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="16" height="16" class="text-white dark:text-black"><path d="M384 128v255.1c0 35.35-28.65 64-64 64H64c-35.35 0-64-28.65-64-64V128c0-35.35 28.65-64 64-64H320C355.3 64 384 92.65 384 128z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+
           const faviconTimeout = settings.animateFavicon ? animateFavicon() : undefined;
           userChatIsActuallySaved = regenerateResponse || continueGenerating || authorRole !== 'user';
           let userChatSavedLocally = regenerateResponse || continueGenerating || authorRole !== 'user'; // false by default unless regenerateResponse is true
@@ -591,9 +718,11 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
               if (!scrolUpDetected && settings.autoScroll) {
                 document.querySelector('#conversation-bottom')?.scrollIntoView();
               }
-              const submitButton = document?.querySelector('#prompt-textarea ~ button');
+              const submitButton = document?.querySelector('[data-testid="send-button"]');
               const textAreaElement = document?.querySelector('#prompt-textarea');
               textAreaElement?.focus();
+              textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
+              textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
               // update all ids with last message id
               const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')]?.pop();
               if (lastMessageWrapper) {
@@ -611,6 +740,8 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
               }
               // submitButton.disabled = false;
               if (submitButton) {
+                submitButton.classList.replace('rounded-full', 'rounded-lg');
+
                 submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
               }
               if (chatStreamIsClosed && e.data !== '[DONE]') {
@@ -664,16 +795,15 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
                   }
                 }, 1000);
               }
+              replaceTextAreaElement(settings);
               isGenerating = false;
               chatStreamIsClosed = false;
               chatStream.close();
               if (syncDiv) syncDiv.style.opacity = '1';
-              replaceTextAreaElement(settings);
-              initializeStopGeneratingResponseButton();
               addFinalCompletionClassToLastMessageWrapper();
               addConversationsEventListeners(finalConversationId, true);
               updateCounter();
-              updateTotalCounter();
+              updateTotalCounter(settings);
               if (settings.chatEndedSound) {
                 playSound('beep');
               }
@@ -693,6 +823,10 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
                 }
 
                 const data = JSON.parse(e.data);
+                if (data.type === 'title_generation') {
+                  updateConversationTitle(data.conversation_id, data.title);
+                  return;
+                }
                 if (data.error) throw new Error(data.error);
                 const { conversation_id: conversationId, message } = data;
                 const { role } = message.author;
@@ -830,7 +964,7 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
                 const lastRowAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
                 const existingRowAssistant = (continueGenerating || authorRole !== 'user') ? lastRowAssistant : document.querySelector(`[id="message-wrapper-${assistantData[0]?.message?.id}"][data-role="assistant"]`);
 
-                if (existingRowAssistant) {
+                if (existingRowAssistant && !existingRowAssistant.nextElementSibling.id.startsWith('message-wrapper-')) {
                   isRenderingAssistantRow = false;
                   addNodeToRowAssistant(finalConversationId, data, gizmoId, continueGenerating, existingInnerHTML, true, settings.pluginDefaultOpen);
                   if (!scrolUpDetected && settings.autoScroll) {
@@ -859,7 +993,7 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
                         if (lastMessagePluginToggleButton) {
                           addMessagePluginToggleButtonsEventListeners([lastMessagePluginToggleButton]);
                         }
-                        addMissingGizmoAvatars();
+                        addMissingGizmoNamesAndAvatars();
                       }, 300);
                       if (!scrolUpDetected && settings.autoScroll) {
                         conversationBottom.scrollIntoView();
@@ -895,8 +1029,10 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
             finalSummary = '';
             shouldSubmitFinalSummary = false;
             syncDiv.style.opacity = '1';
-            const submitButton = document.querySelector('#prompt-textarea ~ button');
+            const submitButton = document.querySelector('[data-testid="send-button"]');
             // submitButton.disabled = false;
+            submitButton.classList.replace('rounded-full', 'rounded-lg');
+
             submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
 
             // eslint-disable-next-line no-console
@@ -941,14 +1077,15 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
     }
   }, 200);
 }
-function submitChatWS(userInput, conversation, messageId, parentId, settings, account, models, selectedModel, imageAssets = [], fileAttachments = [], continueGenerating = false, regenerateResponse = false, authorRole = 'user', authorName = '', initialMetadata = {}) {
+function submitChatWS(userInput, conversation, messageId, parentId, settings, account, chatgptAccountId, models, selectedModel, imageAssets = [], fileAttachments = [], continueGenerating = false, regenerateResponse = false, authorRole = 'user', authorName = '', initialMetadata = {}) {
   const lastMessageFailed = conversation?.mapping?.[conversation?.current_node]?.message?.author?.role === 'user';
 
-  const isPaid = account?.accounts?.default?.entitlement?.has_active_subscription || false;
+  const isPaid = account?.accounts?.[chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
   // check window. localstorage every 200ms until arkoseToken is set
-  const isGPT4 = selectedModel.tags.includes('gpt4');
+  // const isGPT4 = selectedModel.tags.includes('gpt4');
   let arkoseToken = window.localStorage.getItem('arkoseToken');
-  if (isGPT4 && !arkoseToken) {
+  // if (isGPT4 && !arkoseToken) {
+  if (!arkoseToken) {
     arkoseTrigger();
   }
   const userMessageId = messageId;
@@ -972,13 +1109,16 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
       }
       const syncDiv = document.getElementById('sync-div');
       syncDiv.style.opacity = '1';
-      const submitButton = document.querySelector('#prompt-textarea ~ button');
+      const submitButton = document.querySelector('[data-testid="send-button"]');
       // submitButton.disabled = false;
+      submitButton.classList.replace('rounded-full', 'rounded-lg');
+
       submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
       return;
     }
     // if (arkoseToken || (isPaid && !selectedModel.tags.includes('gpt4'))) {
-    if (!isGPT4 || arkoseToken) {
+    // if (!isGPT4 || arkoseToken) {
+    if (arkoseToken) {
       // if (arkoseToken) {
       clearInterval(interval);
       scrolUpDetected = false;
@@ -986,12 +1126,8 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
       // const searchBox = document.querySelector('#conversation-search');
       // if (searchBox?.value) {
       //   searchBox.value = '';
-      //   searchBox.dispatchEvent(new Event('input'), { bubbles: true });
+      //   searchBox.dispatchEvent(new Event('input', { bubbles: true }));
       // }
-
-      const curSubmitButton = document.querySelector('#prompt-textarea ~ button');
-      curSubmitButton.disabled = true;
-      curSubmitButton.innerHTML = '<span class="" data-state="closed"><svg class="animate-spin" width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill="#000" viewBox="0 0 24 24"> <circle class="opacity-25" cx="12" cy="12" r="10" stroke="#000" stroke-width="2"></circle> <path class="opacity-75" fill="#000" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></span>';
       const syncDiv = document.getElementById('sync-div');
       if (syncDiv) syncDiv.style.opacity = '0.3';
       chatStreamIsClosed = false;
@@ -1025,8 +1161,8 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
       let systemMessage = {};
       chrome.storage.local.get('websocket', ({ websocket }) => {
         const spws = new WebSocket(websocket.wss_url);
+        // console.warn('spws', spws.url);
         getGizmoById(gizmoId).then((gizmoData) => {
-          initializeStopGeneratingResponseButton(true);
           spws.addEventListener('message', (e) => {
             const encodedData = JSON.parse(e.data);
             let decodedBody = atob(encodedData.body)?.trim();
@@ -1040,7 +1176,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
               if (!scrolUpDetected && settings.autoScroll) {
                 document.querySelector('#conversation-bottom')?.scrollIntoView();
               }
-              const submitButton = document?.querySelector('#prompt-textarea ~ button');
+              const submitButton = document?.querySelector('[data-testid="send-button"]');
               const textAreaElement = document?.querySelector('#prompt-textarea');
               textAreaElement?.focus();
               // update all ids with last message id
@@ -1060,6 +1196,8 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
               }
               // submitButton.disabled = false;
               if (submitButton) {
+                submitButton.classList.replace('rounded-full', 'rounded-lg');
+
                 submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
               }
               if (chatStreamIsClosed && decodedBody !== '[DONE]') {
@@ -1114,16 +1252,15 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
                   }
                 }, 1000);
               }
+              replaceTextAreaElement(settings);
               isGenerating = false;
               chatStreamIsClosed = false;
               spws.close();
               if (syncDiv) syncDiv.style.opacity = '1';
-              replaceTextAreaElement(settings);
-              initializeStopGeneratingResponseButton();
               addFinalCompletionClassToLastMessageWrapper();
               addConversationsEventListeners(finalConversationId, true);
               updateCounter();
-              updateTotalCounter();
+              updateTotalCounter(settings);
               if (settings.chatEndedSound) {
                 playSound('beep');
               }
@@ -1142,7 +1279,10 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
                   isGenerating = true;
                 }
                 const data = decodedBody ? JSON.parse(decodedBody) : {};
-
+                if (data.type === 'title_generation') {
+                  updateConversationTitle(data.conversation_id, data.title);
+                  return;
+                }
                 if (data.error) throw new Error(data.error);
                 const { conversation_id: conversationId, message } = data;
                 const { role } = message.author;
@@ -1280,7 +1420,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
                 const lastRowAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
                 const existingRowAssistant = (continueGenerating || authorRole !== 'user') ? lastRowAssistant : document.querySelector(`[id="message-wrapper-${assistantData[0]?.message?.id}"][data-role="assistant"]`);
 
-                if (existingRowAssistant) {
+                if (existingRowAssistant && !existingRowAssistant.nextElementSibling.id.startsWith('message-wrapper-')) {
                   isRenderingAssistantRow = false;
                   addNodeToRowAssistant(finalConversationId, data, gizmoId, continueGenerating, existingInnerHTML, true, settings.pluginDefaultOpen);
                   if (!scrolUpDetected && settings.autoScroll) {
@@ -1309,7 +1449,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
                         if (lastMessagePluginToggleButton) {
                           addMessagePluginToggleButtonsEventListeners([lastMessagePluginToggleButton]);
                         }
-                        addMissingGizmoAvatars();
+                        addMissingGizmoNamesAndAvatars();
                       }, 300);
                       if (!scrolUpDetected && settings.autoScroll) {
                         conversationBottom.scrollIntoView();
@@ -1334,6 +1474,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
             }
           });
           spws.addEventListener('error', (err) => {
+            spws.close();
             // Firefox returns error when closing chat stream
             // if firefox and no error data, do nothing
             if (isFirefox && !err.data) return;
@@ -1347,12 +1488,14 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
             finalSummary = '';
             shouldSubmitFinalSummary = false;
             syncDiv.style.opacity = '1';
-            const submitButton = document.querySelector('#prompt-textarea ~ button');
+            const submitButton = document.querySelector('[data-testid="send-button"]');
             // submitButton.disabled = false;
-            submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
-
+            if (submitButton) {
+              submitButton.classList.replace('rounded-full', 'rounded-lg');
+              submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+            }
             // eslint-disable-next-line no-console
-            console.warn(err);
+            // console.warn(err);
             if (err.data) {
               try {
                 const error = JSON.parse(err.data);
@@ -1388,7 +1531,66 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
               }
             }
           });
-          generateChat(userInputParts, conversation?.id, userMessageId, parentId, arkoseToken, gizmoData?.resource, metadata, lastPromptSuggestions, saveHistory, authorRole, authorName, action, contentType, lastMessageFailed);
+          generateChatWS(userInputParts, conversation?.id, userMessageId, parentId, arkoseToken, gizmoData?.resource, metadata, lastPromptSuggestions, saveHistory, authorRole, authorName, action, contentType, lastMessageFailed).then(() => {
+            const curSubmitButton = document.querySelector('[data-testid="send-button"]');
+            curSubmitButton.classList.replace('rounded-lg', 'rounded-full');
+            curSubmitButton.innerHTML = '<span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="16" height="16" class="text-white dark:text-black"><path d="M384 128v255.1c0 35.35-28.65 64-64 64H64c-35.35 0-64-28.65-64-64V128c0-35.35 28.65-64 64-64H320C355.3 64 384 92.65 384 128z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+          }).catch((err) => {
+            spws.close();
+            // Firefox returns error when closing chat stream
+            // if firefox and no error data, do nothing
+            if (isFirefox && !err.data) return;
+            if (settings.chatEndedSound) {
+              playSound('beep');
+            }
+            isGenerating = false;
+            chunkNumber = 1;
+            totalChunks = 1;
+            remainingText = '';
+            finalSummary = '';
+            shouldSubmitFinalSummary = false;
+            syncDiv.style.opacity = '1';
+            const submitButton = document.querySelector('[data-testid="send-button"]');
+            // submitButton.disabled = false;
+            submitButton.classList.replace('rounded-full', 'rounded-lg');
+
+            submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+
+            // eslint-disable-next-line no-console
+            if (err) {
+              try {
+                const errorCode = err?.detail?.code;
+                let errorMessage = typeof err.detail === 'string' ? err.detail : err.detail.message;
+                if (errorCode === 'model_cap_exceeded') {
+                  // seconds until cap is cleared
+                  const clearsIn = err?.detail?.clears_in;
+                  const date = new Date();
+                  date.setSeconds(date.getSeconds() + clearsIn);
+                  // print expire hour minute from local time
+                  const hour = date.getHours();
+                  const minute = date.getMinutes();
+                  const ampm = hour >= 12 ? 'pm' : 'am';
+                  const hour12 = hour % 12;
+                  const hour12Display = hour12 || 12;
+                  const minuteDisplay = minute < 10 ? `0${minute}` : minute;
+                  const capExpiresAt = `${hour12Display}:${minuteDisplay}${ampm}`;
+                  chrome.storage.local.set({ capExpiresAt });
+                  errorMessage = `You've reached the current usage cap for this model. You can continue with the default model now, or try again after ${capExpiresAt}.`;
+                } else {
+                  replaceTextAreaElement(settings);
+                  chrome.storage.local.set({ capExpiresAt: '' });
+                }
+                const conversationBottom = document.querySelector('#conversation-bottom');
+                const errorMessageElement = `<div id="response-error-msg" style="max-width:400px" class="py-2 px-3 my-2 border rounded-md text-sm text-token-text-secondary border-red-500 bg-red-500/10">${errorMessage}</div>`;
+                conversationBottom.insertAdjacentHTML('beforebegin', errorMessageElement);
+                if (!scrolUpDetected && settings.autoScroll) {
+                  conversationBottom.scrollIntoView({ behavior: 'smooth' });
+                }
+              } catch (err2) {
+                // console.error(err2);
+              }
+            }
+          });
         });
       });
     }
@@ -1399,7 +1601,7 @@ function submitFinalSummary() {
   if (finalSummary === '') return;
   const inputForm = document.querySelector('#prompt-input-form');
   if (!inputForm) return;
-  const submitButton = document.querySelector('#prompt-textarea ~ button');
+  const submitButton = document.querySelector('[data-testid="send-button"]');
   if (!submitButton) return;
   const textAreaElement = document.querySelector('#prompt-textarea');
   if (!textAreaElement) return;
@@ -1435,7 +1637,7 @@ function insertNextChunk(settings, previousMessage) {
   }
   const textAreaElement = document.querySelector('#prompt-textarea');
   if (!textAreaElement) return;
-  const submitButton = document.querySelector('#prompt-textarea ~ button');
+  const submitButton = document.querySelector('[data-testid="send-button"]');
   if (!submitButton) return;
   const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
 
@@ -1477,9 +1679,10 @@ function overrideSubmitForm() {
     e.preventDefault();
     e.stopPropagation();
     if (isGenerating) return;
+
     // get all words wrapped in {{ and }}
-    chrome.storage.local.get(['settings', 'conversations', 'models', 'selectedModel', 'account'], ({
-      settings, conversations, models, account, selectedModel,
+    chrome.storage.local.get(['settings', 'conversations', 'models', 'selectedModel', 'account', 'chatgptAccountId'], ({
+      settings, conversations, models, account, selectedModel, chatgptAccountId,
     }) => {
       const fileTemplate = textAreaValue.includes('{{files}}');
       const templateWords = textAreaValue.match(/{{(.*?)}}/g);
@@ -1587,7 +1790,7 @@ ${settings.autoSplitChunkPrompt}`;
             if (textAreaValue || fileAttachments.length > 0) {
               isGenerating = true;
 
-              submitChat(textAreaValue, conversation, messageId, parentId, settings, account, models, selectedModel, imageAssets, fileAttachments, false, false, 'user', '', initialMetadata);
+              submitChat(textAreaValue, conversation, messageId, parentId, settings, account, chatgptAccountId, models, selectedModel, imageAssets, fileAttachments, false, false, 'user', '', initialMetadata);
               const fileWrapperElement = inputForm.querySelector('#file-wrapper-element');
               if (fileWrapperElement) {
                 fileWrapperElement.remove();
@@ -1669,7 +1872,7 @@ ${settings.autoSplitChunkPrompt}`;
               const userRow = rowUser({}, node, 1, 1, result.name, result.avatar, settings);
               replaceAllConfimationWrappersWithActionStopped();
               conversationDiv.innerHTML = userRow;
-              const topDiv = `<div id="conversation-top" class="w-full flex relative items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-token-text-primary group bg-token-main-surface-tertiary" style="min-height:56px;"><span id="conversation-top-title" class="flex">New Chat</span>${conversationSettingsMenu(hasSubscription)}</div>`;
+              const topDiv = `<div id="conversation-top" class="w-full flex relative items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-token-text-primary group ${settings.alternateMainColors ? 'bg-token-main-surface-tertiary' : 'bg-token-main-surface-primary'}" style="min-height:56px;"><span id="conversation-top-title" class="flex">New Chat</span>${conversationSettingsMenu(hasSubscription)}</div>`;
               conversationDiv.insertAdjacentHTML('afterbegin', topDiv);
 
               const bottomDiv = document.createElement('div');
@@ -1682,17 +1885,18 @@ ${settings.autoSplitChunkPrompt}`;
                 bottomDivContent.style.maxWidth = `${settings.conversationWidth}%`;
               }
               bottomDiv.appendChild(bottomDivContent);
-              const totalCounter = document.createElement('div');
-              totalCounter.id = 'total-counter';
-              totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
-              bottomDivContent.appendChild(totalCounter);
-
+              if (settings.showTotalWordCount) {
+                const totalCounter = document.createElement('div');
+                totalCounter.id = 'total-counter';
+                totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
+                bottomDivContent.appendChild(totalCounter);
+              }
               innerDiv.appendChild(conversationDiv);
               outerDiv.appendChild(innerDiv);
               presentation.prepend(outerDiv);
               if (textAreaValue || fileAttachments.length > 0) {
                 isGenerating = true;
-                submitChat(textAreaValue, {}, messageId, parentId, settings, account, models, selectedModel, imageAssets, fileAttachments, false, false, 'user', '', initialMetadata);
+                submitChat(textAreaValue, {}, messageId, parentId, settings, account, chatgptAccountId, models, selectedModel, imageAssets, fileAttachments, false, false, 'user', '', initialMetadata);
                 const fileWrapperElement = inputForm.querySelector('#file-wrapper-element');
                 if (fileWrapperElement) {
                   fileWrapperElement.remove();
@@ -1709,12 +1913,15 @@ ${settings.autoSplitChunkPrompt}`;
     });
   });
 
-  const submitButton = document.querySelector('#prompt-textarea ~ button');
+  const submitButton = document.querySelector('[data-testid="send-button"]');
   const submitButtonClone = submitButton.cloneNode(true);
   submitButtonClone.type = 'button';
   submitButtonClone.addEventListener('click', () => {
     const textAreaElement = document.querySelector('#prompt-textarea');
-    if (isGenerating) return;
+    if (isGenerating) {
+      chatStreamIsClosed = true;
+      return;
+    }
     textAreaElement.style.height = '52px';
     if (textAreaElement.value.trim().length === 0 && curFileAttachments?.length === 0) return;
     addUserPromptToHistory(textAreaElement.value.trim());
@@ -1731,8 +1938,6 @@ function setBackButtonDetection() {
       if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
         const { conversations } = result;
         if (conversations && conversations[conversationId]) {
-          const searchbox = document.querySelector('#conversation-search');
-          const searchValue = searchbox?.value || '';
           const conversationElement = document.querySelector(`#conversation-button-${conversationId}`);
           const focusedConversations = document.querySelectorAll('.selected');
           focusedConversations.forEach((c) => {
@@ -1742,7 +1947,7 @@ function setBackButtonDetection() {
           if (conversationElement) {
             conversationElement.classList = selectedClassList;
           }
-          loadConversation(conversationId, searchValue);
+          loadConversation(conversationId);
         }
       } else if (pathname.startsWith('/g/g-')) {
         const gizmoId = getGizmoIdFromUrl();
@@ -1778,6 +1983,7 @@ function loadConversationList(skipFullReload = false) {
         const conversationId = pathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
         const conversationList = document.querySelector('#conversation-list');
         if (!conversationList) return;
+
         if (/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(conversationId)) {
           const conversation = conversations?.[conversationId];
           if (conversation && conversation.id) {
@@ -1801,7 +2007,7 @@ function loadConversationList(skipFullReload = false) {
             unarchiveConversationById(conversationId, false).then((convExistsInRemoteButIsArchived) => {
               if (convExistsInRemoteButIsArchived) {
                 const isArchived = settings?.autoSyncCount > 0; // if autoSyncCount is 0, there is a good chance the convesation still exists in remote but we are just not seeing it. if autoSyncCount > 0, it less likely to go to a chat that is archived in remote but not locally, so we consider it as archived(but that's not the case always)
-                loadConversation(conversationId, '', isArchived);
+                loadConversation(conversationId, isArchived);
               } else {
                 showNewChatPage();
               }

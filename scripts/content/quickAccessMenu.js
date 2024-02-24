@@ -10,7 +10,7 @@ function addQuickAccessMenuEventListener() {
     const cursorPosition = textAreaElement.selectionStart;
     const textAreaValue = textAreaElement.value;
     const previousAtPosition = textAreaValue.lastIndexOf('@', cursorPosition - 1);
-    const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition - 1);
+    const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition - 1) || textAreaValue.lastIndexOf('£', cursorPosition - 1) || textAreaValue.lastIndexOf('€', cursorPosition - 1);
     const previousHashtagPosition = textAreaValue.lastIndexOf('#', cursorPosition - 1);
     if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
       if (quickAccessMenuElement) quickAccessMenuElement.remove();
@@ -39,7 +39,7 @@ function addQuickAccessMenuEventListener() {
       const textAreaValue = textAreaElement.value;
 
       const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
-      const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
+      const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition) || textAreaElement.value.lastIndexOf('£', cursorPosition) || textAreaElement.value.lastIndexOf('€', cursorPosition);
       const previousHashtagPosition = textAreaElement.value.lastIndexOf('#', cursorPosition);
       if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
         if (quickAccessMenuElement) quickAccessMenuElement.remove();
@@ -142,7 +142,7 @@ function updateQuickAccessMenuItems() {
   const cursorPosition = textAreaElement.selectionStart;
   const textAreaValue = textAreaElement.value;
   const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
-  const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
+  const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition) || textAreaElement.value.lastIndexOf('£', cursorPosition) || textAreaElement.value.lastIndexOf('€', cursorPosition);
   const previousHashtagPosition = textAreaValue.lastIndexOf('#', cursorPosition - 1);
   if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
     return;
@@ -172,8 +172,8 @@ function updateQuickAccessMenuItems() {
   });
 }
 function quickAccessMenu(trigger) {
-  chrome.storage.local.get(['account'], (r) => {
-    const isPaid = r?.account?.accounts?.default?.entitlement?.has_active_subscription || false;
+  chrome.storage.local.get(['account', 'chatgptAccountId'], (r) => {
+    const isPaid = r?.account?.accounts?.[r.chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
     const isGPT4 = document.querySelector('#navbar-selected-model-title')?.innerText?.toLowerCase()?.includes('gpt-4');
     // #gizmo-menu-wrapper-navbar
     const isGizmo = document.querySelector('#gizmo-menu-wrapper-navbar');
@@ -208,8 +208,8 @@ function quickAccessMenu(trigger) {
         });
         menu.appendChild(loadCustomGPTs());
       }
-      if (trigger === '$') {
-        menuTitle.textContent = 'Custom Prompts ($)';
+      if (trigger === '$' || trigger === '£' || trigger === '€') {
+        menuTitle.textContent = `Custom Prompts (${trigger}`;
         menuHeaderButton.id = 'see-all-custom-prompts';
         menuHeaderButton.textContent = '+ Add More';
         menuHeaderButton.addEventListener('click', () => {
@@ -301,7 +301,7 @@ function loadCustomPrompts() {
   chrome.storage.local.get(['customPrompts'], (result) => {
     let { customPrompts } = result;
     if (!customPrompts) customPrompts = defaultPrompts;
-    const sortedCustomPrompts = customPrompts?.sort((a, b) => a.title.localeCompare(b.title));
+    const sortedCustomPrompts = customPrompts;
     for (let i = 0; i < sortedCustomPrompts.length; i += 1) {
       const prompt = sortedCustomPrompts[i];
       const promptElement = document.createElement('button');
@@ -316,7 +316,7 @@ function loadCustomPrompts() {
         // find the neeares previous $ position
         const textAreaValue = textAreaElement.value;
         const cursorPosition = textAreaElement.selectionStart;
-        const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition);
+        const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition) || textAreaValue.lastIndexOf('£', cursorPosition) || textAreaValue.lastIndexOf('€', cursorPosition);
         const newText = textAreaValue.substring(0, previousDollarPosition) + prompt.text + textAreaValue.substring(cursorPosition);
         textAreaElement.value = newText;
         textAreaElement.focus();

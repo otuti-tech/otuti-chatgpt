@@ -5,7 +5,7 @@
 // eslint-disable-next-line no-unused-vars
 function rowAssistant(conversation, nodes, childIndex, childCount, models, settings, gizmoData, isLoading = false) {
   const {
-    customConversationWidth, conversationWidth, autoHideThreadCount, showMessageTimestamp, showWordCount, pluginDefaultOpen, showCopyButton,
+    customConversationWidth, conversationWidth, autoHideThreadCount, showMessageTimestamp, showWordCount, pluginDefaultOpen,
   } = settings;
 
   // overall info
@@ -20,6 +20,7 @@ function rowAssistant(conversation, nodes, childIndex, childCount, models, setti
   const modelTitle = models.find((m) => m.slug === modelSlug)?.title;
   const avatarColor = (modelSlug?.includes('plugins') || modelSlug?.includes('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';
   const avatar = (gizmoData && gizmoData?.resource?.gizmo?.id === nodes[0]?.message?.metadata?.gizmo_id) ? gizmoData?.resource?.gizmo?.display?.profile_picture_url : 'https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png';
+  const displayName = (gizmoData && gizmoData?.resource?.gizmo?.id === nodes[0]?.message?.metadata?.gizmo_id) ? gizmoData?.resource?.gizmo?.display?.name : '&nbsp;';
   let renderedNodes = '';
   let nodeWordCounts = 0;
   let nodeCharCounts = 0;
@@ -64,14 +65,12 @@ function rowAssistant(conversation, nodes, childIndex, childCount, models, setti
   }
 
   return `<div id="message-wrapper-${id}" data-role="assistant"
-  class="group w-full text-token-text-primary border-b border-black/10 dark:border-gray-900/50 ${pinned ? 'border-l-pinned bg-pinned dark:bg-pinned' : 'bg-token-main-surface-tertiary'}">
-  <div class="relative text-base gap-4 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 md:py-6 flex lg:px-0 p-4 md:py-6 lg:px-0" style="${customConversationWidth ? `max-width:${conversationWidth}%` : ''}">
-  ${showMessageTimestamp ? `<div style="position: absolute; bottom: 4px; left: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;">${messageTimestamp}</div>` : ''}
-  <button id="message-pin-button-${id}" title="pin/unpin message" class="${pinned ? 'visible' : 'invisible group-hover:visible'}" style="background-color: transparent; border: none; cursor: pointer;width: 18px; position: absolute; top: -8px; right: 6px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="${pinned ? 'gold' : '#aaa'}" d="M48 0H336C362.5 0 384 21.49 384 48V487.7C384 501.1 373.1 512 359.7 512C354.7 512 349.8 510.5 345.7 507.6L192 400L38.28 507.6C34.19 510.5 29.32 512 24.33 512C10.89 512 0 501.1 0 487.7V48C0 21.49 21.49 0 48 0z"/></svg></button>
+  class="group w-full text-token-text-primary ${pinned ? 'border-l-pinned bg-pinned dark:bg-pinned' : settings?.alternateMainColors ? 'bg-token-main-surface-tertiary' : 'bg-token-main-surface-primary'}">
+  <div class="relative text-base gap-4 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 pb-0 flex" style="${customConversationWidth ? `max-width:${conversationWidth}%` : ''}">
     <div class="flex-shrink-0 flex flex-col relative items-end">
-    ${(gizmoData || nodes[0]?.message?.metadata?.gizmo_id) ? `<div class="relative flex h-9 w-9"><img id="gizmo-avatar" data-gizmoid="${nodes[0]?.message?.metadata?.gizmo_id || gizmoData?.resource?.gizmo?.id}" src="${avatar}" class="h-full w-full bg-token-main-surface-tertiary rounded-full" alt="GPT" width="80" height="80">
-        </div>` : `<div style="background-color:${avatarColor};width:36px;height:36px;" title="${modelTitle}"
-        class="relative p-1 rounded-full h-9 w-9 text-white flex items-center justify-center"><svg
+    ${(gizmoData || nodes[0]?.message?.metadata?.gizmo_id) ? `<div class="gizmo-shadow-stroke relative flex h-6 w-6"><img id="gizmo-avatar" data-gizmoid="${nodes[0]?.message?.metadata?.gizmo_id || gizmoData?.resource?.gizmo?.id}" src="${avatar}" class="h-full w-full bg-token-main-surface-tertiary rounded-full" alt="GPT" width="80" height="80">
+        </div>` : `<div style="background-color:${avatarColor};width:24px;height:24px;" title="${modelTitle}"
+        class="gizmo-shadow-stroke relative p-1 rounded-full h-6 w-6 text-white flex items-center justify-center"><svg
           width="41" height="41" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg"
           stroke-width="1.5" class="h-6 w-6">
           <path
@@ -80,19 +79,32 @@ function rowAssistant(conversation, nodes, childIndex, childCount, models, setti
         </svg></div>`}
       <div id="thread-buttons-wrapper-${id}" class="text-xs flex items-center justify-center gap-1 ${autoHideThreadCount || (childCount === 1) ? 'invisible' : ''} absolute left-0 top-2 -ml-4 -translate-x-full ${childCount > 1 ? 'group-hover:visible' : ''}"><button id="thread-prev-button-${id}" class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400" ${childIndex === 1 ? 'disabled' : ''}><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="15 18 9 12 15 6"></polyline></svg></button><span id="thread-count-wrapper-${id}" class="flex-grow flex-shrink-0">${childIndex} / ${childCount}</span><button id="thread-next-button-${id}" class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400" ${childIndex === childCount ? 'disabled' : ''}><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="9 18 15 12 9 6"></polyline></svg></button></div>
     </div>
-    <div class="relative flex flex-col gap-1 md:gap-3 agent-turn" style="width:calc(100% - 80px);">
-      <div class="flex flex-grow flex-col gap-3 max-w-full">
-        ${renderedNodes}
+    <div class="relative flex flex-col agent-turn" style="width:calc(100% - 80px);">
+    ${nodes[0]?.message?.metadata?.gizmo_id || gizmoData ? `<div class="font-semibold select-none" id="gizmo-name" data-gizmoid="${nodes[0]?.message?.metadata?.gizmo_id || gizmoData?.resource?.gizmo?.id}">${displayName}</div>` : '<div class="font-semibold select-none">ChatGPT</div>'}
+      <div class="flex flex-grow flex-col gap-1 max-w-full">
+        ${renderedNodes}        
+        <div id="message-action-wrapper-${id}" class="flex justify-between empty:hidden gizmo:mt-1 gizmo:justify-start gizmo:gap-3 lg:block gizmo:lg:flex">
+        <div class="text-token-text-secondary flex self-end lg:self-center justify-center gizmo:lg:justify-start mt-2 gizmo:mt-0 visible gap-1">
         
-        <div id="message-feedback-wrapper-${id}" class="flex justify-between empty:hidden gizmo:mt-1 gizmo:justify-start gizmo:gap-3 lg:block gizmo:lg:flex"><div class="text-gray-400 flex self-end lg:self-center justify-center gizmo:lg:justify-start mt-2 gizmo:mt-0 visible gap-1"><div class="flex gap-1"><button id="thumbs-up-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.1318 2.50389C12.3321 2.15338 12.7235 1.95768 13.124 2.00775L13.5778 2.06447C16.0449 2.37286 17.636 4.83353 16.9048 7.20993L16.354 8.99999H17.0722C19.7097 8.99999 21.6253 11.5079 20.9313 14.0525L19.5677 19.0525C19.0931 20.7927 17.5124 22 15.7086 22H6C4.34315 22 3 20.6568 3 19V12C3 10.3431 4.34315 8.99999 6 8.99999H8C8.25952 8.99999 8.49914 8.86094 8.6279 8.63561L12.1318 2.50389ZM10 20H15.7086C16.6105 20 17.4008 19.3964 17.6381 18.5262L19.0018 13.5262C19.3488 12.2539 18.391 11 17.0722 11H15C14.6827 11 14.3841 10.8494 14.1956 10.5941C14.0071 10.3388 13.9509 10.0092 14.0442 9.70591L14.9932 6.62175C15.3384 5.49984 14.6484 4.34036 13.5319 4.08468L10.3644 9.62789C10.0522 10.1742 9.56691 10.5859 9 10.8098V19C9 19.5523 9.44772 20 10 20ZM7 11V19C7 19.3506 7.06015 19.6872 7.17071 20H6C5.44772 20 5 19.5523 5 19V12C5 11.4477 5.44772 11 6 11H7Z" fill="currentColor"></path></svg></button><button id="thumbs-down-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z" fill="currentColor"></path></svg></button><button id="text-to-speech-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" fill="none" class="icon-md"><path fill="currentColor" d="M301.2 34.98c-4.201-1.893-8.727-2.902-13.16-2.902c-7.697 0-15.29 2.884-21.27 8.192L131.8 160.1H48c-26.51 0-48 21.48-48 47.96v95.92c0 26.48 21.49 47.96 48 47.96h83.84l134.9 119.8C272.7 477 280.3 479.8 288 479.8c4.438 0 8.959-.9311 13.16-2.835C312.7 471.8 320 460.4 320 447.9V64.12C320 51.54 312.7 40.13 301.2 34.98zM272 412.1L150.1 303.9L48 303.9v-95.83h102.1L272 99.84V412.1zM412.6 182c-4.469-3.623-9.855-5.394-15.2-5.394c-6.951 0-13.83 2.992-18.55 8.797c-8.406 10.24-6.906 25.35 3.375 33.74C393.5 228.4 400 241.8 400 255.1c0 14.17-6.5 27.59-17.81 36.83c-10.28 8.396-11.78 23.5-3.375 33.74c4.719 5.805 11.62 8.802 18.56 8.802c5.344 0 10.75-1.78 15.19-5.399C435.1 311.5 448 284.6 448 255.1S435.1 200.4 412.6 182zM473.1 108.2c-4.455-3.633-9.842-5.41-15.2-5.41c-6.934 0-13.82 2.975-18.58 8.75c-8.406 10.24-6.906 25.35 3.344 33.74C476.6 172.1 496 213.3 496 255.1c0 42.64-19.44 82.1-53.31 110.7c-10.25 8.396-11.75 23.5-3.344 33.74c4.75 5.773 11.62 8.771 18.56 8.771c5.375 0 10.75-1.78 15.22-5.431C518.2 366.9 544 313 544 255.1S518.2 145 473.1 108.2zM534.4 33.4C529.9 29.77 524.5 28 519.2 28c-6.941 0-13.84 2.977-18.6 8.739c-8.406 10.24-6.906 25.35 3.344 33.74C559.9 116.3 592 183.9 592 255.1s-32.09 139.7-88.06 185.5c-10.25 8.396-11.75 23.5-3.344 33.74C505.3 481 512.2 484 519.2 484c5.375 0 10.75-1.779 15.22-5.431C601.5 423.6 640 342.5 640 255.1C640 169.5 601.5 88.34 534.4 33.4z"/></svg></button></div><button id="message-regenerate-button-${id}" title="Regenerate" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.5 2.5C5.05228 2.5 5.5 2.94772 5.5 3.5V5.07196C7.19872 3.47759 9.48483 2.5 12 2.5C17.2467 2.5 21.5 6.75329 21.5 12C21.5 17.2467 17.2467 21.5 12 21.5C7.1307 21.5 3.11828 17.8375 2.565 13.1164C2.50071 12.5679 2.89327 12.0711 3.4418 12.0068C3.99033 11.9425 4.48712 12.3351 4.5514 12.8836C4.98798 16.6089 8.15708 19.5 12 19.5C16.1421 19.5 19.5 16.1421 19.5 12C19.5 7.85786 16.1421 4.5 12 4.5C9.7796 4.5 7.7836 5.46469 6.40954 7H9C9.55228 7 10 7.44772 10 8C10 8.55228 9.55228 9 9 9H4.5C3.96064 9 3.52101 8.57299 3.50073 8.03859C3.49983 8.01771 3.49958 7.99677 3.5 7.9758V3.5C3.5 2.94772 3.94771 2.5 4.5 2.5Z" fill="currentColor"></path></svg></div></button><button id="message-continue-button-${id}" title="Continue" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible ${shouldShowContinueButton ? 'md:group-[.final-completion]:visible' : ''}"><div class="flex items-center gap-1.5 text-xs"><svg stroke="currentColor" fill="none" stroke-width="2.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 -rotate-180" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg></div></button></div></div>
+        <button id="message-pin-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="none" class="icon-sm"><path fill="${pinned ? 'gold' : 'currentColor'}" d="M336 0h-288C21.49 0 0 21.49 0 48v431.9c0 24.7 26.79 40.08 48.12 27.64L192 423.6l143.9 83.93C357.2 519.1 384 504.6 384 479.9V48C384 21.49 362.5 0 336 0zM336 452L192 368l-144 84V54C48 50.63 50.63 48 53.1 48h276C333.4 48 336 50.63 336 54V452z"/></svg></div></button>
 
-        <div id="result-action-wrapper-${id}"
-          style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7em; width: 100%; height: 40px;">
-          ${showWordCount ? `<div id="result-counter-${id}" class="text-token-text-tertiary">${nodeCharCounts} chars / ${nodeWordCounts} words</div>` : ''}
-          <button id="result-copy-button-${id}"
-            class="btn ${showCopyButton || typeof showCopyButton === 'undefined' ? 'flex' : 'hidden'} justify-center gap-2 btn-neutral border-0 md:border " style="position: absolute; right: 0px; width: 64px; font-size:11px;padding:6px 12px;">Copy</button><div id="copy-result-menu-${id}" style="font-size: 10px; position: absolute; right: 0px; bottom: 37px;display:none;"><button id="result-markdown-copy-button-${id}"
-            class="btn flex justify-center gap-2 btn-neutral border-0 md:border " style="width: 64px; font-size:11px;padding:6px 12px;">Markdown</button><button id="result-html-copy-button-${id}"
-            class="btn flex justify-center gap-2 btn-neutral border-0 md:border " style="width: 64px; font-size:11px;padding:6px 12px;">HTML</button><div style="position:absolute;top: 37px; left: -120px; font-size: 11px;">Copy with formatting ➜ </div></div>
+        <button id="copy-message-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 4C10.8954 4 10 4.89543 10 6H14C14 4.89543 13.1046 4 12 4ZM8.53513 4C9.22675 2.8044 10.5194 2 12 2C13.4806 2 14.7733 2.8044 15.4649 4H17C18.6569 4 20 5.34315 20 7V19C20 20.6569 18.6569 22 17 22H7C5.34315 22 4 20.6569 4 19V7C4 5.34315 5.34315 4 7 4H8.53513ZM8 6H7C6.44772 6 6 6.44772 6 7V19C6 19.5523 6.44772 20 7 20H17C17.5523 20 18 19.5523 18 19V7C18 6.44772 17.5523 6 17 6H16C16 7.10457 15.1046 8 14 8H10C8.89543 8 8 7.10457 8 6Z" fill="currentColor"></path></svg></div></button>
+        
+        <button id="thumbs-down-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z" fill="currentColor"></path></svg></div></button>
+        
+        <button id="text-to-speech-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" fill="none" class="icon-md"><path fill="currentColor" d="M301.2 34.98c-4.201-1.893-8.727-2.902-13.16-2.902c-7.697 0-15.29 2.884-21.27 8.192L131.8 160.1H48c-26.51 0-48 21.48-48 47.96v95.92c0 26.48 21.49 47.96 48 47.96h83.84l134.9 119.8C272.7 477 280.3 479.8 288 479.8c4.438 0 8.959-.9311 13.16-2.835C312.7 471.8 320 460.4 320 447.9V64.12C320 51.54 312.7 40.13 301.2 34.98zM272 412.1L150.1 303.9L48 303.9v-95.83h102.1L272 99.84V412.1zM412.6 182c-4.469-3.623-9.855-5.394-15.2-5.394c-6.951 0-13.83 2.992-18.55 8.797c-8.406 10.24-6.906 25.35 3.375 33.74C393.5 228.4 400 241.8 400 255.1c0 14.17-6.5 27.59-17.81 36.83c-10.28 8.396-11.78 23.5-3.375 33.74c4.719 5.805 11.62 8.802 18.56 8.802c5.344 0 10.75-1.78 15.19-5.399C435.1 311.5 448 284.6 448 255.1S435.1 200.4 412.6 182zM473.1 108.2c-4.455-3.633-9.842-5.41-15.2-5.41c-6.934 0-13.82 2.975-18.58 8.75c-8.406 10.24-6.906 25.35 3.344 33.74C476.6 172.1 496 213.3 496 255.1c0 42.64-19.44 82.1-53.31 110.7c-10.25 8.396-11.75 23.5-3.344 33.74c4.75 5.773 11.62 8.771 18.56 8.771c5.375 0 10.75-1.78 15.22-5.431C518.2 366.9 544 313 544 255.1S518.2 145 473.1 108.2zM534.4 33.4C529.9 29.77 524.5 28 519.2 28c-6.941 0-13.84 2.977-18.6 8.739c-8.406 10.24-6.906 25.35 3.344 33.74C559.9 116.3 592 183.9 592 255.1s-32.09 139.7-88.06 185.5c-10.25 8.396-11.75 23.5-3.344 33.74C505.3 481 512.2 484 519.2 484c5.375 0 10.75-1.779 15.22-5.431C601.5 423.6 640 342.5 640 255.1C640 169.5 601.5 88.34 534.4 33.4z"/></svg></div></button>
+        
+        <button id="message-regenerate-button-${id}" title="Regenerate" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.5 2.5C5.05228 2.5 5.5 2.94772 5.5 3.5V5.07196C7.19872 3.47759 9.48483 2.5 12 2.5C17.2467 2.5 21.5 6.75329 21.5 12C21.5 17.2467 17.2467 21.5 12 21.5C7.1307 21.5 3.11828 17.8375 2.565 13.1164C2.50071 12.5679 2.89327 12.0711 3.4418 12.0068C3.99033 11.9425 4.48712 12.3351 4.5514 12.8836C4.98798 16.6089 8.15708 19.5 12 19.5C16.1421 19.5 19.5 16.1421 19.5 12C19.5 7.85786 16.1421 4.5 12 4.5C9.7796 4.5 7.7836 5.46469 6.40954 7H9C9.55228 7 10 7.44772 10 8C10 8.55228 9.55228 9 9 9H4.5C3.96064 9 3.52101 8.57299 3.50073 8.03859C3.49983 8.01771 3.49958 7.99677 3.5 7.9758V3.5C3.5 2.94772 3.94771 2.5 4.5 2.5Z" fill="currentColor"></path></svg></div></button>
+        
+        <button id="message-continue-button-${id}" title="Continue" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible ${shouldShowContinueButton ? 'md:group-[.final-completion]:visible' : ''}"><div class="flex items-center gap-1.5 text-xs"><svg stroke="currentColor" fill="none" stroke-width="2.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 -rotate-180" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg></div></button>
+        
+        </div></div>
+
+        <div id="message-info-wrapper-${id}"
+          style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7em; width: 100%; max-height: 40px;">
+          ${showWordCount ? `<div id="message-counter-${id}" class="text-token-text-tertiary select-none">${nodeCharCounts} chars / ${nodeWordCounts} words</div>` : ''}
+          ${showMessageTimestamp ? `<div class="text-token-text-tertiary select-none" style="position: absolute; bottom: 4px; right: 0px;">${messageTimestamp}</div>` : ''}
+          </div>
         </div>
       </div>
     </div>
@@ -114,7 +126,7 @@ function renderAllPythonImages() {
     });
   });
 }
-function pythonImageRenderer(node) {
+function pythonImageRenderer(node, conversationId, isNew) {
   const messageId = node?.message?.id;
   const resultImages = node?.message?.metadata?.aggregate_result?.messages?.filter((m) => m?.message_type === 'image');
   resultImages.forEach((image) => {
@@ -123,18 +135,37 @@ function pythonImageRenderer(node) {
     getDownloadUrlFromFileId(imageId).then((response) => {
       if (response.status === 'retry') {
         setTimeout(() => {
-          pythonImageRenderer(node);
+          pythonImageRenderer(node, conversationId);
         }, 1000);
         return;
       }
+
       const existingImage = document.querySelector(`#python-image-displayed-${messageId}[data-file-id="${imageId}"]`);
       if (existingImage) {
         existingImage.src = response.download_url;
         return;
       }
       const renderedNode = `<img style="border-radius:8px; aspect-ratio: ${width}/${height};" id="python-image-displayed-${messageId}" data-file-id="${imageId}" src="${response.download_url}" class="my-1" alt="Output image">`;
-      const lastMessageFeedbackWrapper = [...document.querySelectorAll('[id^=message-feedback-wrapper-]')].pop();
-      lastMessageFeedbackWrapper.insertAdjacentHTML('beforebegin', renderedNode);
+      const lastMessageActionWrapper = [...document.querySelectorAll('[id^=message-action-wrapper-]')].pop();
+      lastMessageActionWrapper.insertAdjacentHTML('beforebegin', renderedNode);
+      if (isNew) {
+        const galleryImage = {
+          image_id: imageId,
+          width,
+          height,
+          download_url: response.download_url,
+          prompt: node.message?.metadata?.aggregate_result?.code,
+          is_public: false,
+          category: 'chart',
+          conversation_id: conversationId,
+        };
+        chrome.runtime.sendMessage({
+          addGalleryImages: true,
+          detail: {
+            images: [galleryImage],
+          },
+        });
+      }
     });
   });
 }
@@ -180,8 +211,8 @@ function addNodeToRowAssistant(conversationId, node, gizmoId, continueGenerating
         updateLastMessagePluginDropdown();
         const renderedNode = pluginDropdownRenderer(node, isLoading, pluginDefaultOpen);
 
-        const lastMessageFeedbackWrapper = [...document.querySelectorAll('[id^=message-feedback-wrapper-]')].pop();
-        lastMessageFeedbackWrapper?.insertAdjacentHTML('beforebegin', renderedNode);
+        const lastMessageActionWrapper = [...document.querySelectorAll('[id^=message-action-wrapper-]')].pop();
+        lastMessageActionWrapper?.insertAdjacentHTML('beforebegin', renderedNode);
         // add event listener to toggle plugin dropdown
         setTimeout(() => {
           const lastMessagePluginToggleButton = [...document.querySelectorAll('[id^="message-plugin-toggle-"]')].pop();
@@ -199,9 +230,9 @@ function addNodeToRowAssistant(conversationId, node, gizmoId, continueGenerating
       const imageDisplayed = node?.message?.content?.text?.includes('<<ImageDisplayed>>');
 
       if (name === 'dalle.text2im') {
-        dalleImageRenderer(node);
+        dalleImageRenderer(node, conversationId, true);
       } else if (imageDisplayed) {
-        pythonImageRenderer(node);
+        pythonImageRenderer(node, conversationId, true);
       } else if (isPluginResponse) {
         addPluginContentNode(node);
       } else if (isActionResponse) {
@@ -252,12 +283,12 @@ function renderAllDalleImages(conversation) {
   allDalleMessageIds.forEach((messageId) => {
     const node = Object.values(conversation.mapping).find((n) => n?.parent === messageId);
     if (node) {
-      dalleImageRenderer(node);
+      dalleImageRenderer(node, conversation.conversation_id);
     }
   });
 }
 // render images for each node
-function dalleImageRenderer(node) {
+function dalleImageRenderer(node, conversationId, isNew = false) {
   const { content } = node.message;
   if (content.content_type !== 'multimodal_text') return;
 
@@ -311,6 +342,26 @@ function dalleImageRenderer(node) {
         }
         // add download event listener
         dalleImageEventListener(images, dalleElementImage, parentId, index);
+        if (isNew) {
+          const galleryImage = {
+            image_id: imageId,
+            width,
+            height,
+            download_url: response.download_url,
+            prompt: image?.metadata?.dalle?.prompt,
+            gen_id: image?.metadata?.dalle?.gen_id,
+            seed: image?.metadata?.dalle?.seed,
+            is_public: false,
+            category: 'dalle',
+            conversation_id: conversationId,
+          };
+          chrome.runtime.sendMessage({
+            addGalleryImages: true,
+            detail: {
+              images: [galleryImage],
+            },
+          });
+        }
       }
     });
   });
@@ -332,8 +383,8 @@ function addActionConfirmationRenderer(actionRequestNode) {
   //     submitActionResponse(conversationId, actionRequestNode.id, domain, 'allow', actionRequestNode);
   //   } else {
   const renderedNode = actionConfirmationRenderer(actionRequestNode);
-  const lastMessageFeedbackWrapper = [...document.querySelectorAll('[id^=message-feedback-wrapper-]')].pop();
-  lastMessageFeedbackWrapper.insertAdjacentHTML('beforebegin', renderedNode);
+  const lastMessageActionWrapper = [...document.querySelectorAll('[id^=message-action-wrapper-]')].pop();
+  lastMessageActionWrapper.insertAdjacentHTML('beforebegin', renderedNode);
   //   }
   // });
 }
@@ -418,10 +469,12 @@ function dalleImageEventListener(images, dalleElementImage, messageId, index) {
   if (downloadButton) {
     downloadButton.addEventListener('click', (e) => {
       e.stopPropagation();
-      const image = dalleElementImage.src;
+      const url = decodeURIComponent(dalleElementImage.src);
+      const fileName = url?.split('filename=')?.[1]?.split('&')?.[0];
+      const format = fileName?.split('.')?.pop() || 'png';
       // use local date and time
-      const filename = `DALL·E ${formatDateDalle()} - ${dalleElementImage.alt}.png`;
-      downloadFileFrmoUrl(image, filename);
+      const filename = `DALL·E ${formatDateDalle()} - ${dalleElementImage.alt}.${format}`;
+      downloadFileFrmoUrl(dalleElementImage.src, filename);
     });
   }
   const imageInfo = dalleElementImage.parentElement.querySelector(`#dalle-image-info-${messageId}-${index}`);
@@ -496,16 +549,16 @@ function pluginContentRenderer(pluginNode) {
   const codeHeader = contentType === 'text'
     ? role === 'assistant' ? `Request to ${pluginName}` : `Response from ${pluginName}`
     : role === 'assistant' ? recipient : 'STDOUT/STDERR';
-  return `<div class="dark bg-black rounded-md w-full text-xs text-white/80"><pre><div class="flex items-center relative text-gray-200 bg-token-main-surface-primary px-4 py-2 text-xs font-sans justify-between rounded-t-md"><span><span class="uppercase">${codeHeader}</span></span>${contentType === 'code' ? '<button id="copy-code" data-initialized="false" class="flex ml-auto gap-2"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>Copy code</button>' : ''}</div><div class="p-4 overflow-y-auto"><code hljs language-${language}" id="message-plugin-${role === 'assistant' ? 'request' : 'response'}-html-${messageId}" class="!whitespace-pre-wrap">${pluginHTML}</code></div>${resultHTML && resultHTML !== pluginHTML ? `<div class="w-full px-4 py-2 text-gray-200 border border-gray-800">Execution Results</div><div class="p-4 overflow-y-auto"><code hljs language-${resultLanguage}" id="message-plugin-result-html-${messageId}" class="!whitespace-pre-wrap">${resultHTML}</code></div>` : ''}</pre></div>`;
+  return `<div class="dark bg-black rounded-md w-full text-xs text-token-text-secondary"><pre><div class="flex items-center relative text-token-text-secondary bg-token-main-surface-secondary px-4 py-2 text-xs font-sans justify-between rounded-t-md select-none"><span><span class="uppercase">${codeHeader}</span></span>${contentType === 'code' ? '<button id="copy-code" data-initialized="false" class="flex ml-auto gap-2 text-token-text-secondary hover:text-token-text-primary"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>Copy code</button>' : ''}</div><div class="p-4 overflow-y-auto"><code hljs language-${language}" id="message-plugin-${role === 'assistant' ? 'request' : 'response'}-html-${messageId}" class="!whitespace-pre-wrap">${pluginHTML}</code></div>${resultHTML && resultHTML !== pluginHTML ? `<div class="w-full px-4 py-2 text-token-text-secondary border border-gray-800">Execution Results</div><div class="p-4 overflow-y-auto"><code hljs language-${resultLanguage}" id="message-plugin-result-html-${messageId}" class="!whitespace-pre-wrap">${resultHTML}</code></div>` : ''}</pre></div>`;
 }
 // eslint-disable-next-line no-unused-vars
 function updateCounter() {
   const lastRowAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
-  const lastResultActionWrapper = [...document.querySelectorAll('[id^=result-action-wrapper-]')].pop();
-  if (!lastRowAssistant || !lastResultActionWrapper) return;
+  const lastMessageInfoWrapper = [...document.querySelectorAll('[id^=message-info-wrapper-]')].pop();
+  if (!lastRowAssistant || !lastMessageInfoWrapper) return;
 
-  const resultCounter = lastResultActionWrapper.querySelector('[id^=result-counter-]');
-  if (!resultCounter) return;
+  const messageCounter = lastMessageInfoWrapper.querySelector('[id^=message-counter-]');
+  if (!messageCounter) return;
 
   // get all message-text- nodes
   const messageTextNodes = [...lastRowAssistant.querySelectorAll('[id^=message-text-]')];
@@ -515,8 +568,8 @@ function updateCounter() {
   const charCount = messageContentParts.replace(/\n/g, '').length;
   const wordCount = messageContentParts.split(/\s+/).filter((word) => word !== '').length;
 
-  if (wordCount > Number(resultCounter.innerText.split(' ')[3])) {
-    resultCounter.innerHTML = `${charCount} chars / ${wordCount} words`;
+  if (wordCount > Number(messageCounter.innerText.split(' ')[3])) {
+    messageCounter.innerHTML = `${charCount} chars / ${wordCount} words`;
   }
 }
 function addAssistantNode(node, continueGenerating = false, existingInnerHTML = '') {
@@ -570,8 +623,8 @@ function addAssistantNode(node, continueGenerating = false, existingInnerHTML = 
     // diffdom.apply(existingMessageText, diff);
   } else {
     const { renderedNode } = assistantRenderer(node);
-    const lastMessageFeedbackWrapper = [...document.querySelectorAll('[id^=message-feedback-wrapper-]')].pop();
-    lastMessageFeedbackWrapper.insertAdjacentHTML('beforebegin', renderedNode);
+    const lastMessageActionWrapper = [...document.querySelectorAll('[id^=message-action-wrapper-]')].pop();
+    lastMessageActionWrapper.insertAdjacentHTML('beforebegin', renderedNode);
   }
 }
 function assistantRenderer(assistantNode) {
@@ -598,7 +651,7 @@ function assistantContentGenerator(assistantNode, returnCounters = false) {
     const lastContinueButton = [...document.querySelectorAll('[id^="message-continue-button-"]')].pop();
     if (lastContinueButton) lastContinueButton.classList.add('md:group-[.final-completion]:visible');
   }
-  let messageContentParts = assistantMessage.content.parts.filter((p) => typeof p === 'string').join('\n');
+  let messageContentParts = assistantMessage?.content?.parts?.filter((p) => typeof p === 'string')?.join('\n');
   // if citations array is not mpty, replace text from start_ix to end_ix position with citation
   if (citations?.length > 0) {
     const reversedCitations = [...citations].reverse();
@@ -611,15 +664,15 @@ function assistantContentGenerator(assistantNode, returnCounters = false) {
         const { url, title } = citationMetadata;
         const citationText = `[<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 19 15" fill="none" class="-mt-0.5 ml-0.5 inline-block text-link-base hover:text-link-hover" width="19" height="15"><path d="M4.42 0.75H2.8625H2.75C1.64543 0.75 0.75 1.64543 0.75 2.75V11.65C0.75 12.7546 1.64543 13.65 2.75 13.65H2.8625C2.8625 13.65 2.8625 13.65 2.8625 13.65C2.8625 13.65 4.00751 13.65 4.42 13.65M13.98 13.65H15.5375H15.65C16.7546 13.65 17.65 12.7546 17.65 11.65V2.75C17.65 1.64543 16.7546 0.75 15.65 0.75H15.5375H13.98" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M6.16045 7.41534C5.32257 7.228 4.69638 6.47988 4.69638 5.58551C4.69638 4.54998 5.53584 3.71051 6.57136 3.71051C7.60689 3.71051 8.44635 4.54998 8.44635 5.58551C8.44635 5.8965 8.37064 6.1898 8.23664 6.448C8.22998 6.48984 8.21889 6.53136 8.20311 6.57208L6.77017 10.2702C6.63182 10.6272 6.18568 10.7873 5.7737 10.6276C5.36172 10.468 5.13991 10.0491 5.27826 9.69206L6.16045 7.41534ZM11.4177 7.41534C10.5798 7.228 9.95362 6.47988 9.95362 5.58551C9.95362 4.54998 10.7931 3.71051 11.8286 3.71051C12.8641 3.71051 13.7036 4.54998 13.7036 5.58551C13.7036 5.8965 13.6279 6.1898 13.4939 6.448C13.4872 6.48984 13.4761 6.53136 13.4604 6.57208L12.0274 10.2702C11.8891 10.6272 11.4429 10.7873 11.0309 10.6276C10.619 10.468 10.3971 10.0491 10.5355 9.69206L11.4177 7.41534Z" fill="currentColor"></path></svg>](${url} "${title}")`;
         // replace all any start with [citedMessageIndex and end with evidenceText] with citationText
-        messageContentParts = messageContentParts.replace(new RegExp(`【${citedMessageIndex}.*?${evidenceText}】`, 'g'), citationText);
+        messageContentParts = messageContentParts?.replace(new RegExp(`【${citedMessageIndex}.*?${evidenceText}】`, 'g'), citationText);
       }
     }
   }
   // replace single \n\\ with \n\n\\
-  messageContentParts = messageContentParts.replace(/[^n}]\n\\/g, '\n\n\\');
+  messageContentParts = messageContentParts?.replace(/[^n}]\n\\/g, '\n\n\\');
   // add newline before and afte brackets
-  messageContentParts = messageContentParts.replace(/\\\[/g, '\n\\[');
-  messageContentParts = messageContentParts.replace(/\\\]/g, '\\]\n');
+  messageContentParts = messageContentParts?.replace(/\\\[/g, '\n\\[');
+  messageContentParts = messageContentParts?.replace(/\\\]/g, '\\]\n');
 
   const assistantMessageHTML = markdown('assistant')
     .use(markdownitSup)

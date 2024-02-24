@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global TurndownService, conversationSettingsMenu, addConversationSettingsMenuEventListener, submitChat, openSubmitPromptModal, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, initializeStopGeneratingResponseButton, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, languageList, writingStyleList, toneList, arkoseTrigger, createFullSizeFileWrapper, addFullSizeFileWrapperEventListener, addUploadFileButton, getMousePosition, renderAllDalleImages, getGizmoById, initializeNavbar, replacePageContent, replaceTextAreaElement, addFinalCompletionClassToLastMessageWrapper, highlightSearch, getGizmoUserActionSettings, actionAllowedRenderer, actionDeniedRenderer, updateLastMessagePluginDropdown, initializeAutoSave, renderAllPythonImages, getDownloadUrlFromFileId, getDownloadUrlFromSandBoxPath, toast, unarchiveConversation, downloadFileFrmoUrl, unarchiveConversationById, openUpgradeModal, textToSpeechLanguageList, registerWebsocket */
+/* global TurndownService, closeMenus, conversationSettingsMenu, addConversationSettingsMenuEventListener, submitChat, openSubmitPromptModal, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, languageList, writingStyleList, toneList, arkoseTrigger, createFullSizeFileWrapper, addFullSizeFileWrapperEventListener, addUploadFileButton, getMousePosition, renderAllDalleImages, getGizmoById, initializeNavbar, replacePageContent, replaceTextAreaElement, addFinalCompletionClassToLastMessageWrapper, highlightSearch, getGizmoUserActionSettings, actionAllowedRenderer, actionDeniedRenderer, updateLastMessagePluginDropdown, initializeAutoSave, renderAllPythonImages, getDownloadUrlFromFileId, getDownloadUrlFromSandBoxPath, toast, unarchiveConversation, downloadFileFrmoUrl, unarchiveConversationById, openUpgradeModal, textToSpeechLanguageList, registerWebsocket */
 
 let volumeIconInterval;
 let speakingMessageId;
@@ -48,7 +48,9 @@ function addPinNav(sortedNodes) {
     main.appendChild(pinNav);
   });
 }
-function loadConversationFromNode(conversationId, newMessageId, oldMessageId, searchValue = '') {
+function loadConversationFromNode(conversationId, newMessageId, oldMessageId) {
+  const searchInput = document.querySelector('#conversation-search');
+  const searchValue = searchInput?.value || '';
   speechSynthesis.cancel();
   chrome.storage.sync.get(['name', 'avatar'], (result) => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {
@@ -109,14 +111,13 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
         addFinalCompletionClassToLastMessageWrapper();
         renderAllDalleImages(fullConversation);
         renderAllPythonImages(fullConversation);
-        addMissingGizmoAvatars();
+        addMissingGizmoNamesAndAvatars();
         replaceTextAreaElement(settings);
         addConversationsEventListeners(fullConversation.id);
-        initializeStopGeneratingResponseButton();
         addPinNav(sortedNodes);
         initializeNavbar(fullConversation);
-        updateTotalCounter();
-        if (!searchValue) {
+        updateTotalCounter(settings);
+        if (!(searchValue || document.activeElement.id === 'conversation-search')) {
           const textAreaElement = document.querySelector('#prompt-textarea');
           textAreaElement?.focus();
           textAreaElement?.setSelectionRange(textAreaElement.value.length, textAreaElement.value.length);
@@ -127,7 +128,9 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
 }
 
 // eslint-disable-next-line no-unused-vars
-function loadConversation(conversationId, searchValue = '', isArchived = false) {
+function loadConversation(conversationId, isArchived = false) {
+  const searchInput = document.querySelector('#conversation-search');
+  const searchValue = searchInput?.value || '';
   registerWebsocket();
   speechSynthesis.cancel();
   removeTextInputExtras();
@@ -199,7 +202,7 @@ function loadConversation(conversationId, searchValue = '', isArchived = false) 
           const systemMessage = [...sortedNodes].reverse().find((node) => node?.message?.role === 'system' || node?.message?.author?.role === 'system');
           const customInstrucionProfile = systemMessage?.message?.metadata?.user_context_message_data || undefined;
 
-          let messageDiv = `<div id="conversation-top" class="w-full flex relative items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-token-text-primary group bg-token-main-surface-tertiary" style="min-height:56px;"><span id="conversation-top-title" class="flex">${folderName ? `<strong>${folderName}  &nbsp;&nbsp;&nbsp;› &nbsp;&nbsp;&nbsp;</strong>` : ''}${fullConversation.title}${customInstrucionProfile ? '<span id="custom-instruction-info-icon" style="display:flex;align-items:center;">&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="none" class="ml-0.5 mt-0.5 h-4 w-4 flex-shrink-0 text-token-text-primary sm:mb-0.5 sm:mt-0 sm:h-5 sm:w-5"><path d="M8.4375 8.4375L8.46825 8.4225C8.56442 8.37445 8.67235 8.35497 8.77925 8.36637C8.88615 8.37776 8.98755 8.41955 9.07143 8.48678C9.15532 8.55402 9.21818 8.64388 9.25257 8.74574C9.28697 8.8476 9.29145 8.95717 9.2655 9.0615L8.7345 11.1885C8.70836 11.2929 8.7127 11.4026 8.74702 11.5045C8.78133 11.6065 8.84418 11.6965 8.9281 11.7639C9.01202 11.8312 9.1135 11.8731 9.2205 11.8845C9.32749 11.8959 9.43551 11.8764 9.53175 11.8282L9.5625 11.8125M15.75 9C15.75 9.88642 15.5754 10.7642 15.2362 11.5831C14.897 12.4021 14.3998 13.1462 13.773 13.773C13.1462 14.3998 12.4021 14.897 11.5831 15.2362C10.7642 15.5754 9.88642 15.75 9 15.75C8.11358 15.75 7.23583 15.5754 6.41689 15.2362C5.59794 14.897 4.85382 14.3998 4.22703 13.773C3.60023 13.1462 3.10303 12.4021 2.76381 11.5831C2.42459 10.7642 2.25 9.88642 2.25 9C2.25 7.20979 2.96116 5.4929 4.22703 4.22703C5.4929 2.96116 7.20979 2.25 9 2.25C10.7902 2.25 12.5071 2.96116 13.773 4.22703C15.0388 5.4929 15.75 7.20979 15.75 9ZM9 6.1875H9.006V6.1935H9V6.1875Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>' : ''}</span>${conversationSettingsMenu(hasSubscription)}</div>`;
+          let messageDiv = `<div id="conversation-top" class="w-full flex relative items-center justify-center border-b border-token-border-light text-token-text-primary group ${settings.alternateMainColors ? 'bg-token-main-surface-tertiary' : 'bg-token-main-surface-primary'}" style="min-height:56px;"><span id="conversation-top-title" class="flex">${folderName ? `<strong>${folderName}  &nbsp;&nbsp;&nbsp;› &nbsp;&nbsp;&nbsp;</strong>` : ''}${fullConversation.title}${customInstrucionProfile ? '<span id="custom-instruction-info-icon" style="display:flex;align-items:center;">&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="none" class="ml-0.5 mt-0.5 h-4 w-4 flex-shrink-0 text-token-text-primary sm:mb-0.5 sm:mt-0 sm:h-5 sm:w-5"><path d="M8.4375 8.4375L8.46825 8.4225C8.56442 8.37445 8.67235 8.35497 8.77925 8.36637C8.88615 8.37776 8.98755 8.41955 9.07143 8.48678C9.15532 8.55402 9.21818 8.64388 9.25257 8.74574C9.28697 8.8476 9.29145 8.95717 9.2655 9.0615L8.7345 11.1885C8.70836 11.2929 8.7127 11.4026 8.74702 11.5045C8.78133 11.6065 8.84418 11.6965 8.9281 11.7639C9.01202 11.8312 9.1135 11.8731 9.2205 11.8845C9.32749 11.8959 9.43551 11.8764 9.53175 11.8282L9.5625 11.8125M15.75 9C15.75 9.88642 15.5754 10.7642 15.2362 11.5831C14.897 12.4021 14.3998 13.1462 13.773 13.773C13.1462 14.3998 12.4021 14.897 11.5831 15.2362C10.7642 15.5754 9.88642 15.75 9 15.75C8.11358 15.75 7.23583 15.5754 6.41689 15.2362C5.59794 14.897 4.85382 14.3998 4.22703 13.773C3.60023 13.1462 3.10303 12.4021 2.76381 11.5831C2.42459 10.7642 2.25 9.88642 2.25 9C2.25 7.20979 2.96116 5.4929 4.22703 4.22703C5.4929 2.96116 7.20979 2.25 9 2.25C10.7902 2.25 12.5071 2.96116 13.773 4.22703C15.0388 5.4929 15.75 7.20979 15.75 9ZM9 6.1875H9.006V6.1935H9V6.1875Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>' : ''}</span>${conversationSettingsMenu(hasSubscription)}</div>`;
 
           if (isArchived) {
             messageDiv = '<div id="conversation-top"></div><div id="top-nav-archive-message" style="display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; color:white; background-color: #444554; position: sticky; top: 0; z-index: 999;">With Superpower ChatGPT, you can continue archived conversations without unarchiving them. <button id="top-nav-unarchive-button" class="ml-2 btn relative btn-primary"><div class="flex w-full gap-2 items-center justify-center"><div class="flex items-center gap-1"><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="18" width="18" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0V0z"></path><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.83 1H5.42l.82-1zM5 19V8h14v11H5zm3-5h2.55v3h2.9v-3H16l-4-4z"></path></svg>Unarchive</div></div></button> </div>';
@@ -237,10 +240,12 @@ function loadConversation(conversationId, searchValue = '', isArchived = false) 
             bottomDivContent.style.maxWidth = `${settings.conversationWidth}%`;
           }
           bottomDiv.appendChild(bottomDivContent);
-          const totalCounter = document.createElement('div');
-          totalCounter.id = 'total-counter';
-          totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
-          bottomDivContent.appendChild(totalCounter);
+          if (settings.showTotalWordCount) {
+            const totalCounter = document.createElement('div');
+            totalCounter.id = 'total-counter';
+            totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;user-select:none;';
+            bottomDivContent.appendChild(totalCounter);
+          }
           innerDiv.appendChild(conversationDiv);
           replacePageContent(innerDiv);
           if (searchValue) {
@@ -252,22 +257,21 @@ function loadConversation(conversationId, searchValue = '', isArchived = false) 
           // has to be before scrollIntoView to render the images first
           renderAllDalleImages(fullConversation);
           renderAllPythonImages(fullConversation);
-          addMissingGizmoAvatars();
+          addMissingGizmoNamesAndAvatars();
           addFinalCompletionClassToLastMessageWrapper();
           addConversationsEventListeners(fullConversation.id);
           addConversationSettingsMenuEventListener(fullConversation.id);
-          initializeStopGeneratingResponseButton();
           addPinNav(sortedNodes);
           initializeNavbar(fullConversation);
           replaceTextAreaElement(settings);
-          updateTotalCounter();
+          updateTotalCounter(settings);
           if (fullConversation.gizmo_id) {
             getGizmoUserActionSettings(fullConversation.gizmo_id, true);
           }
           if (settings.autoClick) {
             document.querySelector('#auto-click-button').click();
           }
-          if (!searchValue) {
+          if (!(searchValue || document.activeElement.id === 'conversation-search')) {
             innerDiv.scrollTop = innerDiv.scrollHeight;
             innerDiv.style = 'scroll-behavior: smooth;';
             const textAreaElement = document.querySelector('#prompt-textarea');
@@ -280,7 +284,8 @@ function loadConversation(conversationId, searchValue = '', isArchived = false) 
   });
 }
 
-function updateTotalCounter() {
+function updateTotalCounter(settings) {
+  if (settings.showTotalWordCount === false) return;
   const totalCounterElement = document.querySelector('#total-counter');
   if (!totalCounterElement) return;
   const allMessages = document.querySelectorAll('[id^=message-text-]');
@@ -326,25 +331,129 @@ function removeTextInputExtras() {
   const fileWrapperElement = document.querySelector('#file-wrapper-element');
   if (fileWrapperElement) fileWrapperElement.remove();
 }
-function addMissingGizmoAvatars() {
-  const missingGizmoAvatars = document.querySelectorAll('[id^="gizmo-avatar"][src*="wikimedia"]');
+function addMissingGizmoNamesAndAvatars() {
+  const missingGizmoAvatars = document.querySelectorAll('[id="gizmo-avatar"]');
   missingGizmoAvatars.forEach((avatar) => {
     const gizmoId = avatar.dataset.gizmoid;
+    const missingGizmoName = avatar.parentNode.parentNode.parentNode.querySelector(`[id="gizmo-name"][data-gizmoid="${gizmoId}"]`);
     getGizmoById(gizmoId).then((gizmoData) => {
-      const avatarSrc = gizmoData?.resource?.gizmo?.display?.profile_picture_url;
-      if (avatarSrc) {
-        avatar.src = avatarSrc;
+      if (avatar.src.includes('wikimedia')) {
+        const avatarSrc = gizmoData?.resource?.gizmo?.display?.profile_picture_url;
+        if (avatarSrc) {
+          avatar.src = avatarSrc;
+        }
+      }
+      const gizmoName = gizmoData?.resource?.gizmo?.display?.name;
+      if (gizmoName && missingGizmoName) {
+        missingGizmoName.innerText = gizmoName;
+      } else {
+        missingGizmoName.innerText = 'ChatGPT';
       }
     });
   });
 }
+function showCopyMenu(event, messageId) {
+  const { x, y } = getMousePosition(event);
+  const translateX = x + 4;
+  const translateY = y + 4;
+  const menu = `<div data-radix-popper-content-wrapper="" id="copy-message-menu" dir="ltr" style="position:fixed;left:0;top:0;transform:translate3d(${translateX}px,${translateY}px,0);min-width:max-content;z-index:1000000;--radix-popper-anchor-width:18px;--radix-popper-anchor-height:18px;--radix-popper-available-width:1167px;--radix-popper-available-height:604px;--radix-popper-transform-origin:0% 0px"><div data-side="bottom" data-align="start" role="menu" aria-orientation="vertical" data-state="open" data-radix-menu-content="" dir="ltr" aria-labelledby="radix-:r6g:" class="mt-2 min-w-[100px] max-w-xs rounded-lg border border-gray-100 bg-token-main-surface-primary shadow-lg dark:border-gray-700" tabindex="-1" data-orientation="vertical" style="outline:0;--radix-dropdown-menu-content-transform-origin:var(--radix-popper-transform-origin);--radix-dropdown-menu-content-available-width:var(--radix-popper-available-width);--radix-dropdown-menu-content-available-height:var(--radix-popper-available-height);--radix-dropdown-menu-trigger-width:var(--radix-popper-anchor-width);--radix-dropdown-menu-trigger-height:var(--radix-popper-anchor-height);pointer-events:auto">
+  
+  <div role="menuitem" id="copy-text-button-${messageId}" class="flex gap-2 m-1.5 rounded p-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-main-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Copy plain text</div>
+  
+  <div role="menuitem" id="copy-html-button-${messageId}" class="flex gap-2 m-1.5 rounded p-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-main-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Copy with format</div>
+  
+  <div role="menuitem" id="copy-markdown-button-${messageId}" class="flex gap-2 m-1.5 rounded p-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-main-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Copy markdown</div>
+  
+  </div></div>`;
+  document.querySelector(`#message-wrapper-${messageId}`).insertAdjacentHTML('beforeend', menu);
+  addCopyMenuEventListeners(messageId);
+}
+function addCopyMenuEventListeners(messageId) {
+  const copyTextButton = document.querySelector(`#copy-text-button-${messageId}`);
+  const copyHtmlButton = document.querySelector(`#copy-html-button-${messageId}`);
+  const copyMarkdownButton = document.querySelector(`#copy-markdown-button-${messageId}`);
+  copyTextButton.addEventListener('click', () => {
+    document.getElementById('copy-message-menu')?.remove();
+    chrome.storage.local.get(['settings'], (result) => {
+      // while parent is not user, keep going up
+      const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
+      // get all message text nodes in the messageWrapperClone
+      const messageTextNodes = messageWrapper.querySelectorAll('[id^="message-text-"]');
+      // create a new div that only contains the message text nodes
+      const assistantTextOnlyElements = document.createElement('div');
+      messageTextNodes.forEach((node) => {
+        assistantTextOnlyElements.insertAdjacentHTML('beforeend', node.outerHTML.replaceAll('><', '>\n<'));
+      });
+
+      const userElement = messageWrapper.previousElementSibling;
+      const codeHeaders = assistantTextOnlyElements.querySelectorAll('#code-header');
+      // hide all code headers
+      codeHeaders.forEach((header) => {
+        header.remove();
+      });
+      const text = `${result.settings.copyMode ? `>> USER: ${userElement.innerText}\n>> ASSISTANT: ` : ''}${assistantTextOnlyElements.innerText}`;
+      navigator.clipboard.writeText(text.trim());
+
+      toast('Copied to clipboard', 'success');
+    });
+  });
+  copyHtmlButton.addEventListener('click', () => {
+    document.getElementById('copy-message-menu')?.remove();
+    chrome.storage.local.get(['settings'], (result) => {
+      const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
+      // get all message text nodes in the messageWrapperClone
+      const messageTextNodes = messageWrapper.querySelectorAll('[id^="message-text-"]');
+      // create a new div that only contains the message text nodes
+      const assistantTextOnlyElements = document.createElement('div');
+      messageTextNodes.forEach((node) => {
+        assistantTextOnlyElements.insertAdjacentHTML('beforeend', node.outerHTML.replaceAll('><', '>\n<'));
+      });
+
+      // don't want avatar in HTML
+      const userElement = messageWrapper.previousElementSibling;
+
+      if (result.settings.copyMode) {
+        assistantTextOnlyElements.innerHTML = `<div>USER:</div><div>${userElement.innerText}</div><br><div>ASSISTANT:</div>${assistantTextOnlyElements.innerHTML}`;
+      }
+      copyRichText(assistantTextOnlyElements);
+      toast('Copied to clipboard', 'success');
+    });
+  });
+
+  copyMarkdownButton.addEventListener('click', () => {
+    document.getElementById('copy-message-menu')?.remove();
+    chrome.storage.local.get(['settings'], (result) => {
+      const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
+      // get all message text nodes in the messageWrapperClone
+      const messageTextNodes = messageWrapper.querySelectorAll('[id^="message-text-"]');
+      // create a new div that only contains the message text nodes
+      const assistantTextOnlyElements = document.createElement('div');
+      messageTextNodes.forEach((node) => {
+        assistantTextOnlyElements.insertAdjacentHTML('beforeend', node.outerHTML.replaceAll('><', '>\n<'));
+      });
+
+      const userElement = messageWrapper.previousElementSibling;
+
+      const turndownService = new TurndownService();
+      let markdown = turndownService.turndown(assistantTextOnlyElements.innerHTML);
+
+      if (result.settings.copyMode) {
+        markdown = `##USER:\n${userElement.innerText}\n\n##ASSISTANT:\n${markdown}`;
+      }
+      navigator.clipboard.writeText(markdown.trim());
+
+      toast('Copied to clipboard', 'success');
+    });
+  });
+}
+
 function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = false) {
   const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
   let messageEditButtons = document.querySelectorAll('[id^="message-edit-button-"]');
   let addToLibraryButtons = document.querySelectorAll('[id^="message-add-to-library-button-"]');
-  let thumbsUpButtons = document.querySelectorAll('[id^="thumbs-up-button"]');
+  // let thumbsUpButtons = document.querySelectorAll('[id^="thumbs-up-button"]');
   let thumbsDownButtons = document.querySelectorAll('[id^="thumbs-down-button"]');
-  let resultCopyButtons = document.querySelectorAll('[id^="result-copy-button-"]');
+  let messageCopyButtons = document.querySelectorAll('[id^="copy-message-button-"]');
   let threadPrevButtons = document.querySelectorAll('[id^="thread-prev-button-"]');
   let threadNextButtons = document.querySelectorAll('[id^="thread-next-button-"]');
   let messagePinButtons = document.querySelectorAll('[id^="message-pin-button-"]');
@@ -365,9 +474,9 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
   if (onlyUpdateLastMessage) {
     messageEditButtons = Array.from(messageEditButtons).slice(-1);
     addToLibraryButtons = Array.from(addToLibraryButtons).slice(-1);
-    thumbsUpButtons = Array.from(thumbsUpButtons).slice(-1);
+    // thumbsUpButtons = Array.from(thumbsUpButtons).slice(-1);
     thumbsDownButtons = Array.from(thumbsDownButtons).slice(-1);
-    resultCopyButtons = Array.from(resultCopyButtons).slice(-1);
+    messageCopyButtons = Array.from(messageCopyButtons).slice(-1);
     // start - last 2 buttons for thread buttons
     threadPrevButtons = Array.from(threadPrevButtons).slice(-2);
     threadNextButtons = Array.from(threadNextButtons).slice(-2);
@@ -429,7 +538,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
       saveButton.innerText = 'Save & Submit';
       saveButton.addEventListener('click', () => {
         messageEditWrapper.style.display = 'block';
-        chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account'], (result) => {
+        chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account', 'chatgptAccountId'], (result) => {
           const conversation = result.conversations[conversationId];
           const message = conversation.mapping[messageId];
           arkoseTrigger();
@@ -485,7 +594,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
             newMessage = generateInstructions(conversation, result.settings, newMessage, true);// forceAddInstructions=true
           }
           isGenerating = true;
-          submitChat(newMessage, conversation, newMessageId, parentId, result.settings, result.account, result.models, result.selectedModel);
+          submitChat(newMessage, conversation, newMessageId, parentId, result.settings, result.account, result.chatgptAccountId, result.models, result.selectedModel);
           // }
         });
       });
@@ -526,19 +635,19 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
       });
     });
   });
-  thumbsUpButtons.forEach((btn) => {
-    // clear existing event listeners
-    const button = btn.cloneNode(true);
-    btn.parentNode.replaceChild(button, btn);
-    button.addEventListener('click', () => {
-      const messageId = button.id.split('thumbs-up-button-').pop();
-      messageFeedback(conversationId, messageId, 'thumbsUp');
-      openFeedbackModal(conversationId, messageId, 'thumbsUp');
-      button.disabled = true;
-      const thumbsDownButton = document.querySelector(`#thumbs-down-button-${messageId}`);
-      thumbsDownButton.style.display = 'none';
-    });
-  });
+  // thumbsUpButtons.forEach((btn) => {
+  //   // clear existing event listeners
+  //   const button = btn.cloneNode(true);
+  //   btn.parentNode.replaceChild(button, btn);
+  //   button.addEventListener('click', () => {
+  //     const messageId = button.id.split('thumbs-up-button-').pop();
+  //     messageFeedback(conversationId, messageId, 'thumbsUp');
+  //     openFeedbackModal(conversationId, messageId, 'thumbsUp');
+  //     button.disabled = true;
+  //     const thumbsDownButton = document.querySelector(`#thumbs-down-button-${messageId}`);
+  //     thumbsDownButton.style.display = 'none';
+  //   });
+  // });
   thumbsDownButtons.forEach((btn) => {
     // clear existing event listeners
     const button = btn.cloneNode(true);
@@ -553,125 +662,17 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
     });
   });
 
-  resultCopyButtons.forEach((btn) => {
+  messageCopyButtons.forEach((btn) => {
     // clear existing event listeners
     const button = btn.cloneNode(true);
     btn.parentNode.replaceChild(button, btn);
-    const messageId = button.id.split('result-copy-button-').pop();
-    const copyMenu = document.querySelector(`#copy-result-menu-${messageId}`);
-    const htmlButton = document.querySelector(`#result-html-copy-button-${messageId}`);
-    const newHtmlButton = htmlButton.cloneNode(true);
-    htmlButton.parentNode.replaceChild(newHtmlButton, htmlButton);
-    const markdownButton = document.querySelector(`#result-markdown-copy-button-${messageId}`);
-    const newMarkdownButton = markdownButton.cloneNode(true);
-    markdownButton.parentNode.replaceChild(newMarkdownButton, markdownButton);
+    const messageId = button.id.split('copy-message-button-').pop();
 
-    button.addEventListener('mouseover', () => {
-      copyMenu.style.display = 'block';
-    });
-    button.addEventListener('mouseout', () => {
-      copyMenu.style.display = 'none';
-    });
-    copyMenu.addEventListener('mouseover', () => {
-      copyMenu.style.display = 'block';
-    });
-    copyMenu.addEventListener('mouseout', () => {
-      copyMenu.style.display = 'none';
-    });
-    button.addEventListener('click', () => {
-      chrome.storage.local.get(['settings'], (result) => {
-        // while parent is not user, keep going up
-        const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
-        // get all message text nodes in the messageWrapperClone
-        const messageTextNodes = messageWrapper.querySelectorAll('[id^="message-text-"]');
-        // create a new div that only contains the message text nodes
-        const assistantTextOnlyElements = document.createElement('div');
-        messageTextNodes.forEach((node) => {
-          // replace all >< with >\n< to make it easier to copy
-          node.innerHTML = node.innerHTML.replace(/></g, '>\n<');
-          assistantTextOnlyElements.appendChild(node.cloneNode(true));
-        });
-
-        const userElement = messageWrapper.previousElementSibling;
-        const codeHeaders = assistantTextOnlyElements.querySelectorAll('#code-header');
-        // hide all code headers
-        codeHeaders.forEach((header) => {
-          header.remove();
-        });
-        const text = `${result.settings.copyMode ? `>> USER: ${userElement.innerText}\n>> ASSISTANT: ` : ''}${assistantTextOnlyElements.innerText}`;
-        navigator.clipboard.writeText(text.trim());
-
-        // animate copy button text to copied and back in 3 seconds
-        button.textContent = 'Copied!';
-        setTimeout(
-          () => {
-            button.textContent = 'Copy';
-          },
-          1500,
-        );
-      });
-    });
-    newHtmlButton.addEventListener('click', () => {
-      chrome.storage.local.get(['settings'], (result) => {
-        const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
-        // get all message text nodes in the messageWrapperClone
-        const messageTextNodes = messageWrapper.querySelectorAll('[id^="message-text-"]');
-        // create a new div that only contains the message text nodes
-        const assistantTextOnlyElements = document.createElement('div');
-        messageTextNodes.forEach((node) => {
-          node.innerHTML = node.innerHTML.replace(/></g, '>\n<');
-          assistantTextOnlyElements.appendChild(node.cloneNode(true));
-        });
-
-        // don't want avatar in HTML
-        const userElement = messageWrapper.previousElementSibling;
-
-        if (result.settings.copyMode) {
-          assistantTextOnlyElements.innerHTML = `<div>USER:</div><div>${userElement.innerText}</div><br><div>ASSISTANT:</div>${assistantTextOnlyElements.innerHTML}`;
-        }
-        copyRichText(assistantTextOnlyElements);
-        // animate copy htmlButton text to copied and back in 3 seconds
-        newHtmlButton.textContent = 'Copied!';
-        setTimeout(
-          () => {
-            newHtmlButton.textContent = 'HTML';
-          },
-          1500,
-        );
-      });
-    });
-
-    newMarkdownButton.addEventListener('click', () => {
-      chrome.storage.local.get(['settings'], (result) => {
-        const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
-        // get all message text nodes in the messageWrapperClone
-        const messageTextNodes = messageWrapper.querySelectorAll('[id^="message-text-"]');
-        // create a new div that only contains the message text nodes
-        const assistantTextOnlyElements = document.createElement('div');
-        messageTextNodes.forEach((node) => {
-          node.innerHTML = node.innerHTML.replace(/></g, '>\n<');
-          assistantTextOnlyElements.appendChild(node.cloneNode(true));
-        });
-
-        const userElement = messageWrapper.previousElementSibling;
-
-        const turndownService = new TurndownService();
-        let markdown = turndownService.turndown(assistantTextOnlyElements.innerHTML);
-
-        if (result.settings.copyMode) {
-          markdown = `##USER:\n${userElement.innerText}\n\n##ASSISTANT:\n${markdown}`;
-        }
-        navigator.clipboard.writeText(markdown.trim());
-
-        // animate copy markdownButton text to copied and back in 3 seconds
-        newMarkdownButton.textContent = 'Copied!';
-        setTimeout(
-          () => {
-            newMarkdownButton.textContent = 'Markdown';
-          },
-          1500,
-        );
-      });
+    button.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeMenus();
+      showCopyMenu(event, messageId);
     });
   });
 
@@ -698,9 +699,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
         if (currentThreadIndex > 1) {
           const newThreadIndex = currentThreadIndex - 1;
           const newMessageId = siblings[newThreadIndex - 1]; // thread index is 1-based, array index is 0-based
-          const searchbox = document.querySelector('#conversation-search');
-          const searchValue = searchbox.value;
-          loadConversationFromNode(conversation.id, newMessageId, messageId, searchValue);
+          loadConversationFromNode(conversation.id, newMessageId, messageId);
         }
       });
     });
@@ -730,9 +729,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
           const newThreadIndex = currentThreadIndex + 1;
 
           const newMessageId = siblings[newThreadIndex - 1]; // thread index is 1-based, array index is 0-based
-          const searchbox = document.querySelector('#conversation-search');
-          const searchValue = searchbox.value;
-          loadConversationFromNode(conversation.id, newMessageId, messageId, searchValue);
+          loadConversationFromNode(conversation.id, newMessageId, messageId);
         }
       });
     });
@@ -865,7 +862,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
     const button = btn.cloneNode(true);
     btn.parentNode.replaceChild(button, btn);
     button.addEventListener('click', () => {
-      chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account'], (result) => {
+      chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account', 'chatgptAccountId'], (result) => {
         const conversation = result.conversations[conversationId];
         const messageId = button.id.split('message-regenerate-button-').pop();
         const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
@@ -885,7 +882,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
         const fileAttachments = lastUserMessage.message?.metadata?.attachments || [];
         messageWrapper.remove();
         isGenerating = true;
-        submitChat(newMessage, conversation, lastUserChatMessageId, lastUserMessageParentId, result.settings, result.account, result.models, result.selectedModel, imageAssets, fileAttachments, false, true);
+        submitChat(newMessage, conversation, lastUserChatMessageId, lastUserMessageParentId, result.settings, result.account, result.chatgptAccountId, result.models, result.selectedModel, imageAssets, fileAttachments, false, true);
       });
     });
   });
@@ -893,11 +890,11 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
     const button = btn.cloneNode(true);
     btn.parentNode.replaceChild(button, btn);
     button.addEventListener('click', () => {
-      chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account'], (result) => {
+      chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account', 'chatgptAccountId'], (result) => {
         const conversation = result.conversations[conversationId];
         isGenerating = true;
         btn.classList.remove('md:group-[.final-completion]:visible');
-        submitChat(null, conversation, conversation.current_node, conversation.current_node, result.settings, result.account, result.models, result.selectedModel, [], [], true);
+        submitChat(null, conversation, conversation.current_node, conversation.current_node, result.settings, result.account, result.chatgptAccountId, result.models, result.selectedModel, [], [], true);
       });
     });
   });
@@ -917,14 +914,18 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
         chrome.storage.local.set({ conversations }, () => {
           const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
           const icon = button.querySelector('path');
-          let defaultCalsses = 'bg-token-main-surface-secondary';
+          let defaultCalsses = 'bg-token-main-surface-primary';
           if (messageWrapper.getAttribute('data-role') === 'user') {
-            defaultCalsses = ['bg-token-main-surface-secondary'];
+            defaultCalsses = ['bg-token-main-surface-primary'];
           } else {
-            defaultCalsses = ['bg-token-main-surface-tertiary'];
+            if (settings.alternateMainColors) {
+              defaultCalsses = ['bg-token-main-surface-tertiary'];
+            } else {
+              defaultCalsses = ['bg-token-main-surface-primary'];
+            }
           }
           if (isPinned) {
-            icon.setAttribute('fill', '#aaa');
+            icon.setAttribute('fill', 'currentColor');
             button.classList.remove('visible');
             button.classList.add('invisible', 'group-hover:visible');
             messageWrapper.classList.remove('border-l-pinned', 'bg-pinned', 'dark:bg-pinned');
@@ -939,7 +940,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
           if (settings.showPinNav) {
             const pinNav = document.querySelector('#pin-nav');
             if (isPinned) {
-              pinNav.removeChild(pinNav.querySelector(`#pin-nav-item-${messageId}`));
+              pinNav?.removeChild(pinNav?.querySelector(`#pin-nav-item-${messageId}`));
             } else {
               const pin = document.createElement('button');
               pin.style = 'background-color: transparent; border: none; cursor: pointer;width:100%;width: 18px; margin-bottom:4px;transition: width 0.2s ease-in-out;';
@@ -1059,16 +1060,16 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
   addMessagePluginToggleButtonsEventListeners(messagePluginToggleButtons);
 }
 function submitActionResponse(conversationId, parentMessageId, domain, actionType) {
-  chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account'], (result) => {
+  chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account', 'chatgptAccountId'], (result) => {
     const toolActionRequestWrapper = document.querySelector(`#tool-action-request-wrapper-${parentMessageId}`);
     const responseNode = actionType === 'allow' ? actionAllowedRenderer(domain) : actionDeniedRenderer(domain);
     if (toolActionRequestWrapper) {
       // replace the toolActionRequestWrapper with actionDeniedRenderer(domain)
       toolActionRequestWrapper.outerHTML = responseNode;
     } else {
-      // add before lastMessageFeedbackWrapper
-      const lastMessageFeedbackWrapper = [...document.querySelectorAll('[id^=message-feedback-wrapper-]')].pop();
-      lastMessageFeedbackWrapper?.insertAdjacentHTML('beforebegin', responseNode);
+      // add before lastMessageActionWrapper
+      const lastMessageActionWrapper = [...document.querySelectorAll('[id^=message-action-wrapper-]')].pop();
+      lastMessageActionWrapper?.insertAdjacentHTML('beforebegin', responseNode);
     }
     const conversation = result.conversations[conversationId];
     isGenerating = true;
@@ -1091,7 +1092,7 @@ function submitActionResponse(conversationId, parentMessageId, domain, actionTyp
       timestamp_: 'absolute',
     };
     updateLastMessagePluginDropdown();
-    submitChat('', conversation, messageId, parentMessageId, result.settings, result.account, result.models, result.selectedModel, [], [], false, false, authorRole, authorName, metadata);
+    submitChat('', conversation, messageId, parentMessageId, result.settings, result.account, result.chatgptAccountId, result.models, result.selectedModel, [], [], false, false, authorRole, authorName, metadata);
   });
 }
 function addMessagePluginToggleButtonsEventListeners(messagePluginToggleButtons) {

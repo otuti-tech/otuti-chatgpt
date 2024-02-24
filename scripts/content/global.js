@@ -56,32 +56,32 @@ function initializeStorage() {
               chatgptAccountId, allConversations, conversations,
             } = res;
             chrome.storage.local.set({
-              allConversations: { ...allConversations, [chatgptAccountId]: conversations },
+              allConversations: { ...allConversations, [chatgptAccountId || 'default']: conversations },
             });
           });
         }
       }
       if (e.conversationsOrder) {
         // get all folders
-        const folders = e.conversationsOrder.newValue.filter((convOrFold) => typeof convOrFold !== 'string');
-        // for each folder get the conversationIds
-        const conversationIds = folders.map((folder) => folder.conversationIds);
-        // flatten the conversationIds
-        const flattenedConversationIds = conversationIds.flat();
-        // if conversationIds are not strings (they are objects), get the id property
-        flattenedConversationIds.forEach((conversationId, index) => {
-          if (typeof conversationId !== 'string') {
-            // eslint-disable-next-line no-console
-            console.warn('Bad type. Please contact the developer!');
-          }
-        });
+        // const folders = e?.conversationsOrder?.newValue?.filter((convOrFold) => typeof convOrFold !== 'string');
+        // // for each folder get the conversationIds
+        // const conversationIds = folders?.map((folder) => folder.conversationIds);
+        // // flatten the conversationIds
+        // const flattenedConversationIds = conversationIds?.flat();
+        // // if conversationIds are not strings (they are objects), get the id property
+        // flattenedConversationIds?.forEach((conversationId, index) => {
+        //   if (typeof conversationId !== 'string') {
+        //     // eslint-disable-next-line no-console
+        //     console.warn('Bad type. Please contact the developer!');
+        //   }
+        // });
 
-        // if there are duplicates, remove them
-        const uniqueConversationIds = [...new Set(flattenedConversationIds)];
-        if (uniqueConversationIds.length !== flattenedConversationIds.length) {
-          // eslint-disable-next-line no-console
-          console.warn('Not unique. Please contact the developer!');
-        }
+        // // if there are duplicates, remove them
+        // const uniqueConversationIds = [...new Set(flattenedConversationIds)];
+        // if (uniqueConversationIds.length !== flattenedConversationIds.length) {
+        //   // eslint-disable-next-line no-console
+        //   console.warn('Not unique. Please contact the developer!');
+        // }
 
         if (account?.account_ordering?.length > 1) {
           // update allConversationsOrder
@@ -92,14 +92,15 @@ function initializeStorage() {
               chatgptAccountId, allConversationsOrder, conversationsOrder,
             } = res;
             chrome.storage.local.set({
-              allConversationsOrder: { ...allConversationsOrder, [chatgptAccountId]: conversationsOrder },
+              allConversationsOrder: { ...allConversationsOrder, [chatgptAccountId || 'default']: conversationsOrder },
             });
           });
         }
       }
     });
   });
-  return chrome.storage.local.get(['customModels']).then((result) => chrome.storage.local.set({
+  return chrome.storage.local.get(['customModels', 'chatgptAccountId']).then((result) => chrome.storage.local.set({
+    chatgptAccountId: result.chatgptAccountId || 'default',
     selectedConversations: [],
     lastSelectedConversation: null,
     customModels: result.customModels || [],
@@ -129,9 +130,9 @@ function initializeStorage() {
 const markdown = (role) => new markdownit({
   html: role === 'assistant',
   linkify: true,
-  highlight(str, _lang) {
-    const { language, value } = hljs.highlightAuto(str);
-    return `<pre dir="ltr" class="w-full"><div class="dark bg-black mb-4 rounded-md"><div id='code-header' class="flex items-center relative text-token-text-tertiary bg-token-main-surface-primary px-4 py-2 text-xs font-sans rounded-t-md" style='border-top-left-radius:6px;border-top-right-radius:6px;'><span class="">${language}</span><button id='copy-code' data-initialized="false" class="flex ml-auto gap-2"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>Copy code</button></div><div class="p-4 overflow-y-auto"><code class="!whitespace-pre hljs language-${language}">${value}</code></div></div></pre>`;
+  highlight(str, lang) {
+    const { language, value } = lang && hljs.getLanguage(lang) ? hljs.highlight(str, { language: lang }) : { value: str };
+    return `<pre dir="ltr" class="w-full"><div class="dark bg-black mb-4 rounded-md"><div id='code-header' class="flex select-none items-center relative text-token-text-secondary bg-token-main-surface-secondary px-4 py-2 text-xs font-sans rounded-t-md" style='border-top-left-radius:6px;border-top-right-radius:6px;'><span class="">${lang}</span><button id='copy-code' data-initialized="false" class="flex ml-auto gap-2 text-token-text-secondary hover:text-token-text-primary"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>Copy code</button></div><div class="p-4 overflow-y-auto"><code class="!whitespace-pre hljs language-${lang}">${value}</code></div></div></pre>`;
   },
 });
 function addSounds() {
@@ -408,6 +409,8 @@ function closeMenus() {
   if (menus.length > 0) menus.forEach((menu) => menu.remove());
   menus = document.querySelectorAll('#folder-element-menu');
   if (menus.length > 0) menus.forEach((menu) => menu.remove());
+  menus = document.querySelectorAll('#copy-message-menu');
+  if (menus.length > 0) menus.forEach((menu) => menu.remove());
   menus = document.querySelectorAll('#sidebar-gizmo-menu');
   if (menus.length > 0) menus.forEach((menu) => menu.remove());
   menus = document.querySelectorAll('#conversation-element-menu');
@@ -428,8 +431,13 @@ function getGizmoIdFromUrl(defaultURL = null) {
 }
 
 function replacePageContent(newContent) {
-  const presentation = document.querySelector('main > div[role=presentation]');
-  if (!presentation) return;
+  const main = document.querySelector('main');
+  main.style.overflow = 'auto';
+  let presentation = document.querySelector('main > div[role=presentation]');
+  if (!presentation) {
+    main.childNodes[1]?.setAttribute('role', 'presentation');
+    presentation = document.querySelector('main > div[role=presentation]');
+  }
   presentation.classList = 'flex h-full flex-col bg-token-main-surface-primary';
 
   const contentWrapper = presentation?.firstChild;

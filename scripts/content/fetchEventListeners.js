@@ -45,7 +45,12 @@ window.addEventListener('accountReceived', (event) => {
   }
 });
 // window.addEventListener('registerWebsocketReceived', (event) => {
-//   chrome.storage.local.set({ websocket: event.detail });
+//   chrome.storage.local.set({
+//     websocket: {
+//       registeredAt: new Date().toISOString(),
+//       ...event.detail,
+//     },
+//   });
 // });
 window.addEventListener('gizmoNotFound', (event) => {
   const gizmoId = getGizmoIdFromUrl(event.detail.url);

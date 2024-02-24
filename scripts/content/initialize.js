@@ -1,7 +1,7 @@
-/* global navigation, initializeStorage, initializeSidebar, initializeInput, initializeContinue, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, initializeAnnouncement, initializeReleaseNote, initializeSelectActionButton, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, openLinksInNewTab, initializeKeyboardShortcuts, addQuickAccessMenuEventListener, upgradeCustomInstructions, addAutoSyncToggleButton, addSounds, closeMenusEventListener, initializeAutoRefreshAccount, observeOriginalExplore, removeGrammerly, showAutoSyncWarning, startSpeechToText, initializeUpgradeButton */
+/* global navigation, initializeStorage, initializeSidebar, initializeInput, initializeContinue, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, initializeAnnouncement, initializeReleaseNote, initializeSelectActionButton, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, openLinksInNewTab, initializeKeyboardShortcuts, addQuickAccessMenuEventListener, upgradeCustomInstructions, addAutoSyncToggleButton, addSounds, closeMenusEventListener, initializeAutoRefreshAccount, observeOriginalExplore, syncImages, removeGrammerly, showAutoSyncWarning, startSpeechToText, initializeUpgradeButton */
 // let initialized = false;
 let initializTimeout;
-function observeNav() {
+function observeAll() {
   // wathc document and once it has nav and nav has 3 childnodes initialize
   // const bodyObserverCallback = function (mutationsList, observer) {
   //   mutationsList.forEach((mutation) => {
@@ -21,6 +21,16 @@ function observeNav() {
         if (document.querySelector('grammarly-extension')) {
           removeGrammerly();
         }
+        if (document.querySelector('body')?.innerText.includes('Oops, an error occurred!') && document.querySelector('body')?.innerText.includes('Try again')) {
+          const tryAgainButton = document.querySelector('body')?.querySelector('button');
+          if (tryAgainButton) {
+            const tryAgainButtonClone = tryAgainButton.cloneNode(true);
+            tryAgainButton.parentNode.replaceChild(tryAgainButtonClone, tryAgainButton);
+            tryAgainButtonClone.addEventListener('click', () => {
+              window.location.reload();
+            });
+          }
+        }
       }
     });
   };
@@ -37,7 +47,9 @@ function initialize() {
   if (window.location.pathname.includes('/admin')) return;
   const settingsButton = document.querySelector('#settings-button');
   if (settingsButton) return;
-
+  // setTimeout(() => {
+  //   syncImages();
+  // }, 10000);
   chrome.runtime.sendMessage({
     checkHasSubscription: true,
     detail: {
@@ -94,5 +106,5 @@ function checkSyncAndLoad() {
 }
 
 initializeStorage();
-observeNav();
+observeAll();
 observeOriginalExplore();

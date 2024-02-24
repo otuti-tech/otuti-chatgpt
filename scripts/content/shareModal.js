@@ -1,9 +1,9 @@
 /* eslint-disable no-unused-vars */
-/* global markdown, katex, texmath, highlight, markdownitSup, deleteShare, share, toast */
+/* global markdown, katex, getGizmoById, texmath, highlight, markdownitSup, deleteShare, share, toast */
 let sharingConversationName = '';
 let shareConversationAnonymously = true;
 const dataIsUpdated = false;
-function shareModal(conversation, shareData, name) {
+async function shareModal(conversation, shareData, name) {
   // const {
   //   share_id,
   //   share_url,
@@ -42,10 +42,11 @@ function shareModal(conversation, shareData, name) {
     const recipient = n?.message?.recipient;
     return role === 'user' || (recipient === 'all' && role === 'assistant');
   });
+  const content = await generateContent(conversation, filteredSortedNodes);
 
   return `<div
   data-state="open"
-  class="fixed inset-0 bg-gray-300/70 dark:bg-gray-600/70"
+  class="fixed inset-0 bg-black/50 dark:bg-black/80"
   style="pointer-events: auto;"
 >
   <div
@@ -57,7 +58,7 @@ function shareModal(conversation, shareData, name) {
       aria-describedby="radix-:r5u:"
       aria-labelledby="radix-:r5t:"
       data-state="open"
-      class="relative col-auto col-start-2 row-auto row-start-2 w-full rounded-lg text-left shadow-xl transition-all left-1/2 -translate-x-1/2 bg-white dark:bg-gray-900 max-w-[550px]"
+      class="relative left-1/2 col-auto col-start-2 row-auto row-start-2 w-full -translate-x-1/2 rounded-xl bg-token-popover-surface-primary text-left shadow-xl transition-all max-w-[550px]"
       tabindex="-1"
       style="pointer-events: auto;"
     >
@@ -69,7 +70,7 @@ function shareModal(conversation, shareData, name) {
             <h2
               id="radix-:r5t:"
               as="h3"
-              class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200"
+              class="text-lg font-medium leading-6 text-toke-text-primary"
             >
               Share Link to Conversation
             </h2>
@@ -107,12 +108,13 @@ function shareModal(conversation, shareData, name) {
             shared link.`}
           </p>
         </div>
+        <div class="mb-4 flex items-start justify-start gap-2.5 rounded-md bg-token-main-surface-tertiary p-4 text-token-text-secondary last:mb-0"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm mt-1 flex-shrink-0" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>Any personalized data not present in the conversation won’t be shared with viewers (ex: custom instructions).</div>
         <div
-          class="w-full mb-4 shadow-[0_2px_12px_0px_rgba(0,0,0,0.08)] dark:bg-gray-800/90 rounded-lg border border-gray-100 dark:border-gray-700 overflow-hidden bg-gray-50"
+          class="w-full mb-4 shadow-[0_2px_12px_0px_rgba(0,0,0,0.08)] rounded-lg border border-token-border-light overflow-hidden"
         >
           <div class="flex h-full max-w-full flex-1 flex-col">
             <main
-              class="relative h-full w-full transition-width flex flex-col overflow-hidden items-stretch"
+              class="relative h-full w-full transition-width flex flex-col overflow-hidden items-stretch bg-token-main-surface-primary"
             >
               <div class="flex-1 overflow-hidden">
                 <div
@@ -124,12 +126,12 @@ function shareModal(conversation, shareData, name) {
                     style="position: absolute; inset: 0px;"
                   >
                     <div class="flex flex-col text-sm bg-token-main-surface-secondary">
-                    ${generateContent(filteredSortedNodes)}
+                    ${content}
                     </div >
                   </div >
                 </div >
   <div
-    class="flex p-4 bg-token-main-surface-secondary/90 border-t border-gray-100 dark:border-gray-700 rounded-b-lg w-full h-full"
+    class="flex p-4 bg-token-main-surface-secondary border-token-main-surface-tertiary border-t rounded-b-lg w-full h-full"
   >
     <div class="flex-1 pr-1">
       <div id="share-modal-name-wrapper"
@@ -399,14 +401,26 @@ function addConversationNameEventListener(shareData) {
     });
   });
 }
-function generateContent(nodes) {
-  return nodes.map((node, index) => {
+async function generateContent(conversation, nodes) {
+  let content = '';
+  for (let i = 0; i < nodes.length; i += 1) {
+    const node = nodes[i];
     const { message } = node;
     if (message.role === 'user' || message.author?.role === 'user') {
-      return userRow(message);
+      content += userRow(message);
+    } else {
+      const gizmoId = message.metadata.gizmo_id || conversation.gizmo_id;
+      let gizmoData;
+      if (gizmoId) {
+        // eslint-disable-next-line no-await-in-loop
+        gizmoData = await getGizmoById(gizmoId);
+      }
+
+      content += assistantRow(message, gizmoData);
     }
-    return assistantRow(message);
-  }).join('');
+  }
+
+  return content;
 }
 
 function userRow(message) {
@@ -414,7 +428,7 @@ function userRow(message) {
   const messageContentPartsHTML = markdown('user')
     .render(messageContent);
   return `<div
-  class="group w-full text-gray-800 dark:text-gray-100 bg-token-main-surface-secondary"
+  class="group w-full text-token-text-primary bg-token-main-surface-primary"
 >
   <div
     class="flex p-4 gap-4 text-base md:gap-6 md:max-w-2xl lg:max-w-xl xl:max-w-3xl md:py-6 lg:px-0 ml-5"
@@ -422,9 +436,9 @@ function userRow(message) {
     <div
       class="flex-shrink-0 flex flex-col relative items-end"
     >
-      <div class="w-[30px]">
+      <div class="w-6">
         <div
-          class="relative p-1 rounded-sm h-[30px] w-[30px] text-token-text-primary flex items-center justify-center"
+          class="gizmo-shadow-stroke relative p-1 rounded-full h-6 w-6 text-white flex items-center justify-center"
           style="background-color: rgb(171, 104, 255);"
         >
           <svg
@@ -448,8 +462,10 @@ function userRow(message) {
       </div>
     </div>
     <div
-      class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]"
+      class="relative flex w-[calc(100%-50px)] flex-col gap-1 lg:w-[calc(100%-115px)]"
     >
+    <div class="font-semibold select-none">You</div>
+
       <div class="flex flex-grow flex-col gap-3">
         <div
           class="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap break-words"
@@ -461,7 +477,7 @@ function userRow(message) {
   </div>
 </div>`;
 }
-function assistantRow(message) {
+function assistantRow(message, gizmoData) {
   let messageContentParts = message.content.parts.filter((p) => typeof p === 'string').join('\n');
 
   // if citations array is not mpty, replace text from start_ix to end_ix position with citation
@@ -493,7 +509,7 @@ function assistantRow(message) {
   const avatarColor = (message.metadata.model_slug?.includes('plugins') || message.metadata.model_slug?.includes('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';
 
   return `<div
-  class="group w-full text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-700"
+  class="group w-full text-token-text-primary bg-token-main-surface-primary"
 >
   <div
     class="flex p-4 gap-4 text-base md:gap-6 md:max-w-2xl lg:max-w-xl xl:max-w-3xl md:py-6 lg:px-0 ml-5"
@@ -501,9 +517,10 @@ function assistantRow(message) {
     <div
       class="flex-shrink-0 flex flex-col relative items-end"
     >
-      <div class="w-[30px]">
-        <div
-          class="relative p-1 rounded-sm h-[30px] w-[30px] text-token-text-primary flex items-center justify-center"
+      <div class="w-6">
+      ${gizmoData ? `<div class="gizmo-shadow-stroke relative flex h-6 w-6"><img src="${gizmoData?.resource?.gizmo?.display?.profile_picture_url}" class="h-full w-full bg-token-main-surface-tertiary rounded-full" alt="GPT" width="80" height="80">
+      </div>` : `<div
+          class="gizmo-shadow-stroke relative p-1 rounded-full h-6 w-6 text-white flex items-center justify-center"
           style="background-color:${avatarColor}"
         >
           <svg
@@ -523,12 +540,13 @@ function assistantRow(message) {
               fill="currentColor"
             ></path>
           </svg>
-        </div>
+        </div>`}
       </div>
     </div>
     <div
-      class="relative flex w-[calc(100%-50px)] flex-col gap-1 md:gap-3 lg:w-[calc(100%-115px)]"
+      class="relative flex w-[calc(100%-50px)] flex-col gap-1 lg:w-[calc(100%-115px)]"
     >
+    <div class="font-semibold select-none">ChatGPT</div>
       <div class="flex flex-grow flex-col gap-3">
         <div
           class="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap break-words"

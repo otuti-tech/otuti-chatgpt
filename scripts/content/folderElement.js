@@ -47,7 +47,7 @@ function createFolder(folder, conversations = [], isNewFolder = false) {
     const allSelectedCheckbox = document.querySelectorAll('[id^="conversation-button"] input[type="checkbox"]:checked');
     if (allSelectedCheckbox?.length > 0) return;
     const actionsWrapper = document.querySelector(`#folder-actions-wrapper-${folderId}`);
-    const curFolderIcon = document.querySelector(`#folder-${folder.id} img`);
+    const curFolderIcon = document.querySelector(`#folder-icon-${folder.id}`);
     if (actionsWrapper.querySelector('button')) {
       actionsWrapper.querySelector('button').innerHTML = curFolderIcon?.dataset?.isOpen === 'true' ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" stroke="currentColor" fill="currentColor" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" stroke-width="2"><path d="M432.6 209.3l-191.1 183.1C235.1 397.8 229.1 400 224 400s-11.97-2.219-16.59-6.688L15.41 209.3C5.814 200.2 5.502 184.1 14.69 175.4c9.125-9.625 24.38-9.938 33.91-.7187L224 342.8l175.4-168c9.5-9.219 24.78-8.906 33.91 .7187C442.5 184.1 442.2 200.2 432.6 209.3z"/></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512" stroke="currentColor" fill="currentColor" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" stroke-width="2"><path d="M113.3 47.41l183.1 191.1c4.469 4.625 6.688 10.62 6.688 16.59s-2.219 11.97-6.688 16.59l-183.1 191.1c-9.152 9.594-24.34 9.906-33.9 .7187c-9.625-9.125-9.938-24.38-.7187-33.91l168-175.4L78.71 80.6c-9.219-9.5-8.906-24.78 .7187-33.91C88.99 37.5 104.2 37.82 113.3 47.41z"/></svg>';
     }
@@ -59,7 +59,7 @@ function createFolder(folder, conversations = [], isNewFolder = false) {
     // get closet element with id starting with conversation-button
     chrome.storage.local.get(['conversationsOrder'], (result) => {
       const { conversationsOrder } = result;
-      const curFolderIcon = document.querySelector(`#folder-${folder.id} img`);
+      const curFolderIcon = document.querySelector(`#folder-icon-${folder.id}`);
       curFolderIcon.src = chrome.runtime.getURL(`${curFolderIcon.dataset.isOpen === 'false' ? 'icons/folder-open.png' : 'icons/folder.png'}`);
       curFolderIcon.dataset.isOpen = curFolderIcon.dataset.isOpen === 'false' ? 'true' : 'false';
       const curFolderContent = document.querySelector(`#folder-content-${folder.id}`);
@@ -71,6 +71,7 @@ function createFolder(folder, conversations = [], isNewFolder = false) {
 
   // folder icon
   const folderIcon = document.createElement('img');
+  folderIcon.id = `folder-icon-${folderId}`;
   folderIcon.classList = 'w-4 h-4';
   folderIcon.src = folder.isOpen ? chrome.runtime.getURL('icons/folder-open.png') : chrome.runtime.getURL('icons/folder.png');
   folderIcon.dataset.isOpen = folder.isOpen ? 'true' : 'false';
@@ -222,7 +223,7 @@ function folderActions(folderId) {
   if (allSelectedCheckbox?.length > 0) {
     return addToFolderAction(folderId);
   }
-  const curFolderIcon = document.querySelector(`#folder-${folderId} img`);
+  const curFolderIcon = document.querySelector(`#folder-icon-${folderId}`);
 
   return defaultFolderActions(folderId, curFolderIcon?.dataset?.isOpen === 'true');
 }

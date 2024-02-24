@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, initializeTimestamp, isGenerating, prependConversation, addToTheTopOfConversationList, generateTitleForConversation, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner, isWindows, sortConversationsByTimestamp, renderGPTList, getConversations, formatTime */
+/* global updateNewChatButtonNotSynced, getAllConversations, getConversation, loadConversationList, generateTitleForConversation, initializeTimestamp, isGenerating, prependConversation, addToTheTopOfConversationList, canSubmitPrompt, formatDate, userChatIsActuallySaved:true, addAsyncInputEvents, addSyncBanner, isWindows, sortConversationsByTimestamp, renderGPTList, getConversations, formatTime */
 /* eslint-disable no-await-in-loop, */
 let autoSaveTimeoutId;
 
@@ -484,7 +484,7 @@ function initializeAutoSave(skipFullReload = false, forceRefreshIds = []) {
           if (!remoteConv) {
             delete localConversations[localConvIds[i]];
           } else {
-            localConversations[localConvIds[i]].title = remoteConv?.title;
+            localConversations[localConvIds[i]].title = remoteConv?.title || 'New chat';
             if (
               forceRefreshIds.includes(localConvIds[i])
               || localConversations[localConvIds[i]]?.update_time === 'force_copy'

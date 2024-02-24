@@ -428,7 +428,7 @@ function runPromptChain(promptChainSteps, initialStep = 0, newChat = true) {
     return;
   }
   const textAreaElement = document.querySelector('#prompt-textarea');
-  const submitButtonElement = document.querySelector('#prompt-textarea ~ button');
+  const submitButtonElement = document.querySelector('[data-testid="send-button"]');
   // eslint-disable-next-line prefer-destructuring
   textAreaElement.value = promptChainSteps[initialStep];
   runningPromptChainSteps = promptChainSteps;
@@ -451,7 +451,7 @@ function runPromptChain(promptChainSteps, initialStep = 0, newChat = true) {
 }
 function insertNextChain(promptChainSteps, promptChainStepIndex) {
   const textAreaElement = document.querySelector('#prompt-textarea');
-  const submitButtonElement = document.querySelector('#prompt-textarea ~ button');
+  const submitButtonElement = document.querySelector('[data-testid="send-button"]');
   textAreaElement.value = promptChainSteps[promptChainStepIndex];
   // update prompt chain step counter
   const runningPromptChainStepCount = document.getElementById('running-prompt-chain-step-count');
