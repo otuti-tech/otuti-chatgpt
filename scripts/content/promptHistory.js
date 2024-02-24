@@ -132,11 +132,9 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
         shiftClickText.style = 'font-size:10px;position:absolute;right:32px;bottom:36px;display:none;color:lightslategray;';
       });
       historyItemUseButton.addEventListener('click', (event) => {
-        const inputForm = document.querySelector('form');
-        if (!inputForm) return;
-        const submitButton = inputForm.querySelector('textarea ~ button');
+        const submitButton = document.querySelector('#prompt-textarea ~ button');
         if (!submitButton) return;
-        const textAreaElement = inputForm.querySelector('textarea');
+        const textAreaElement = document.querySelector('#prompt-textarea');
         if (!textAreaElement) return;
         textAreaElement.value = userInputValue.inputValue;
         textAreaElement.focus();
@@ -473,7 +471,7 @@ function historyModalActions() {
 function addUserPromptToHistory(inputValue) {
   // Add new value to the value history
   if (!inputValue) return;
-  chrome.storage.local.get(['userInputValueHistory', 'settings'], (result) => {
+  chrome.storage.local.get(['userInputValueHistory', 'selectedModel'], (result) => {
     const userInputValueHistory = result.userInputValueHistory || [];
     // if inputValue already exists in history, remove it first
     const existingInputValueIndex = userInputValueHistory.findIndex(
@@ -487,7 +485,7 @@ function addUserPromptToHistory(inputValue) {
       isFavorite: deletedItems.length > 0 ? deletedItems[0].isFavorite : false,
       timestamp: Date.now(),
       inputValue: inputValue.trim(),
-      modelSlug: result.settings.selectedModel.slug,
+      modelSlug: result.selectedModel.slug,
     });
     chrome.storage.local.set({ userInputValueHistory }, () => {
       chrome.storage.local.set({ userInputValueHistoryIndex: userInputValueHistory.length });
@@ -497,9 +495,7 @@ function addUserPromptToHistory(inputValue) {
 
 // Add input event listener to text area
 function textAreaElementInputEventListener(event) {
-  const inputForm = document.querySelector('form');
-  if (!inputForm) return;
-  const submitButton = inputForm.querySelector('textarea ~ button');
+  const submitButton = document.querySelector('#prompt-textarea ~ button');
   if (submitButton) {
     const spinners = document.querySelectorAll('[id^=file-upload-spinner-]');
 
@@ -532,7 +528,7 @@ function textAreaElementInputEventListener(event) {
     });
   });
 }
-// Add keyboard event listener to text area
+// Add keyboard event listener to text area: autosync OFF
 function textAreaElementKeydownEventListenerAsync(event) {
   const textAreaElement = event.target;
 
@@ -601,13 +597,13 @@ function textAreaElementKeydownEventListenerAsync(event) {
   // space key
   if (event.keyCode === 32) {
     chrome.storage.local.get(['customPrompts'], (res) => {
-      // find any word that starts with @ and ends with space
+      // find any word that starts with $ and ends with space
       // if the word is in customPrompts titles, replace it with the prompt.text
       const customPrompts = res.customPrompts || [];
       const textAreaValue = textAreaElement.value;
       const words = textAreaValue.split(/[\s\n]+/);
       const lastWord = words[words.length - 2];
-      if (lastWord.startsWith('@')) {
+      if (lastWord.startsWith('$')) {
         const prompt = customPrompts.find((p) => p.title.toLowerCase() === lastWord.substring(1).toLowerCase());
         if (prompt) {
           textAreaElement.value = textAreaValue.substring(0, textAreaValue.length - (lastWord.length + 1)) + prompt.text;
@@ -617,6 +613,7 @@ function textAreaElementKeydownEventListenerAsync(event) {
     });
   }
 }
+// autosync ON
 // eslint-disable-next-line no-unused-vars
 function textAreaElementKeydownEventListenerSync(event) {
   const textAreaElement = event.target;
@@ -624,6 +621,14 @@ function textAreaElementKeydownEventListenerSync(event) {
   if (event.key === 'Enter' && event.which === 13 && !event.shiftKey && !isGenerating) {
     event.preventDefault();
     event.stopPropagation();
+    const quickAccessMenu = document.querySelector('#quick-access-menu');
+    if (quickAccessMenu && quickAccessMenu.style.display !== 'none') {
+      // click on the first button in the quick access menu with id^=quick-access-menu-item- and display block
+      const firstItem = quickAccessMenu.querySelector('button[id^=quick-access-menu-item-]:not([style*="display: none"])');
+      if (firstItem) {
+        firstItem.click();
+      }
+    }
     updateInputCounter('');
     chrome.storage.local.get(['textInputValue'], (result) => {
       const textInputValue = result.textInputValue || '';
@@ -702,13 +707,13 @@ function textAreaElementKeydownEventListenerSync(event) {
       quickAccessMenuElement.remove();
     }
     chrome.storage.local.get(['customPrompts'], (res) => {
-      // find any word that starts with @ and ends with space
+      // find any word that starts with $ and ends with space
       // if the word is in customPrompts titles, replace it with the prompt.text
       const customPrompts = res.customPrompts || [];
       const textAreaValue = textAreaElement.value;
       const words = textAreaValue.split(/[\s\n]+/);
       const lastWord = words[words.length - 2];
-      if (lastWord?.startsWith('@')) {
+      if (lastWord?.startsWith('$')) {
         const prompt = customPrompts.find((p) => p.title.toLowerCase() === lastWord.substring(1).toLowerCase());
         if (prompt) {
           textAreaElement.value = textAreaValue.substring(0, textAreaValue.length - (lastWord.length + 1)) + prompt.text;
@@ -721,24 +726,31 @@ function textAreaElementKeydownEventListenerSync(event) {
   setTimeout(() => {
     updateQuickAccessMenuItems();
   }, 100);
-  // @
-  if (event.shiftKey && event.keyCode === 50) {
-    // open the dropdown with custom prompts
-    quickAccessMenu('@');
-  }
-  // #
-  if (event.shiftKey && event.keyCode === 51) {
-    // open the dropdown with prompt chains
-    quickAccessMenu('#');
-  }
+  // selectionchange event takes care of this
+  // // @
+  // if (event.shiftKey && event.keyCode === 50) {
+  //   // open the dropdown with custom GPTs
+  //   quickAccessMenu('@');
+  // }
+  // // $
+  // if (event.shiftKey && event.keyCode === 52) {
+  //   // open the dropdown with custom prompts
+  //   quickAccessMenu('$');
+  // }
+  // // #
+  // if (event.shiftKey && event.keyCode === 51) {
+  //   // open the dropdown with prompt chains
+  //   quickAccessMenu('#');
+  // }
 
   if (event.key === 'Backspace') {
     const cursorPosition = textAreaElement.selectionStart;
-    // @
+    // $
     const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
+    const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
     const previousHashtagPosition = textAreaElement.value.lastIndexOf('#', cursorPosition);
-    const previousTrigger = previousAtPosition > previousHashtagPosition ? '@' : '#';
-    const previousTriggerPosition = Math.max(previousAtPosition, previousHashtagPosition);
+    const previousTriggerPosition = Math.max(previousAtPosition, previousDollarPosition, previousHashtagPosition);
+    const previousTrigger = textAreaElement.value.substring(previousTriggerPosition, previousTriggerPosition + 1);
 
     if (previousTriggerPosition > -1 && cursorPosition - 1 > previousTriggerPosition && textAreaElement.value.lastIndexOf(' ', cursorPosition) < previousTriggerPosition) {
       const quickAccessMenuElement = document.querySelector('#quick-access-menu');
@@ -757,16 +769,19 @@ function textAreaElementKeydownEventListenerSync(event) {
 
 // eslint-disable-next-line no-unused-vars
 function initializePromptHistory() {
-  addButtonToNavFooter('My Prompt History', () => createPromptHistoryModal());
+  chrome.storage.local.get(['settings'], (result) => {
+    const { settings } = result;
+    if (settings && (settings?.showMyPromptHistory || settings?.showMyPromptHistory === undefined)) {
+      addButtonToNavFooter('My Prompt History', () => createPromptHistoryModal());
+    }
+  });
 }
 // eslint-disable-next-line no-unused-vars
 function addAsyncInputEvents() {
   addInputCounter();
-  const inputForm = document.querySelector('form');
-  if (!inputForm) return;
-  const textAreaElement = inputForm.querySelector('textarea');
+  const textAreaElement = document.querySelector('#prompt-textarea');
   if (!textAreaElement) return;
-  const submitButton = inputForm.querySelector('textarea ~ button');
+  const submitButton = document.querySelector('#prompt-textarea ~ button');
   if (!submitButton) return;
   chrome.storage.local.get(['userInputValueHistory'], (result) => {
     chrome.storage.local.set({
@@ -779,7 +794,7 @@ function addAsyncInputEvents() {
   // Add Click event listener to submit button
   if (submitButton) {
     submitButton.addEventListener('click', () => {
-      const curTextAreaElement = inputForm.querySelector('textarea');
+      const curTextAreaElement = document.querySelector('#prompt-textarea');
       const textInputValue = curTextAreaElement.value;
       // add text input value to local storage history
       if (textInputValue === '') return;

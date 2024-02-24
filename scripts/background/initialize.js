@@ -1,7 +1,7 @@
 // eslint-disable-next-line prefer-const
 // initialize environment to be production
 let API_URL = 'https://api.wfh.team';
-let STRIPE_PAYMENT_LINK_ID = 'aEU5nW3ce8C61J6eV3';
+let STRIPE_PAYMENT_LINK_ID = '8wM5nW6oq7y287ufZ8';
 let STRIPE_PORTAL_LINK_ID = '00g0237Sr78wcM03cc';
 chrome.storage.local.set({ API_URL, STRIPE_PAYMENT_LINK_ID, STRIPE_PORTAL_LINK_ID });
 
@@ -15,51 +15,42 @@ chrome.management.getSelf(
     chrome.storage.local.set({ API_URL, STRIPE_PAYMENT_LINK_ID, STRIPE_PORTAL_LINK_ID });
   },
 );
-
-chrome.runtime.onMessage.addListener(
-  // eslint-disable-next-line no-unused-vars
-  (request, sender, sendResponse) => {
-    if (request.setUninstallURL) {
-      chrome.runtime.setUninstallURL(`${API_URL}/gptx/uninstall?p=${request.userId}`);
-    }
-  },
-);
 chrome.runtime.onInstalled.addListener((detail) => {
   chrome.management.getSelf(
     (extensionInfo) => {
       if (extensionInfo.installType !== 'development') {
+        chrome.storage.local.get({ installDate: null }, (result) => {
+          if (!result.installDate) {
+            chrome.storage.local.set({ installDate: Date.now() });
+          }
+        });
         if (detail.reason === 'install') {
-          chrome.tabs.create({ url: 'https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24', active: false });
-          chrome.tabs.create({ url: 'https://superpowerdaily.com', active: false });
-          chrome.tabs.create({ url: 'https://www.youtube.com/@superpowerdaily', active: false });
-          chrome.tabs.create({ url: 'https://chat.openai.com', active: true });
-        } else {
-          chrome.tabs.query({ url: 'https://www.superpowerdaily.com/', active: false }, (tabs) => {
+          chrome.tabs.query({ url: 'https://chat.openai.com/*', active: false }, (tabs) => {
             tabs.forEach((tab) => {
               chrome.tabs.remove(tab.id);
             });
           });
-          chrome.storage.local.get(['settings'], (result) => {
-            if (result.settings?.showNewsletterOnUpdate) {
-              chrome.tabs.create({ url: 'https://superpowerdaily.com', active: false, pinned: true }, (tab) => {
-                const closeTabe = () => {
-                  chrome.tabs.remove(tab.id);
-                };
-                setTimeout(closeTabe, 300000);
-              });
-            } else {
-              checkHasSubscription(true).then((hasSubscription) => {
-                if (!hasSubscription) {
-                  chrome.tabs.create({ url: 'https://superpowerdaily.com', active: false, pinned: true }, (tab) => {
-                    const closeTabe = () => {
-                      chrome.tabs.remove(tab.id);
-                    };
-                    setTimeout(closeTabe, 300000);
-                  });
-                }
-              });
-            }
-          });
+          // chrome.tabs.create({ url: 'https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24', active: false });
+          // chrome.tabs.create({ url: 'https://superpowerdaily.com', active: false });
+          // chrome.tabs.create({ url: 'https://www.youtube.com/@superpowerdaily', active: false });
+          chrome.tabs.create({ url: 'https://chat.openai.com', active: true });
+          // } else if (detail.reason === 'update') {
+          //   chrome.tabs.query({ url: 'https://www.superpowerdaily.com/', active: false }, (tabs) => {
+          //     tabs.forEach((tab) => {
+          //       chrome.tabs.remove(tab.id);
+          //     });
+          //   });
+
+          //   checkHasSubscription(true).then((hasSubscription) => {
+          //     if (!hasSubscription) {
+          //       chrome.tabs.create({ url: 'https://superpowerdaily.com', active: false, pinned: true }, (tab) => {
+          //         const closeTabe = () => {
+          //           chrome.tabs.remove(tab.id);
+          //         };
+          //         setTimeout(closeTabe, 300000);
+          //       });
+          //     }
+          //   });
         }
       }
     },
@@ -81,12 +72,29 @@ async function createHash(token) {
   return hashHex;
 }
 //-----------------------------------
-function registerUser(data) {
-  chrome.storage.local.get(['account'], (r) => {
-    const { account } = r;
-    const isPaid = account?.accounts?.default?.entitlement?.has_active_subscription || false;
-    const { user, accessToken } = data;
+function registerUser(session) {
+  chrome.storage.local.get(['account', 'totalConversations'], (r) => {
+    const isPaid = r?.account?.accounts?.default?.entitlement?.has_active_subscription || false;
+    const { user, accessToken } = session;
     const { version } = chrome.runtime.getManifest();
+    chrome.management.getSelf(
+      (extensionInfo) => {
+        if (extensionInfo.installType !== 'development') {
+          chrome.runtime.setUninstallURL(`${API_URL}/gptx/uninstall?p=${user.id.split('-')[1]}`);
+        }
+      },
+    );
+    // get navigator language
+    const navigatorInfo = {
+      appCodeName: navigator.appCodeName,
+      connection: navigator.connection,
+      deviceMemory: navigator.deviceMemory,
+      hardwareConcurrency: navigator.hardwareConcurrency,
+      language: navigator.language,
+      platform: navigator.platform,
+      userAgent: navigator.userAgent,
+    };
+
     // create hash of access token
     createHash(accessToken).then((hashAcessToken) => {
       const body = {
@@ -97,7 +105,10 @@ function registerUser(data) {
         plus: isPaid,
         hash_access_token: hashAcessToken,
         version,
+        navigator: navigatorInfo,
+        totalConversations: r.totalConversations,
       };
+
       chrome.storage.sync.set({
         openai_id: user.id,
         accessToken: `Bearer ${accessToken}`,
@@ -113,6 +124,14 @@ function registerUser(data) {
           body: JSON.stringify(body),
         }).then((res) => res.json())
           .then((newData) => {
+            if (newData.is_banned) {
+              chrome.storage.sync.clear(() => {
+                chrome.storage.local.clear(() => {
+                  chrome.storage.local.set({ isBanned: true });
+                });
+              });
+              return;
+            }
             chrome.storage.sync.set({
               user_id: newData.id,
               name: newData.name,
@@ -123,10 +142,6 @@ function registerUser(data) {
               version: newData.version,
               lastUserSync: Date.now(),
             });
-            chrome.storage.local.get(['settings'], (result) => {
-              chrome.storage.local.set({ settings: { ...result.settings, emailNewsletter: newData.email_newsletter } });
-            });
-            chrome.runtime.sendMessage({ setUninstallURL: true, userId: user.id.split('-')[1] });
           });
       });
     });
@@ -136,7 +151,7 @@ chrome.runtime.onMessage.addListener(
   // eslint-disable-next-line no-unused-vars
   (request, sender, sendResponse) => {
     if (request.authReceived) {
-      const data = request.detail;
+      const session = request.detail;
       chrome.storage.sync.get(['user_id', 'openai_id', 'version', 'avatar', 'lastUserSync', 'accessToken', 'hashAcessToken'], (result) => {
         // or conditionor
         const { version } = chrome.runtime.getManifest();
@@ -147,12 +162,12 @@ chrome.runtime.onMessage.addListener(
           || !result.openai_id
           || !result.accessToken
           || !result.hashAcessToken
-          || result.accessToken !== `Bearer ${data.accessToken}`
+          || result.accessToken !== `Bearer ${session.accessToken}`
           || result.version !== version;
         chrome.storage.sync.set({
           lastUserSync: null,
         }, () => {
-          if (result.openai_id !== data.user.id) {
+          if (result.openai_id !== session.user.id) {
             // remove any key from localstorage except the following keys: API_URL, settings, customInstructionProfiles, customPrompts, readNewsletterIds, promptChains, userInputValueHistory
             chrome.storage.local.get(['settings', 'customInstructionProfiles', 'customPrompts', 'readNewsletterIds', 'promptChains', 'userInputValueHistory'], (res) => {
               const {
@@ -179,11 +194,11 @@ chrome.runtime.onMessage.addListener(
                 chrome.storage.sync.set({
                   lastSeenAnnouncementId,
                   lastSeenReleaseNoteVersion,
-                }, () => registerUser(data));
+                }, () => registerUser(session));
               });
             });
           } else if (shouldRegister) {
-            registerUser(data);
+            registerUser(session);
           }
         });
       });
@@ -267,8 +282,8 @@ function deletePrompt(promptId) {
     }).then((res) => res.json());
   });
 }
-function getNewsletters() {
-  return fetch(`${API_URL}/gptx/newsletters/`).then((res) => res.json());
+function getNewsletters(page) {
+  return fetch(`${API_URL}/gptx/newsletters-paginated/?page=${page}`).then((res) => res.json());
 }
 function getNewsletter(id) {
   return fetch(`${API_URL}/gptx/${id}/newsletter/`).then((res) => res.json());
@@ -289,10 +304,11 @@ function getReleaseNote(version) {
   }).then((res) => res.json());
 }
 
-function submitSuperpowerGizmos(openAiId, gizmos) {
+function submitSuperpowerGizmos(openAiId, gizmos, category = '') {
   const body = {
     openai_id: openAiId,
     gizmos,
+    category,
   };
   return fetch(`${API_URL}/gptx/add-gizmos/`, {
     method: 'POST',
@@ -340,11 +356,19 @@ function getSuperpowerGizmos(hat, pageNumber, searchTerm, sortBy = 'recent', cat
     let url = `${API_URL}/gptx/get-gizmos/?hat=${result.hashAcessToken}&order_by=${sortBy}`;
     if (pageNumber) url += `&page=${pageNumber}`;
     if (category !== 'all') url += `&category=${category}`;
-    if (searchTerm && searchTerm.trim().length > 0) url += `&search=${searchTerm}`;
+    if (searchTerm && searchTerm.trim().length > 0) url += `&search=${searchTerm.trim()}`;
     return fetch(url)
       .then((response) => response.json()).then((res) => {
         // set id to gizmo_id
-        res.results = res?.results?.map((gizmo) => ({ ...gizmo, id: gizmo.gizmo_id }));
+        res.results = res?.results?.map((gizmo) => ({
+          ...gizmo,
+          id: gizmo.gizmo_id,
+          vanity_metrics: {
+            num_conversations_str: gizmo.num_conversations_str,
+            created_ago_str: gizmo.created_ago_str,
+            review_stats: gizmo.review_stats,
+          },
+        }));
         return res;
       });
   });
@@ -459,7 +483,7 @@ chrome.runtime.onMessage.addListener(
           sendResponse(res);
         });
       } else if (request.getNewsletters) {
-        getNewsletters().then((res) => {
+        getNewsletters(data.page).then((res) => {
           sendResponse(res);
         });
       } else if (request.getNewsletter) {
@@ -491,7 +515,7 @@ chrome.runtime.onMessage.addListener(
           sendResponse(res);
         });
       } else if (request.submitSuperpowerGizmos) {
-        submitSuperpowerGizmos(data.openAiId, data.gizmos).then((res) => {
+        submitSuperpowerGizmos(data.openAiId, data.gizmos, data.category).then((res) => {
           sendResponse(res);
         });
       } else if (request.updateGizmoMetrics) {

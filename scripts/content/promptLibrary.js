@@ -1,4 +1,4 @@
-/* global highlightSearch, highlightBracket, addUserPromptToHistory, addButtonToNavFooter,createModal, debounce, toast, openSubmitPromptModal, dropdown, addDropdownEventListener, languageList, categoryList, sortByList, reportReasonList */
+/* global highlightSearch, highlightBracket, addUserPromptToHistory, addButtonToNavFooter,createModal, debounce, toast, openSubmitPromptModal, dropdown, addDropdownEventListener, languageList, categoryList, librarySortByList, reportReasonList */
 
 let promptLibraryPageNumber = 1;
 let promptLibrarySearchTerm = '';
@@ -334,11 +334,9 @@ function promptLibraryListComponent(libraryData, loading = false) {
       shiftClickText.style = 'font-size:10px;position:absolute;right:0px;bottom:36px;display:none;color:lightslategray;';
     });
     libraryItemUseButton.addEventListener('click', (event) => {
-      const inputForm = document.querySelector('form');
-      if (!inputForm) return;
-      const submitButton = inputForm.querySelector('textarea ~ button');
+      const submitButton = document.querySelector('#prompt-textarea ~ button');
       if (!submitButton) return;
-      const textAreaElement = inputForm.querySelector('textarea');
+      const textAreaElement = document.querySelector('#prompt-textarea');
       if (!textAreaElement) return;
       textAreaElement.value = libraryPrompt.text;
       addUserPromptToHistory(libraryPrompt.text);
@@ -516,12 +514,12 @@ function promptLibraryModalContent(libraryData) {
   const libraryList = promptLibraryListComponent(libraryData);
   // library filter
   const libraryFilterElement = document.createElement('div');
-  libraryFilterElement.style = 'display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%; padding: 6px 12px; background-color: #778899; z-index: 100; position: sticky; top: 0;';
+  libraryFilterElement.style = 'display: flex; flex-direction: row; justify-content: space-between; align-items: flex-start; width: 100%; padding: 6px 12px; background-color: #778899; z-index: 100; position: sticky; top: 0;';
 
   // add library search box
   const librarySearchInput = document.createElement('input');
   librarySearchInput.type = 'search';
-  librarySearchInput.style = 'background-color: #1f2123; color: lightslategray; font-size:0.8em; border-radius: 4px; border: 1px solid lightslategray; padding:4px 8px; width: 100%;height:46px;';
+  librarySearchInput.style = 'background-color: #1f2123; color: lightslategray; font-size:0.8em; border-radius: 4px; border: 1px solid lightslategray; padding:4px 8px; width: 100%;height:42px;';
   librarySearchInput.placeholder = 'Search by prompt title, prompt text or author name';
   librarySearchInput.id = 'library-search-input';
   librarySearchInput.autocomplete = 'off';
@@ -547,9 +545,9 @@ function promptLibraryModalContent(libraryData) {
     const { selectedLibrarySortBy } = settings;
     const sortBySelectorWrapper = document.createElement('div');
     sortBySelectorWrapper.style = 'position:relative;width:150px;z-index:1000;margin-left:8px;';
-    sortBySelectorWrapper.innerHTML = dropdown('Library-SortBy', sortByList, selectedLibrarySortBy, 'right', true);
+    sortBySelectorWrapper.innerHTML = dropdown('Library-SortBy', librarySortByList, selectedLibrarySortBy, 'right', true);
     libraryFilterElement.appendChild(sortBySelectorWrapper);
-    addDropdownEventListener('Library-SortBy', sortByList, () => fetchPrompts(1), true);
+    addDropdownEventListener('Library-SortBy', librarySortByList, () => fetchPrompts(1), true);
   });
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
@@ -676,5 +674,10 @@ function initializePromptLibrary() {
   promptLibrarySearchTerm = '';
   promptLibraryMaxPageNumber = 0;
   // create library button
-  addButtonToNavFooter('Community Prompts', () => createPromptLibraryModal());
+  chrome.storage.local.get(['settings'], (result) => {
+    const { settings } = result;
+    if (settings && (settings?.showCommunityPrompts || settings?.showCommunityPrompts === undefined)) {
+      addButtonToNavFooter('Community Prompts', () => createPromptLibraryModal());
+    }
+  });
 }

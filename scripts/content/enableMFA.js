@@ -14,7 +14,7 @@ function showEnableMFA() {
     aria-describedby="radix-:r5r:"
     aria-labelledby="radix-:r5q:"
     data-state="open"
-    class="relative col-auto col-start-2 row-auto row-start-2 w-full rounded-lg text-left shadow-xl transition-all bg-white dark:bg-gray-900"
+    class="relative col-auto col-start-2 row-auto row-start-2 w-full rounded-lg text-left shadow-xl transition-all bg-token-main-surface-secondary"
     tabindex="-1"
     style="pointer-events: auto;"
     >
@@ -26,7 +26,7 @@ function showEnableMFA() {
         <h2
         id="radix-:r5q:"
         as="h3"
-        class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200"
+        class="text-lg font-medium leading-6 text-token-text-primary"
         >
         Enable two-factor authentication
         </h2>

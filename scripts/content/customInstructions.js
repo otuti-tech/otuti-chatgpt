@@ -4,14 +4,14 @@
 function checkmarkIcon(placement, profileId) {
   const checkmark = document.createElement('span');
   checkmark.id = `custom-instructions-profile-dropdown-checkmark-${placement}-${profileId}`;
-  checkmark.classList = 'absolute inset-y-0 right-0 flex items-center pr-2 text-gray-800 dark:text-gray-100';
+  checkmark.classList = 'absolute inset-y-0 right-0 flex items-center pr-2 text-token-text-primary';
   checkmark.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="20 6 9 17 4 12"></polyline></svg>';
   return checkmark;
 }
 function trashIcon(placement, profileId) {
   const trash = document.createElement('span');
   trash.id = `custom-instructions-profile-dropdown-trash-${placement}-${profileId}`;
-  trash.classList = 'absolute inset-y-0 right-0 flex items-center pr-2 text-gray-800 dark:text-gray-100';
+  trash.classList = 'absolute inset-y-0 right-0 flex items-center pr-2 text-token-text-primary';
   trash.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
   trash.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -29,8 +29,8 @@ function trashIcon(placement, profileId) {
 function profileDropdown(customInstructionProfiles, customInstructionProfileIsEnabled, placement) {
   const dropdown = document.createElement('ul');
   dropdown.id = `custom-instructions-profile-dropdown-list-${placement}`;
-  dropdown.style = 'max-height:300px;overflow-y:scroll;width:200px;top:46px;right:0;z-index:200;';
-  dropdown.classList = 'hidden absolute z-10 right-0 mt-1 overflow-auto rounded py-1 text-base ring-1 ring-opacity-5 focus:outline-none bg-white dark:bg-gray-800 dark:ring-white/20 dark:last:border-0 sm:text-sm -translate-x-1/4';
+  dropdown.style = 'max-height:190px;overflow-y:scroll;width:200px;top:46px;right:0;z-index:200;';
+  dropdown.classList = 'hidden absolute z-10 right-0 mt-1 overflow-auto rounded py-1 text-base ring-1 ring-opacity-5 focus:outline-none bg-token-main-surface-primary  dark:ring-white/20 dark:last:border-0 sm:text-sm -translate-x-1/4';
   dropdown.setAttribute('role', 'menu');
   dropdown.setAttribute('aria-orientation', 'vertical');
   dropdown.setAttribute('aria-labelledby', `custom-instructions-profile-dropdown-button-${placement}`);
@@ -47,9 +47,9 @@ function profileDropdown(customInstructionProfiles, customInstructionProfileIsEn
     const dropdownItem = document.createElement('li');
     dropdownItem.id = `custom-instructions-profile-dropdown-item-${placement}-${profileId}`;
     dropdownItem.dir = 'auto';
-    dropdownItem.classList = 'text-gray-900 relative cursor-pointer select-none border-b p-2 last:border-0 border-gray-100 dark:border-white/20 hover:bg-gray-600';
+    dropdownItem.classList = 'text-token-text-primary relative cursor-pointer select-none border-b p-2 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary';
     const dropdownOption = document.createElement('span');
-    dropdownOption.classList = 'font-semibold flex h-6 items-center gap-1 truncate text-gray-800 dark:text-gray-100';
+    dropdownOption.classList = 'font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary';
     dropdownOption.style = 'white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;margin-right: 24px; text-align:left';
     dropdownOption.innerText = profileName;
     dropdownOption.title = profileName;
@@ -179,14 +179,14 @@ function profileDropdownButton(customInstructionProfiles, placement) {
   const button = document.createElement('button');
   button.id = `custom-instructions-profile-dropdown-button-${placement}`;
   button.title = 'Change the custom instructions profile';
-  button.classList = 'w-full relative cursor-pointer rounded-md border bg-white border-gray-300 pt-1 pl-3 pr-10 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 dark:border-white/20 dark:bg-gray-800 sm:text-sm';
+  button.classList = 'w-full relative cursor-pointer rounded-md border pt-1 pl-3 pr-10 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 border-token-border-light bg-token-main-surface-primary sm:text-sm';
   button.type = 'button';
   const label = document.createElement('label');
-  label.classList = 'block text-xs text-gray-700 dark:text-gray-500';
+  label.classList = 'block text-xs text-token-text-tertiary';
   label.textContent = 'Profile';
   button.appendChild(label);
   const span = document.createElement('span');
-  span.classList = 'inline-flex w-full truncate font-semibold  text-gray-800 dark:text-gray-100';
+  span.classList = 'inline-flex w-full truncate font-semibold text-token-text-primary';
   button.appendChild(span);
   const span2 = document.createElement('span');
   span2.classList = 'flex h-6 items-center gap-1 truncate';
@@ -223,10 +223,9 @@ function upgradeCustomInstructions() {
           if (!customInstructionsDialog) return;
           removeGrammerly();
           chrome.storage.local.get(['customInstructionProfiles', 'customInstructionProfileIsEnabled'], (result) => {
-            const customInstructionsDialogHeader = customInstructionsDialog.querySelector('h2');
             const existingProfileButtonWrapper = customInstructionsDialog.querySelector('#custom-instructions-profile-button-wrapper-settings');
             const textAreaFields = customInstructionsDialog.querySelectorAll('textarea');
-            if (textAreaFields.length > 0 && !existingProfileButtonWrapper && customInstructionsDialog && customInstructionsDialogHeader.textContent === 'Custom instructions') {
+            if (textAreaFields.length > 0 && !existingProfileButtonWrapper && customInstructionsDialog) {
               const { customInstructionProfiles, customInstructionProfileIsEnabled } = result;
               const newCustomInstructionProfiles = customInstructionProfiles;
               const selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
@@ -251,21 +250,24 @@ function upgradeCustomInstructions() {
               // body  = second child
               const body = customInstructionsDialog.children[1];
               const nameLabel = document.createElement('label');
-              nameLabel.classList = 'block text-xs text-gray-700 dark:text-gray-500 mb-2 text-gray-600';
+              nameLabel.classList = 'block text-xs text-token-text-primary mb-2';
               nameLabel.textContent = 'Name';
               const nameInput = document.createElement('input');
               nameInput.id = 'custom-instructions-name-input';
               nameInput.placeholder = 'Profile Name';
               nameInput.value = selectedProfile?.name || '';
-              nameInput.classList = 'w-full rounded p-2 mb-6 border dark:bg-gray-800 bg-white border-gray-100 focus:border-brand-green focus:ring-0 focus-visible:ring-0 bg-gray-50 outline-none focus-visible:outline-none';
+              nameInput.classList = 'w-full rounded p-2 mb-6 border bg-token-main-surface-primary border-gray-100 focus:border-brand-green focus:ring-0 focus-visible:ring-0 outline-none focus-visible:outline-none';
               if (textAreaFields[0].disabled) {
                 nameInput.disabled = true;
                 nameInput.classList.add('text-gray-300');
+                nameInput.classList.add('opacity-50');
+                textAreaFields[0].classList.add('opacity-50');
+                textAreaFields[1].classList.add('opacity-50');
               }
               nameInput.addEventListener('input', () => {
                 const curSelectedProfileName = selectedProfile?.name || '';
                 const allButtons = body.querySelectorAll('button');
-                const saveButton = [...allButtons].find((b) => b.textContent === 'Save');
+                const saveButton = [...allButtons].find((b) => b.classList.contains('btn-primary'));
                 const curTextAreaFields = document.querySelectorAll('[role="dialog"][data-state="open"][tabindex="-1"] textarea');
                 const curAboutUserInput = curTextAreaFields[0];
                 const curAboutModelInput = curTextAreaFields[1];
@@ -285,7 +287,7 @@ function upgradeCustomInstructions() {
                 t.addEventListener('input', () => {
                   setTimeout(() => {
                     const allButtons = body.querySelectorAll('button');
-                    const saveButton = [...allButtons].find((b) => b.textContent === 'Save');
+                    const saveButton = [...allButtons].find((b) => b.classList.contains('btn-primary'));
                     const curNameInput = document.querySelector('#custom-instructions-name-input');
                     if (saveButton && curNameInput.value === '') {
                       saveButton.disabled = true;
@@ -300,7 +302,7 @@ function upgradeCustomInstructions() {
               // find a button inside body that has text "Save"
               const allButtons = body.querySelectorAll('button');
               const toggleButton = [...allButtons].find((b) => b.getAttribute('role') === 'switch');
-              const saveButton = [...allButtons].find((b) => b.textContent === 'Save');
+              const saveButton = [...allButtons].find((b) => b.classList.contains('btn-primary'));
               // add a chane listener to the toggle button
               if (toggleButton) {
                 toggleButton.addEventListener('click', () => {
@@ -309,15 +311,29 @@ function upgradeCustomInstructions() {
                   // when toggle off nameinput shoud be disabled
                   const curNameInput = document.querySelector('#custom-instructions-name-input');
                   if (currState === 'true') {
-                    curNameInput.disabled = true;
-                    curNameInput.classList.add('text-gray-300');
+                    setTimeout(() => { // timeout is needed because there is another style being applied to textarea by the website
+                      curNameInput.disabled = true;
+                      curNameInput.classList.add('text-gray-300');
+                      curNameInput.classList.add('opacity-50');
+                      const curTextAreaFields = customInstructionsDialog.querySelectorAll('textarea');
+                      curTextAreaFields.forEach((t) => {
+                        t.classList.add('opacity-50');
+                      });
+                    }, 300);
                   } else {
-                    curNameInput.disabled = false;
-                    curNameInput.classList.remove('text-gray-300');
+                    setTimeout(() => { // timeout is needed because there is another style being applied to textarea by the website
+                      curNameInput.disabled = false;
+                      curNameInput.classList.remove('text-gray-300');
+                      curNameInput.classList.remove('opacity-50');
+                      const curTextAreaFields = customInstructionsDialog.querySelectorAll('textarea');
+                      curTextAreaFields.forEach((t) => {
+                        t.classList.remove('opacity-50');
+                      });
+                    }, 300);
                   }
                   setTimeout(() => {
                     const curAllButtons = body.querySelectorAll('button');
-                    const curSaveButton = [...curAllButtons].find((b) => b.textContent === 'Save');
+                    const curSaveButton = [...curAllButtons].find((b) => b.classList.contains('btn-primary'));
                     if (curSaveButton && curNameInput.value === '') {
                       curSaveButton.disabled = true;
                       curSaveButton.classList.add('opacity-50', 'cursor-not-allowed');
@@ -384,12 +400,10 @@ function reloadCustomInstructionSettings() {
   const existingCustomInstructionSettings = document.querySelector('#custom-instruction-settings');
 
   if (existingCustomInstructionSettings) {
-    existingCustomInstructionSettings.remove();
-    const newPageSettings = document.querySelector('#new-page-settings');
     setTimeout(() => {
       const customInstructionSettings = customInstructionSettingsElement();
-      // prepend the custom instruction settings to the new page settings
-      newPageSettings.insertBefore(customInstructionSettings, newPageSettings.firstChild);
+      // replace existingCustomInstructionSettings with customInstructionSettings
+      existingCustomInstructionSettings.replaceWith(customInstructionSettings);
     }, 500);
   }
 }

@@ -13,7 +13,7 @@ function createAnnouncementModal(data, email = '') {
   const title = titleMap[data.category];
   const subtitle = subtitleMap[data.category];
   const releaseDate = new Date(data.release_date);
-  createModal(title, `${subtitle} (${(new Date(releaseDate.getTime() + (releaseDate.getTimezoneOffset() * 60000))).toDateString()})`, bodyContent, actionsBarContent, true);
+  createModal(title, `${subtitle} (${(new Date(releaseDate.getTime() + (releaseDate.getTimezoneOffset() * 60000))).toDateString()}${data.link ? ` - <a href="${data.link}" target="_blank" rel="noopener noreferrer" style="color:gold;">Read Online</a>` : ''})`, bodyContent, actionsBarContent, true);
 }
 
 function announcementModalContent(data, email = '') {
@@ -34,7 +34,7 @@ function announcementModalContent(data, email = '') {
   const announcementText = document.createElement('article');
   announcementText.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; min-height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;padding:16px;position: relative;z-index:10;color: #fff;';
   const announcement = data;
-  // add ?ref=superpower-chatgpt-chrome-extension to the end of all href links
+  // add ?ref=superpower-chatgpt-extension to the end of all href links
   const updatedTextWithRef = announcement.text.replace(/href="([^"]*)"/g, 'href="$1?ref=superpower-chatgpt-extension"').replace(/\{\{email\}\}/g, email);
   announcementText.innerHTML = announcement.category === 'newsletter' ? updatedTextWithRef : `<h1 style="margin-bottom: 24px; ">${announcement.title}</h1>${announcement.text}`;
   content.appendChild(announcementText);
@@ -89,8 +89,8 @@ function announcementModalActions(data) {
 function initializeAnnouncement() {
   setTimeout(() => {
     chrome.storage.sync.get(['lastSeenAnnouncementId', 'email'], (result) => {
-      chrome.storage.local.get(['readNewsletterIds', 'settings'], (res) => {
-        const { lastSeenAnnouncementId, email } = result;
+      chrome.storage.local.get(['readNewsletterIds', 'settings', 'installDate'], (res) => {
+        const { lastSeenAnnouncementId, email, installDate } = result;
         const readNewsletterIds = res.readNewsletterIds || [];
 
         // try getting latest announcement first
@@ -107,6 +107,8 @@ function initializeAnnouncement() {
               },
             });
           } else {
+            // if installDate is less than 2 days ago, don't show newsletter
+            if (installDate && (new Date() - new Date(installDate)) < 172800000) return;
             // if no announcement was found, try getting the latest newsletter
             chrome.runtime.sendMessage({
               getLatestNewsletter: true,
@@ -121,7 +123,7 @@ function initializeAnnouncement() {
                   newsletterButton.appendChild(newsletterNotification);
                 } else {
                   createAnnouncementModal(newsletter, email);
-                  chrome.storage.local.set({ readNewsletterIds: [newsletter.id, ...readNewsletterIds] });
+                  chrome.storage.local.set({ readNewsletterIds: [newsletter.id, ...readNewsletterIds.slice(0, 100)] });
                   chrome.runtime.sendMessage({
                     incrementOpenRate: true,
                     detail: {
@@ -135,5 +137,5 @@ function initializeAnnouncement() {
         });
       });
     });
-  }, 7000);
+  }, 120000);
 }

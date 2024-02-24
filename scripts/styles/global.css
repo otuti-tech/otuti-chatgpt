@@ -1,3 +1,43 @@
+
+html {
+  --text-primary: var(--gray-950);
+  --text-secondary: var(--gray-600);
+  --text-tertiary: var(--gray-500);
+  --text-quaternary: var(--gray-300);
+  --border-light: rgba(0,0,0,.1);
+  --border-medium: rgba(0,0,0,.15);
+  --border-heavy: rgba(0,0,0,.2);
+  --border-xheavy: rgba(0,0,0,.25);
+  --main-surface-primary: var(--white);
+  --main-surface-secondary: var(--gray-50);
+  --main-surface-tertiary: var(--gray-100);
+  --sidebar-surface-primary: var(--gray-50);
+  --sidebar-surface-secondary: var(--gray-100);
+  --sidebar-surface-tertiary: var(--gray-200);
+  --popover-surface-primary: var(--white);
+  --link: #2964aa;
+  --link-hover: #749ac8
+}
+
+.dark {
+  --text-primary: var(--gray-50);
+  --text-secondary: var(--gray-300);
+  --text-tertiary: var(--gray-500);
+  --text-quaternary: var(--gray-700);
+  --border-light: rgba(217,217,227,.1);
+  --border-medium: rgba(217,217,227,.15);
+  --border-heavy: rgba(217,217,227,.2);
+  --border-xheavy: rgba(217,217,227,.25);
+  --main-surface-primary: var(--gray-900);
+  --main-surface-secondary: var(--gray-850);
+  --main-surface-tertiary: var(--gray-800);
+  --sidebar-surface-primary: var(--gray-950);
+  --sidebar-surface-secondary: var(--gray-850);
+  --sidebar-surface-tertiary: var(--gray-800);
+  --popover-surface-primary: var(--gray-900);
+  --link: #7ab7ff;
+  --link-hover: #5e83b3
+}
 /* style for html inside of browsers */
 .katex {
   font-size: 1em !important;
@@ -45,11 +85,78 @@ input[type="checkbox"]:checked:focus {
   background: #ffd700;
   color: #000;
 }
+/* Token color */
+.text-token-text-purple {
+  color: #a26bf7;
+}
+.bg-token-border-light {
+  background-color: rgba(0,0,0,.1);
+  background-color: var(--border-light)
+}
 
+.bg-token-border-medium {
+  background-color: rgba(0,0,0,.15);
+  background-color: var(--border-medium)
+}
+
+.bg-token-main-surface-primary {
+  background-color: #fff;
+  background-color: var(--main-surface-primary)
+}
+
+.bg-token-main-surface-secondary {
+  background-color: #f9f9f9;
+  background-color: var(--main-surface-secondary)
+}
+
+.bg-token-main-surface-tertiary {
+  background-color: #ececec;
+  background-color: var(--main-surface-tertiary)
+}
+
+.bg-token-popover-surface-primary {
+  background-color: #fff;
+  background-color: var(--popover-surface-primary)
+}
+
+.bg-token-sidebar-surface-primary {
+  background-color: #f9f9f9;
+  background-color: var(--sidebar-surface-primary)
+}
+
+.bg-token-sidebar-surface-secondary {
+  background-color: #ececec;
+  background-color: var(--sidebar-surface-secondary)
+}
+.bg-token-sidebar-surface-tertiary {
+  background-color: #ececec;
+  background-color: var(--sidebar-surface-tertiary)
+}
+
+.bg-token-text-primary {
+  background-color: #0d0d0d;
+  background-color: var(--text-primary)
+}
+
+.bg-token-text-secondary {
+  background-color: #676767;
+  background-color: var(--text-secondary)
+}
+
+.bg-token-text-tertiary {
+  background-color: #9b9b9b;
+  background-color: var(--text-tertiary)
+}
+/* Token color */
 #sidebar {
   visibility: visible !important;
   width: 260px !important;
 }
+/* dark:bg-[#444654] */
+.dark .dark\:bg-[\#444654] {
+  background-color: #444654;
+}
+
 /* sortable */
 .sortable-ghost {
   background-color: #ffd70050 !important;
@@ -65,8 +172,47 @@ input[type="checkbox"]:checked:focus {
 .multi-drag-selected [id^="conversation-button-"] {
   background-color: #ffd70050 !important;
 }
+.hoverScale {
+  transition: transform 0.1s ease-in-out;
+}
+.hoverScale:hover {
+  transform: scale(1.05);
+}
 /* tailwind custom*/
+.hover\:pr-8:hover {
+  padding-right: 2rem;
+}
+.hover\:pr-10:hover {
+  padding-right: 2.5rem;
+}
+.border-green-500 {
+  border-color: #10a37f;
+}
+.border-green-500:hover {
+  border-color: #10a37f;
+}
+.hover\:border-green-500:hover {
+  border-color: #10a37f;
+}
+.text-green-500 {
+  color: #10a37f;
+}
+.text-green-500:hover {
+  color: #10a37f;
+}
+.hover\:text-green-500:hover {
+  color: #10a37f;
+}
+.pr-8 {
+  padding-right: 2rem;
+}
+.pr-10 {
+  padding-right: 2.5rem;
+}
 .hover\:pr-20:hover {
+  padding-right: 5.5rem;
+}
+.pr-20 {
   padding-right: 5.5rem;
 }
 .rounded-t-2xl {
@@ -89,9 +235,7 @@ input[type="checkbox"]:checked:focus {
 .hover\:bg-gold-dark:hover {
   background-color: #f1cb00;
 }
-.pr-20 {
-  padding-right: 5.5rem;
-}
+
 .pr-14 {
   padding-right: 3.5rem;
 }
@@ -172,7 +316,7 @@ ul.hidden {
   display: none !important;
 }
 /* toggle switch */
-.switch {
+.sp-switch {
   position: relative;
   display: inline-block;
   width: 40px;
@@ -180,13 +324,15 @@ ul.hidden {
   margin: 0 8px;
 }
 
-.switch input {
+.sp-switch input {
   opacity: 0;
   width: 0;
   height: 0;
 }
-
-.slider {
+.sp-switch input:disabled + .sp-switch-slider {
+  cursor: not-allowed;
+}
+.sp-switch-slider {
   position: absolute;
   cursor: pointer;
   top: 0;
@@ -197,8 +343,7 @@ ul.hidden {
   -webkit-transition: 0.4s;
   transition: 0.4s;
 }
-
-.slider:before {
+.sp-switch-slider:before {
   position: absolute;
   content: "";
   height: 16px;
@@ -209,30 +354,66 @@ ul.hidden {
   -webkit-transition: 0.4s;
   transition: 0.4s;
 }
-
-input:checked + .slider {
+input:checked + .sp-switch-slider {
   background-color: gold;
 }
 
-input:focus + .slider {
+input:focus + .sp-switch-slider {
   box-shadow: 0 0 1px gold;
 }
 
-input:checked + .slider:before {
+input:checked + .sp-switch-slider:before {
   -webkit-transform: translateX(16px);
   -ms-transform: translateX(16px);
   transform: translateX(16px);
 }
 
 /* Rounded sliders */
-.slider.round {
+.sp-switch-slider.round {
   border-radius: 24px;
 }
 
-.slider.round:before {
+.sp-switch-slider.round:before {
   border-radius: 50%;
 }
-
+/* Range slider */
+.sp-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 8px;
+  outline: none;
+  -webkit-transition: 0.2s;
+  transition: opacity 0.2s;
+}
+.sp-range-slider:disabled {
+  background-color: #3b3b3b !important;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.sp-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 100%;
+  background: gold;
+  cursor: pointer;
+}
+.sp-range-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 100%;
+  background: gold;
+  cursor: pointer;
+}
+.sp-range-slider:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+}
+.sp-range-slider:disabled::-moz-range-thumb {
+  cursor: not-allowed;
+}
 /* loading animation */
 
 .lds-grid {

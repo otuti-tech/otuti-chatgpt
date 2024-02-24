@@ -110,8 +110,6 @@ function exportAllConversations(exportFormat) {
         zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }).then((content) => {
           saveAs(content, `${new Date().toISOString().slice(0, 10)}-conversations.zip`);
           const exportAllModal = document.getElementById('export-all-modal');
-          const exportAllButton = document.querySelector('#export-all-button');
-          exportAllButton.innerHTML = exportAllButton.innerHTML.replace(/Export \d+ Selected/, 'Export All');
           resetSelection();
           setTimeout(() => {
             exportAllModal.remove();
@@ -122,9 +120,13 @@ function exportAllConversations(exportFormat) {
   }, () => { });
 }
 
+// eslint-disable-next-line no-unused-vars
 function openExportAllModal() {
+  clearTimeout(timeout);
+  exportAllCanceled = false;
   const exportAllModal = document.createElement('div');
-  exportAllModal.style = 'position:fixed;top:0px;left:0px;width:100%;height:100%;background-color:rgba(0,0,0,0.5);z-index:1000;display:flex;align-items:center;justify-content:center;color:lightslategray;';
+  exportAllModal.style = 'position:fixed;top:0px;left:0px;width:100%;height:100%;z-index:1000;display:flex;align-items:center;justify-content:center;color:lightslategray;';
+  exportAllModal.classList = 'bg-black/50 dark:bg-gray-600/70';
   exportAllModal.id = 'export-all-modal';
   exportAllModal.addEventListener('click', (e) => {
     // export-all-modal-progress-bar-fill
@@ -134,7 +136,7 @@ function openExportAllModal() {
     }
   });
   const exportAllModalContent = document.createElement('div');
-  exportAllModalContent.style = 'width:400px;min-height:300px;background-color:#0b0d0e;border-radius:4px;padding:16px;display:flex;flex-direction:column;align-items:flex-start;justify-content:start;';
+  exportAllModalContent.style = 'width:400px;min-height:300px;background-color:#0b0d0e;border-radius:8px;padding:16px;display:flex;flex-direction:column;align-items:flex-start;justify-content:start;box-shadow: rgb(0 0 0 / 72%) 0px 0px 20px 0px; border: 1px solid #555;';
   exportAllModal.appendChild(exportAllModalContent);
   const exportAllModalTitle = document.createElement('div');
   exportAllModalTitle.style = 'font-size:1.25rem;font-weight:500;';
@@ -301,43 +303,4 @@ function openExportAllModal() {
     }
   });
   document.body.appendChild(exportAllModal);
-}
-function addExportAllButton() {
-  const nav = document.querySelector('nav');
-  if (!nav) return;
-
-  // check if the export all button is already added
-  if (document.querySelector('#export-all-button')) return;
-  // create the export all button by copying the nav button
-  const exportAllButton = document.createElement('a');
-  exportAllButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
-  exportAllButton.id = 'export-all-button';
-  chrome.storage.local.get(['selectedConversations'], (result) => {
-    const { selectedConversations } = result;
-    if (!selectedConversations || selectedConversations.length === 0) {
-      exportAllButton.textContent = 'Export All';
-    } else {
-      exportAllButton.textContent = `Export ${selectedConversations.length} Selected`;
-    }
-    const exportAllButtonIcon = document.createElement('img');
-    exportAllButtonIcon.style = 'width: 16px; height: 16px;';
-    exportAllButtonIcon.src = chrome.runtime.getURL('icons/export-all.png');
-    exportAllButton.prepend(exportAllButtonIcon);
-    exportAllButton.style = `${exportAllButton.style.cssText}; width: 100%;`;
-  });
-  // Add click event listener to setting button
-  exportAllButton.addEventListener('click', () => {
-    clearTimeout(timeout);
-    exportAllCanceled = false;
-    // open the export all modal
-    openExportAllModal();
-  });
-  // add the export all button immediately after the navgap element
-  const userMenu = nav.querySelector('#user-menu');
-  userMenu.prepend(exportAllButton);
-}
-
-// eslint-disable-next-line no-unused-vars
-function initializeExport() {
-  addExportAllButton();
 }

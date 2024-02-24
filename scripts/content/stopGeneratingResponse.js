@@ -1,10 +1,9 @@
-/* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global isGenerating, chatStreamIsClosed:true, addInputFormActionWrapper */
-function toggleStopGeneratingResponseButton() {
-  const textAreaElement = document.querySelector('main form textarea');
+/* global isGenerating, chatStreamIsClosed:true */
+function toggleStopGeneratingResponseButton(skipIsGenerating) {
+  const textAreaElement = document.querySelector('#prompt-textarea');
   if (!textAreaElement) return;
-  const submitButton = document.querySelector('main form textarea ~ button');
+  const submitButton = document.querySelector('#prompt-textarea ~ button');
   if (!submitButton) return;
 
   const existingStopGeneratingResponseButton = document.querySelector('#stop-generating-response-button');
@@ -13,8 +12,9 @@ function toggleStopGeneratingResponseButton() {
     return;
   }
   if (existingStopGeneratingResponseButton) return;
-  if (!isGenerating) return;
-
+  if (!skipIsGenerating) {
+    if (!isGenerating) return;
+  }
   const newStopGeneratingResponseButton = document.createElement('button');
   newStopGeneratingResponseButton.id = 'stop-generating-response-button';
   newStopGeneratingResponseButton.type = 'button';
@@ -25,11 +25,11 @@ function toggleStopGeneratingResponseButton() {
     newStopGeneratingResponseButton.remove();
   });
 
-  const inputFormActionWrapper = addInputFormActionWrapper();
+  const inputFormActionWrapper = document.querySelector('#input-form-action-wrapper');
   inputFormActionWrapper?.appendChild(newStopGeneratingResponseButton);
 }
 
 // eslint-disable-next-line no-unused-vars
-function initializeStopGeneratingResponseButton() {
-  toggleStopGeneratingResponseButton();
+function initializeStopGeneratingResponseButton(skipIsGenerating) {
+  toggleStopGeneratingResponseButton(skipIsGenerating);
 }

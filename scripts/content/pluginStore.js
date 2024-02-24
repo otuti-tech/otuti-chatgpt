@@ -165,7 +165,7 @@ function renderPluginList(plugins) {
   return `
   ${plugins.slice((currentPluginStorePage - 1) * 8, currentPluginStorePage * 8).map((plugin) => `<div
     id="${plugin.id}"
-    class="flex flex-col gap-4 rounded border border-black/10 bg-white p-6 dark:border-white/20 dark:bg-gray-900"
+    class="flex flex-col gap-4 rounded border border-black/10 bg-white p-6 border-token-border-light dark:bg-gray-900"
   >
     <div class="flex gap-4">
       <div class="h-[70px] w-[70px] shrink-0">

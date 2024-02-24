@@ -1,8 +1,8 @@
-/* global SSE, addGizmoToList */
+/* global SSE, toast, renderGPTList */
 /* eslint-disable no-restricted-globals */
 /* eslint-disable no-unused-vars */
 let API_URL = 'https://api.wfh.team';
-chrome.storage.local.get(['API_URL'], (r) => {
+chrome.storage.local.get({ API_URL: 'https://api.wfh.team' }, (r) => {
   API_URL = r.API_URL;
 });
 let lastPromptSuggestions = [];
@@ -11,6 +11,82 @@ let lastPromptSuggestions = [];
 const defaultHeaders = {
   'content-type': 'application/json',
 };
+
+const newChatgptAccountId = document?.cookie?.split('; ')?.find((row) => row?.startsWith('_account'))?.split('=')?.[1];
+if (newChatgptAccountId) {
+  defaultHeaders['Chatgpt-Account-Id'] = newChatgptAccountId;
+  chrome.storage.local.get([
+    'account', 'chatgptAccountId', 'allConversations', 'allConversationsOrder', 'conversations', 'conversationsOrder',
+  ], (res) => {
+    const {
+      account, chatgptAccountId: oldChatgptAccountId, allConversations, allConversationsOrder, conversations, conversationsOrder,
+    } = res;
+    if (account?.account_ordering?.length > 1) {
+      const defaulConversations = newChatgptAccountId === oldChatgptAccountId ? conversations : {};
+      const defaultConversationsOrder = newChatgptAccountId === oldChatgptAccountId ? conversationsOrder : [];
+      chrome.storage.local.set({
+        chatgptAccountId: newChatgptAccountId,
+        conversations: allConversations?.[newChatgptAccountId] || defaulConversations,
+        conversationsOrder: allConversationsOrder?.[newChatgptAccountId] || defaultConversationsOrder,
+      });
+    }
+  });
+} else {
+  delete defaultHeaders['Chatgpt-Account-Id'];
+}
+
+// https://chat.openai.com/backend-api/register-websocket
+function registerWebsocket() {
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/register-websocket', {
+    method: 'POST',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.accessToken,
+    },
+  }).then((response) => {
+    if (response.ok) {
+      return response.json();
+    }
+    return Promise.reject(response);
+  }).then((data) => {
+    chrome.storage.local.set({
+      websocket: {
+        registeredAt: new Date().toISOString(),
+        ...data,
+      },
+    });
+  }));
+}
+
+// https://chat.openai.com/backend-api/me
+function me() {
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/me', {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.accessToken,
+    },
+  }).then((response) => {
+    if (response.ok) {
+      return response.json();
+    }
+    return Promise.reject(response);
+  }));
+}
+function gizmoCreatorProfile() {
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/gizmo_creator_profile', {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.accessToken,
+    },
+  }).then((response) => {
+    if (response.ok) {
+      return response.json();
+    }
+    return Promise.reject(response);
+  }));
+}
 function getExamplePrompts(offset = 0, limit = 4) {
   const url = new URL('https://chat.openai.com/backend-api/prompt_library/');
   const params = { offset, limit };
@@ -23,7 +99,7 @@ function getExamplePrompts(offset = 0, limit = 4) {
     },
   }).then((response) => response.json()))
     .then((data) => {
-      lastPromptSuggestions = data.items.map((item) => item.prompt);
+      lastPromptSuggestions = data?.items?.map((item) => item.prompt);
       return data;
     });
 }
@@ -74,22 +150,27 @@ function convertGizmoToPayload(gizmoResource) {
     product_features: gizmoResource.product_features,
   };
 }
-function generateChat(userInputParts, conversationId, messageId, parentMessageId, token, gizmoResource = null, metadata = {}, suggestions = [], saveHistory = true, role = 'user', name = '', action = 'next', contentType = 'text') {
-  return chrome.storage.local.get(['settings', 'enabledPluginIds', 'installedPlugins', 'gizmosBootstrap']).then((res) => chrome.storage.sync.get(['accessToken']).then((result) => {
+function generateChat(userInputParts, conversationId, messageId, parentMessageId, token, gizmoResource = null, metadata = {}, suggestions = [], saveHistory = true, role = 'user', name = '', action = 'next', contentType = 'text', lastMessageFailed = false) {
+  return chrome.storage.local.get(['enabledPluginIds', 'installedPlugins', 'selectedModel']).then((res) => chrome.storage.sync.get(['accessToken']).then((result) => {
+    const isGPT4 = res.selectedModel?.tags?.includes('gpt4');
+
     const payload = {
       action,
       force_paragen: false,
       force_rate_limit: false,
-      arkose_token: token,
-      model: res.settings.selectedModel.slug,
+      arkose_token: isGPT4 ? token : null,
+      model: res.selectedModel.slug,
       parent_message_id: parentMessageId,
       history_and_training_disabled: !saveHistory,
       suggestions,
       timezone_offset_min: new Date().getTimezoneOffset(),
       conversation_mode: {
-        kind: gizmoResource ? 'gizmo_interaction' : 'primary_assistant',
+        kind: (gizmoResource || metadata.gizmo_id) ? 'gizmo_interaction' : 'primary_assistant',
       },
     };
+    if (metadata.gizmo_id) {
+      payload.model = 'gpt-4-gizmo';
+    }
     if (action === 'next' || action === 'variant') {
       payload.messages = messageId
         ? [
@@ -127,17 +208,20 @@ function generateChat(userInputParts, conversationId, messageId, parentMessageId
       });
     }
     if (action === 'variant') {
-      payload.variant_purpose = 'comparison_implicit';
+      payload.variant_purpose = lastMessageFailed ? 'none' : 'comparison_implicit';
     }
     if (gizmoResource) {
       payload.conversation_mode.gizmo = gizmoResource;
       payload.conversation_mode.gizmo_id = gizmoResource.gizmo.id;
     }
+    if (metadata?.gizmo_id) {
+      payload.conversation_mode.gizmo_id = metadata.gizmo_id;
+    }
     if (conversationId) {
       payload.conversation_id = conversationId;
     }
     // plugin model: text-davinci-002-plugins
-    if (!conversationId && (res.settings.selectedModel.slug.includes('plugins') || res.settings.selectedModel.slug === 'gpt-4')) {
+    if (!conversationId && isGPT4) {
       // remove plugin ids from enabledPluginIds that are not installed
       const newEnabledPluginIds = res.enabledPluginIds.filter((id) => res.installedPlugins.find((p) => p.id === id));
       payload.plugin_ids = newEnabledPluginIds;
@@ -145,6 +229,11 @@ function generateChat(userInputParts, conversationId, messageId, parentMessageId
     }
     // clear arkose once used
     window.localStorage.removeItem('arkoseToken');
+    if (isGPT4) {
+      defaultHeaders['openai-sentinel-arkose-token'] = token;
+    } else {
+      delete defaultHeaders['openai-sentinel-arkose-token'];
+    }
     const eventSource = new SSE(
       '/backend-api/conversation',
       {
@@ -159,6 +248,106 @@ function generateChat(userInputParts, conversationId, messageId, parentMessageId
     );
     eventSource.stream();
     return eventSource;
+  }));
+}
+function generateChatWS(userInputParts, conversationId, messageId, parentMessageId, token, gizmoResource = null, metadata = {}, suggestions = [], saveHistory = true, role = 'user', name = '', action = 'next', contentType = 'text', lastMessageFailed = false) {
+  return chrome.storage.local.get(['enabledPluginIds', 'installedPlugins', 'selectedModel']).then((res) => chrome.storage.sync.get(['accessToken']).then((result) => {
+    const isGPT4 = res.selectedModel?.tags?.includes('gpt4');
+
+    const payload = {
+      action,
+      force_paragen: false,
+      force_rate_limit: false,
+      arkose_token: isGPT4 ? token : null,
+      model: res.selectedModel.slug,
+      parent_message_id: parentMessageId,
+      history_and_training_disabled: !saveHistory,
+      suggestions,
+      timezone_offset_min: new Date().getTimezoneOffset(),
+      conversation_mode: {
+        kind: (gizmoResource || metadata.gizmo_id) ? 'gizmo_interaction' : 'primary_assistant',
+      },
+    };
+    if (metadata.gizmo_id) {
+      payload.model = 'gpt-4-gizmo';
+    }
+    if (action === 'next' || action === 'variant') {
+      payload.messages = messageId
+        ? [
+          {
+            id: messageId,
+            author: {
+              role,
+              name,
+            },
+            content: {
+              content_type: contentType,
+              parts: userInputParts,
+            },
+            metadata,
+          },
+        ]
+        : null;
+    }
+    const replyToText = metadata?.targeted_reply;
+    if (messageId && replyToText) {
+      payload.messages.push({
+        id: self.crypto.randomUUID(),
+        author: {
+          role: 'system',
+        },
+        content: {
+          content_type: 'text',
+          parts: [
+            `User is replying to this part in particular: [${replyToText}]`,
+          ],
+        },
+        metadata: {
+          exclude_after_next_user_message: true,
+        },
+      });
+    }
+    if (action === 'variant') {
+      payload.variant_purpose = lastMessageFailed ? 'none' : 'comparison_implicit';
+    }
+    if (gizmoResource) {
+      payload.conversation_mode.gizmo = gizmoResource;
+      payload.conversation_mode.gizmo_id = gizmoResource.gizmo.id;
+    }
+    if (metadata?.gizmo_id) {
+      payload.conversation_mode.gizmo_id = metadata.gizmo_id;
+    }
+    if (conversationId) {
+      payload.conversation_id = conversationId;
+    }
+    // plugin model: text-davinci-002-plugins
+    if (!conversationId && isGPT4) {
+      // remove plugin ids from enabledPluginIds that are not installed
+      const newEnabledPluginIds = res.enabledPluginIds.filter((id) => res.installedPlugins.find((p) => p.id === id));
+      payload.plugin_ids = newEnabledPluginIds;
+      chrome.storage.local.set({ enabledPluginIds: newEnabledPluginIds });
+    }
+    // clear arkose once used
+    window.localStorage.removeItem('arkoseToken');
+    if (isGPT4) {
+      defaultHeaders['openai-sentinel-arkose-token'] = token;
+    } else {
+      delete defaultHeaders['openai-sentinel-arkose-token'];
+    }
+    fetch('/backend-api/conversation', {
+      method: 'POST',
+      headers: {
+        ...defaultHeaders,
+        accept: 'text/event-stream',
+        Authorization: result.accessToken,
+      },
+      payload: JSON.stringify(payload),
+    }).then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+      return Promise.reject(response);
+    }).then((data) => chrome.storage.local.set({ websocket: data }));
   }));
 }
 function getConversation(conversationId, forceRefresh = false) {
@@ -176,13 +365,17 @@ function getConversation(conversationId, forceRefresh = false) {
         ...defaultHeaders,
         Authorization: result.accessToken,
       },
-
+      signal: AbortSignal.timeout(5000),
     }).then((response) => {
       if (response.ok) {
         return response.json();
       }
+      if (response.status.startsWith('5')) {
+        return Promise.resolve(response);
+      }
       return Promise.reject(response);
-    }));
+    })
+      .catch((err) => Promise.reject(err)));
   });
 }
 function getAccount() {
@@ -194,14 +387,31 @@ function getAccount() {
     },
   }));
 }
-function getGizmosBootstrap(limit = 2) {
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/gizmos/bootstrap?limit=${limit}`, {
-    method: 'GET',
-    headers: {
-      ...defaultHeaders,
-      Authorization: result.accessToken,
-    },
-  }));
+function getGizmosBootstrap(forceRefresh = false, limit = 2) {
+  return chrome.storage.local.get(['gizmosBootstrap']).then((res) => {
+    const { gizmosBootstrap } = res;
+
+    if (gizmosBootstrap && !forceRefresh) {
+      return gizmosBootstrap;
+    }
+    return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/gizmos/bootstrap?limit=${limit}`, {
+      method: 'GET',
+      headers: {
+        ...defaultHeaders,
+        Authorization: result.accessToken,
+      },
+    }).then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+      return Promise.reject(response);
+    }).then((data) => {
+      chrome.storage.local.set({
+        gizmosBootstrap: data,
+      });
+      return data;
+    }));
+  });
 }
 function updateGizmoSidebar(gizmoId, action) {
   return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/gizmos/${gizmoId}/sidebar`, {
@@ -212,65 +422,25 @@ function updateGizmoSidebar(gizmoId, action) {
     },
     body: JSON.stringify({ action }),
   }).then((response) => {
-    // update gizmosBootstrap
-    chrome.storage.local.get(['gizmosBootstrap']).then((res) => {
-      const { gizmosBootstrap } = res;
+    const showMoreButton = document.querySelector('#show-more-button');
+    renderGPTList(showMoreButton?.innerText?.includes('less'), true);
 
-      const gizmoData = gizmosBootstrap?.gizmos?.find((g) => g?.resource?.gizmo?.id === gizmoId);
-      if (gizmoData) {
-        chrome.storage.local.set({
-          gizmosBootstrap: {
-            ...gizmosBootstrap,
-            gizmos: [
-              ...gizmosBootstrap.gizmos.filter((g) => g?.resource?.gizmo?.id !== gizmoId),
-              {
-                ...gizmoData,
-                flair: {
-                  ...gizmoData.flair,
-                  kind: action === 'keep' ? 'sidebar_keep' : 'recent',
-                },
-              },
-            ],
-          },
-        }, () => {
-          // update sidebar
-          const gptList = document.querySelector('#gpt-list');
-          const gizmoItem = gptList.querySelector(`a[href*="${gizmoId}"]`)?.parentElement;
-          const gptListRecentBorder = document.querySelector('#gpt-list-recent-border');
-          if (action === 'keep') {
-            if (gizmoItem) {
-              gptList.insertBefore(gizmoItem, gptListRecentBorder);
-            } else {
-              addGizmoToList(gizmoId, false);
-            }
-          } else if (gizmoItem && action === 'hide') {
-            gizmoItem.remove();
-          }
-          if (gptListRecentBorder?.nextElementSibling?.id === 'gpt-list-explore-button') {
-            gptListRecentBorder.remove();
-          }
-          // update top gizmo menu option
-          // gizmo-menu-option-hide-from-sidebar
-          // if gizmoId is in url path
-          if (window.location.pathname.includes(gizmoId)) {
-            if (action === 'hide') {
-              const gizmoMenuOptionHideFromSidebar = document.querySelector('#gizmo-menu-option-hide-from-sidebar');
-              if (gizmoMenuOptionHideFromSidebar) {
-                gizmoMenuOptionHideFromSidebar.id = 'gizmo-menu-option-keep-in-sidebar';
-                gizmoMenuOptionHideFromSidebar.innerHTML = '<svg class="mr-2 icon-md" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M17.4845 2.8798C16.1773 1.57258 14.0107 1.74534 12.9272 3.24318L9.79772 7.56923C9.60945 7.82948 9.30775 7.9836 8.98654 7.9836H6.44673C3.74061 7.9836 2.27414 11.6759 4.16948 13.5713L6.59116 15.993L2.29324 20.2909C1.90225 20.6819 1.90225 21.3158 2.29324 21.7068C2.68422 22.0977 3.31812 22.0977 3.70911 21.7068L8.00703 17.4088L10.4287 19.8305C12.3241 21.7259 16.0164 20.2594 16.0164 17.5533V15.0135C16.0164 14.6923 16.1705 14.3906 16.4308 14.2023L20.7568 11.0728C22.2547 9.98926 22.4274 7.8227 21.1202 6.51549L17.4845 2.8798ZM11.8446 18.4147C12.4994 19.0694 14.0141 18.4928 14.0141 17.5533V15.0135C14.0141 14.0499 14.4764 13.1447 15.2572 12.58L19.5832 9.45047C20.0825 9.08928 20.1401 8.3671 19.7043 7.93136L16.0686 4.29567C15.6329 3.85993 14.9107 3.91751 14.5495 4.4168L11.4201 8.74285C10.8553 9.52359 9.95016 9.98594 8.98654 9.98594H6.44673C5.5072 9.98594 4.93059 11.5006 5.58535 12.1554L11.8446 18.4147Z" fill="currentColor"></path></svg>Keep in sidebar';
-              }
-            } else if (action === 'keep') {
-              // gizmo-menu-option-keep-in-sidebar
-              const gizmoMenuOptionKeepInSidebar = document.querySelector('#gizmo-menu-option-keep-in-sidebar');
-              if (gizmoMenuOptionKeepInSidebar) {
-                gizmoMenuOptionKeepInSidebar.id = 'gizmo-menu-option-hide-from-sidebar';
-                gizmoMenuOptionKeepInSidebar.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 icon-md"><path d="M15 15V17.5585C15 18.4193 14.4491 19.1836 13.6325 19.4558L13.1726 19.6091C12.454 19.8487 11.6616 19.6616 11.126 19.126L4.87403 12.874C4.33837 12.3384 4.15132 11.546 4.39088 10.8274L4.54415 10.3675C4.81638 9.55086 5.58066 9 6.44152 9H9M12 6.2L13.6277 3.92116C14.3461 2.91549 15.7955 2.79552 16.6694 3.66942L20.3306 7.33058C21.2045 8.20448 21.0845 9.65392 20.0788 10.3723L18 11.8571" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 16L3 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 4L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Hide from sidebar';
-              }
-            }
-          }
-        });
+    if (window.location.pathname.includes(gizmoId)) {
+      if (action === 'hide') {
+        const gizmoMenuOptionHideFromSidebar = document.querySelector('#gizmo-menu-option-hide-from-sidebar');
+        if (gizmoMenuOptionHideFromSidebar) {
+          gizmoMenuOptionHideFromSidebar.id = 'gizmo-menu-option-keep-in-sidebar';
+          gizmoMenuOptionHideFromSidebar.innerHTML = '<svg class="mr-2 icon-md" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M17.4845 2.8798C16.1773 1.57258 14.0107 1.74534 12.9272 3.24318L9.79772 7.56923C9.60945 7.82948 9.30775 7.9836 8.98654 7.9836H6.44673C3.74061 7.9836 2.27414 11.6759 4.16948 13.5713L6.59116 15.993L2.29324 20.2909C1.90225 20.6819 1.90225 21.3158 2.29324 21.7068C2.68422 22.0977 3.31812 22.0977 3.70911 21.7068L8.00703 17.4088L10.4287 19.8305C12.3241 21.7259 16.0164 20.2594 16.0164 17.5533V15.0135C16.0164 14.6923 16.1705 14.3906 16.4308 14.2023L20.7568 11.0728C22.2547 9.98926 22.4274 7.8227 21.1202 6.51549L17.4845 2.8798ZM11.8446 18.4147C12.4994 19.0694 14.0141 18.4928 14.0141 17.5533V15.0135C14.0141 14.0499 14.4764 13.1447 15.2572 12.58L19.5832 9.45047C20.0825 9.08928 20.1401 8.3671 19.7043 7.93136L16.0686 4.29567C15.6329 3.85993 14.9107 3.91751 14.5495 4.4168L11.4201 8.74285C10.8553 9.52359 9.95016 9.98594 8.98654 9.98594H6.44673C5.5072 9.98594 4.93059 11.5006 5.58535 12.1554L11.8446 18.4147Z" fill="currentColor"></path></svg>Keep in sidebar';
+        }
+      } else if (action === 'keep') {
+        // gizmo-menu-option-keep-in-sidebar
+        const gizmoMenuOptionKeepInSidebar = document.querySelector('#gizmo-menu-option-keep-in-sidebar');
+        if (gizmoMenuOptionKeepInSidebar) {
+          gizmoMenuOptionKeepInSidebar.id = 'gizmo-menu-option-hide-from-sidebar';
+          gizmoMenuOptionKeepInSidebar.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="mr-2 icon-md"><path d="M15 15V17.5585C15 18.4193 14.4491 19.1836 13.6325 19.4558L13.1726 19.6091C12.454 19.8487 11.6616 19.6616 11.126 19.126L4.87403 12.874C4.33837 12.3384 4.15132 11.546 4.39088 10.8274L4.54415 10.3675C4.81638 9.55086 5.58066 9 6.44152 9H9M12 6.2L13.6277 3.92116C14.3461 2.91549 15.7955 2.79552 16.6694 3.66942L20.3306 7.33058C21.2045 8.20448 21.0845 9.65392 20.0788 10.3723L18 11.8571" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M8 16L3 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M4 4L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>Hide from sidebar';
+        }
       }
-    });
+    }
   }));
 }
 function getConversationTemplates(workspaceId, gizmoId) {
@@ -326,32 +496,32 @@ function getGizmoById(gizmoId, forceRefresh = false) {
       },
     }).then((response) => {
       if (response.ok) {
-        // add to gizmosBootstrap
         return response.json();
       }
-      return Promise.reject(response);
+      if (response.status === 404) {
+        chrome.runtime.sendMessage({
+          deleteSuperpowerGizmo: true,
+          detail: {
+            gizmoId,
+          },
+        });
+        toast('GPT inaccessible or not found', 'warning');
+        if (!window.location.pathname.includes('/c/')) {
+          window.location.href = '/';
+        }
+      }
+      return Promise.resolve({});
     }).then((data) => {
       // add gizmo to superpower
-      chrome.runtime.sendMessage({
-        submitSuperpowerGizmos: true,
-        detail: {
-          openAiId: result.openai_id,
-          gizmos: [data.gizmo],
-        },
-      });
-      // add to gizmosBootstrap
-      chrome.storage.local.set({
-        gizmosBootstrap: {
-          ...gizmosBootstrap,
-          gizmos: [
-            ...gizmosBootstrap.gizmos.filter((g) => g?.resource?.gizmo?.id !== gizmoId),
-            {
-              flair: { kind: 'recent' },
-              resource: data,
-            },
-          ],
-        },
-      });
+      if (data?.gizmo) {
+        chrome.runtime.sendMessage({
+          submitSuperpowerGizmos: true,
+          detail: {
+            openAiId: result.openai_id,
+            gizmos: [data.gizmo],
+          },
+        });
+      }
       return {
         flair: { kind: 'recent' },
         resource: data,
@@ -359,38 +529,50 @@ function getGizmoById(gizmoId, forceRefresh = false) {
     }));
   });
 }
-function getGizmoDiscovery(type, cursor, limit = 24) {
-  let url = new URL('https://chat.openai.com/public-api/gizmos/discovery');
-  if (type) url = new URL(`https://chat.openai.com/public-api/gizmos/discovery/${type}`);
-  if (cursor) url.searchParams.append('cursor', cursor);
-  if (limit) url.searchParams.append('limit', limit);
-  return chrome.storage.sync.get(['accessToken', 'openai_id']).then((result) => fetch(url, {
-    method: 'GET',
-    headers: {
-      ...defaultHeaders,
-      Authorization: result.accessToken,
-    },
-  }).then((response) => {
-    if (response.ok) {
-      return response.json();
+function getGizmoDiscovery(category, cursor, limit = 24, locale = 'global', forceRefresh = true) {
+  return chrome.storage.local.get(['gizmoDiscovery']).then((res) => {
+    const { gizmoDiscovery } = res;
+    if (!forceRefresh && gizmoDiscovery && gizmoDiscovery?.[category]) {
+      return gizmoDiscovery[category];
     }
-    return Promise.reject(response);
-  }).then((data) => {
-    // uncomment this when gizmo discovery is fixed
-    const gizmos = type ? data.list.items.map((item) => item.resource.gizmo) : data.cuts.map((cut) => cut.list.items.map((item) => item.resource.gizmo)).flat();
-    // remove this when gizmo discovery is fixed
-    // const gizmos = data.cuts.map((cut) => cut.list.items.map((item) => item.resource.gizmo)).flat();
-    chrome.runtime.sendMessage({
-      submitSuperpowerGizmos: true,
-      detail: {
-        openAiId: result.openai_id,
-        gizmos,
+
+    let url = new URL('https://chat.openai.com/public-api/gizmos/discovery');
+    if (category) url = new URL(`https://chat.openai.com/public-api/gizmos/discovery/${category}`);
+    if (cursor) url.searchParams.append('cursor', cursor);
+    if (limit) url.searchParams.append('limit', limit);
+    if (locale) url.searchParams.append('locale', locale);
+    return chrome.storage.sync.get(['accessToken', 'openai_id']).then((result) => fetch(url, {
+      method: 'GET',
+      headers: {
+        ...defaultHeaders,
+        Authorization: result.accessToken,
       },
-    });
-    // remove this when gizmo discovery is fixed
-    // if (type) return data.cuts.find((cut) => cut.info.id === type);
-    return data;
-  }));
+    }).then((response) => {
+      if (response.ok) {
+        return response.json();
+      }
+      return Promise.reject(response);
+    }).then((data) => {
+      chrome.storage.local.get({ gizmoDiscovery: {} }, (r) => {
+        chrome.storage.local.set({ gizmoDiscovery: { ...r.gizmoDiscovery, [category]: data } });
+      });
+      // uncomment this when gizmo discovery is fixed
+      const gizmos = category ? data.list.items.map((item) => item.resource.gizmo) : data.cuts.map((cut) => cut.list.items.map((item) => item.resource.gizmo)).flat();
+      // remove this when gizmo discovery is fixed
+      // const gizmos = data.cuts.map((cut) => cut.list.items.map((item) => item.resource.gizmo)).flat();
+      chrome.runtime.sendMessage({
+        submitSuperpowerGizmos: true,
+        detail: {
+          openAiId: result.openai_id,
+          gizmos,
+          category,
+        },
+      });
+      // remove this when gizmo discovery is fixed
+      // if (category) return data.cuts.find((cut) => cut.info.id === category);
+      return data;
+    }));
+  });
 }
 function updateActionSettings(gizmoId, domain, gizmoActionId, actionSettings) {
   const payload = {
@@ -455,6 +637,53 @@ function getGizmoUserActionSettings(gizmoId, forceRefresh = false) {
 //     "system_message"
 //   ]
 // }
+function accountTransfer(destinationWorkspaceId) {
+  const payload = {
+    workspace_id: destinationWorkspaceId,
+  };
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/accounts/transfer', {
+    method: 'POST',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.accessToken,
+    },
+    body: JSON.stringify(payload),
+  }).then((response) => {
+    if (response.ok) {
+      return response.json();
+    }
+    return Promise.reject(response);
+  }));
+}
+function getUserSettings() {
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/settings/user', {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.accessToken,
+    },
+  }).then((response) => {
+    if (response.ok) {
+      return response.json();
+    }
+    return Promise.reject(response);
+  }));
+}
+
+function updateAccountUserSetting(feature, value) {
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/settings/account_user_setting?feature=${feature}&value=${value}`, {
+    method: 'PATCH',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.accessToken,
+    },
+  }).then((response) => {
+    if (response.ok) {
+      return response.json();
+    }
+    return Promise.reject(response);
+  }));
+}
 function createFileInServer(file, useCase) {
   // get filesize
   const payload = {
@@ -592,8 +821,8 @@ function getDownloadUrlFromSandBoxPath(conversationId, messageId, sandboxPath) {
 
 function setUserSystemMessage(aboutUser, aboutModel, enabled) {
   const payload = {
-    about_user_message: aboutUser,
-    about_model_message: aboutModel,
+    about_user_message: aboutUser.toString(),
+    about_model_message: aboutModel.toString(),
     enabled,
   };
   return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/user_system_messages', {
@@ -647,11 +876,11 @@ function getModels() {
   }).then((response) => response.json()))
     .then((data) => {
       if (data.models) {
-        chrome.storage.local.get(['settings', 'models'], (res) => {
-          const { models, settings } = res;
+        chrome.storage.local.get(['selectedModel', 'settings', 'models'], (res) => {
+          const { models, selectedModel, settings } = res;
           chrome.storage.local.set({
             models: data.models,
-            settings: { ...settings, selectedModel: settings.selectedModel || data.models?.[0] },
+            selectedModel: selectedModel || settings?.selectedModel || data.models?.[0],
           });
           if (data.models.map((m) => m.slug).find((m) => m.includes('plugins'))) {
             setTimeout(() => {
@@ -680,7 +909,7 @@ function getConversationLimit() {
     }));
 }
 function openGraph(url) {
-  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/opengraph/tags??url=${url}`, {
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/opengraph/tags?url=${url}`, {
     method: 'GET',
     headers: {
       ...defaultHeaders,
@@ -708,15 +937,26 @@ function messageFeedback(conversationId, messageId, rating, text = '') {
     body: JSON.stringify(data),
   }).then((res) => res.json()));
 }
+function getPopularPlugins() {
+  return getPlugins(0, 250, undefined, 'most_popular').then((res) => {
+    chrome.storage.local.set({
+      popularPlugins: res.items,
+    });
+  });
+}
 function getAllPlugins() {
-  return getPlugins(0, 250, undefined, 'approved').then((res) => {
+  return getPlugins(0, 250, undefined).then((res) => {
     chrome.storage.local.set({
       allPlugins: res.items,
     });
   });
 }
-function getApprovedPlugins() {
-  getPlugins(0, 100, undefined, 'approved').then((res) => res);
+function getNewPlugins() {
+  return getPlugins(0, 250, undefined, 'newly_added').then((res) => {
+    chrome.storage.local.set({
+      newPlugins: res.items,
+    });
+  });
 }
 function getInstalledPlugins() {
   getPlugins(0, 250, true, undefined).then((res) => {
@@ -725,8 +965,8 @@ function getInstalledPlugins() {
     });
   });
 }
-function getPlugins(offset = 0, limit = 20, isInstalled = undefined, statuses = undefined) {
-  const url = new URL('https://chat.openai.com/backend-api/aip/p');
+function getPlugins(offset = 0, limit = 8, isInstalled = undefined, category = undefined, search = '') {
+  const url = new URL(`https://chat.openai.com/backend-api/aip/p${isInstalled ? '' : '/approved'}`);
   // without passing limit it returns 20 by default
   // limit cannot be more than 100
   const params = { offset, limit };
@@ -734,8 +974,11 @@ function getPlugins(offset = 0, limit = 20, isInstalled = undefined, statuses = 
   if (isInstalled !== undefined) {
     url.searchParams.append('is_installed', isInstalled);
   }
-  if (statuses) {
-    url.searchParams.append('statuses', statuses);
+  if (category) {
+    url.searchParams.append('category', category);
+  }
+  if (search) {
+    url.searchParams.append('search', search);
   }
   return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
     method: 'GET',
@@ -901,9 +1144,8 @@ function getAllConversations(forceRefresh = false) {
       const {
         conversations, conversationsAreSynced, settings,
       } = res;
-      const { autoSync } = settings;
 
-      if (!forceRefresh && conversationsAreSynced && (typeof autoSync === 'undefined' || autoSync)) {
+      if (!forceRefresh && conversations && conversationsAreSynced && (typeof settings?.autoSync === 'undefined' || settings?.autoSync)) {
         const visibleConversation = Object.values(conversations);
         resolve(visibleConversation);
       } else {
@@ -914,8 +1156,10 @@ function getAllConversations(forceRefresh = false) {
           const {
             limit, offset, items,
           } = convs;
+          chrome.storage.local.set({ totalConversations: convs.total });
+
           // eslint-disable-next-line no-nested-ternary
-          const total = convs.total ? Math.min(convs.total, 10000) : 10000; // sync last 10000 conversations
+          const total = settings?.autoSyncCount === 1000 ? (convs.total ? Math.min(convs.total, 10000) : 10000) : Math.min(convs.total, settings?.autoSyncCount); // sync last 10000 conversations
           if (items.length === 0 || total === 0) {
             resolve([]);
             return;
@@ -934,10 +1178,10 @@ function getAllConversations(forceRefresh = false) {
               });
               resolve(allConversations);
             }, (err) => {
+              // eslint-disable-next-line no-console
               console.warn('error getting conversations promise', err);
               if (conversationsAreSynced) {
-                const visibleConversation = Object.values(conversations).filter((conversation) => !conversation.archived);
-                resolve(visibleConversation);
+                resolve(Object.values(conversations || {}));
               }
               resolve(Promise.reject(err));
             });
@@ -945,16 +1189,25 @@ function getAllConversations(forceRefresh = false) {
             resolve(allConversations);
           }
         }, (err) => {
+          // eslint-disable-next-line no-console
           console.warn('error getting conversations', err);
           if (conversationsAreSynced) {
-            const visibleConversation = Object.values(conversations).filter((conversation) => !conversation.archived);
-            resolve(visibleConversation);
+            resolve(Object.values(conversations || {}));
           }
           resolve(Promise.reject(err));
         });
       }
     });
   });
+}
+function arkoseDX() {
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/sentinel/arkose/dx', {
+    method: 'POST',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.accessToken,
+    },
+  }).then((response) => response.json()));
 }
 function getSharedConversations(offset = 0, limit = 100) {
   const url = new URL('https://chat.openai.com/backend-api/shared_conversations');
@@ -975,12 +1228,15 @@ function getSharedConversations(offset = 0, limit = 100) {
     return Promise.reject(res);
   }));
 }
-function getConversations(offset = 0, limit = 100, order = 'updated') {
+function getConversations(offset = 0, limit = 100, order = 'updated', isArchived = false) {
   const url = new URL('https://chat.openai.com/backend-api/conversations');
   // without passing limit it returns 50 by default
   // limit cannot be more than 20
   const params = { offset, limit, order };
   url.search = new URLSearchParams(params).toString();
+  if (isArchived) {
+    url.searchParams.append('is_archived', isArchived);
+  }
   return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
     method: 'GET',
     headers: {
@@ -1028,6 +1284,61 @@ function renameConversation(conversationId, title) {
     },
     body: JSON.stringify({ title }),
   }).then((res) => res.json()));
+}
+function archiveAllConversations() {
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/conversations', {
+    method: 'PATCH',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.accessToken,
+    },
+    body: JSON.stringify({ is_archived: true }),
+  }).then((res) => {
+    if (res.ok) {
+      toast('All conversations are archived', 'success');
+      document.querySelector('#conversation-list').querySelectorAll('[id^=conversation-button]').forEach((item) => {
+        item.remove();
+      });
+      return res.json();
+    }
+    return Promise.reject(res);
+  }));
+}
+function archiveConversation(conversationId) {
+  return chrome.storage.local.get(['conversations', 'settings']).then((localRes) => {
+    const { conversations, settings } = localRes;
+    if (settings?.autoSync && !conversations[conversationId].saveHistory) {
+      return { success: true };
+    }
+    return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`, {
+      method: 'PATCH',
+      headers: {
+        ...defaultHeaders,
+        Authorization: result.accessToken,
+      },
+      body: JSON.stringify({ is_archived: true }),
+    }).then((res) => {
+      if (res.ok) {
+        return res.json();
+      }
+      return Promise.reject(res);
+    }));
+  });
+}
+function unarchiveConversation(conversationId) {
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/conversation/${conversationId}`, {
+    method: 'PATCH',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.accessToken,
+    },
+    body: JSON.stringify({ is_archived: false }),
+  }).then((res) => {
+    if (res.ok) {
+      return res.json();
+    }
+    return Promise.reject(res);
+  }));
 }
 function deleteConversation(conversationId) {
   return chrome.storage.local.get(['conversations']).then((localRes) => {

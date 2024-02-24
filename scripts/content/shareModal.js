@@ -120,16 +120,16 @@ function shareModal(conversation, shareData, name) {
                   style="position: relative; width: 100%; padding-bottom: 52.6316%;"
                 >
                   <div
-                    class="overflow-auto bg-white dark:bg-gray-800"
+                    class="overflow-auto bg-token-main-surface-secondary"
                     style="position: absolute; inset: 0px;"
                   >
-                    <div class="flex flex-col text-sm dark:bg-gray-800">
+                    <div class="flex flex-col text-sm bg-token-main-surface-secondary">
                     ${generateContent(filteredSortedNodes)}
                     </div >
                   </div >
                 </div >
   <div
-    class="flex p-4 bg-white dark:bg-gray-800/90 border-t border-gray-100 dark:border-gray-700 rounded-b-lg w-full h-full"
+    class="flex p-4 bg-token-main-surface-secondary/90 border-t border-gray-100 dark:border-gray-700 rounded-b-lg w-full h-full"
   >
     <div class="flex-1 pr-1">
       <div id="share-modal-name-wrapper"
@@ -414,7 +414,7 @@ function userRow(message) {
   const messageContentPartsHTML = markdown('user')
     .render(messageContent);
   return `<div
-  class="group w-full text-gray-800 dark:text-gray-100 dark:bg-gray-800"
+  class="group w-full text-gray-800 dark:text-gray-100 bg-token-main-surface-secondary"
 >
   <div
     class="flex p-4 gap-4 text-base md:gap-6 md:max-w-2xl lg:max-w-xl xl:max-w-3xl md:py-6 lg:px-0 ml-5"
@@ -424,7 +424,7 @@ function userRow(message) {
     >
       <div class="w-[30px]">
         <div
-          class="relative p-1 rounded-sm h-[30px] w-[30px] text-white flex items-center justify-center"
+          class="relative p-1 rounded-sm h-[30px] w-[30px] text-token-text-primary flex items-center justify-center"
           style="background-color: rgb(171, 104, 255);"
         >
           <svg
@@ -493,7 +493,7 @@ function assistantRow(message) {
   const avatarColor = (message.metadata.model_slug?.includes('plugins') || message.metadata.model_slug?.includes('gpt-4')) ? 'rgb(171, 104, 255)' : 'rgb(25, 195, 125)';
 
   return `<div
-  class="group w-full text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-[#444654]"
+  class="group w-full text-gray-800 dark:text-gray-100 bg-gray-50 dark:bg-gray-700"
 >
   <div
     class="flex p-4 gap-4 text-base md:gap-6 md:max-w-2xl lg:max-w-xl xl:max-w-3xl md:py-6 lg:px-0 ml-5"
@@ -503,7 +503,7 @@ function assistantRow(message) {
     >
       <div class="w-[30px]">
         <div
-          class="relative p-1 rounded-sm h-[30px] w-[30px] text-white flex items-center justify-center"
+          class="relative p-1 rounded-sm h-[30px] w-[30px] text-token-text-primary flex items-center justify-center"
           style="background-color:${avatarColor}"
         >
           <svg

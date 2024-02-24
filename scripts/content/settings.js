@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global createModal, Sortable, getGizmoById, generateRandomDarkColor, createReleaseNoteModal, languageList, writingStyleList, toneList, toast, loadConversationList, modelSwitcher, openUpgradeModal, addModelSwitcherEventListener, dropdown, addDropdownEventListener, API_URL:true, showActionConfirm, initializeUpgradeButton */
+/* global isFirefox, isOpera, createModal, Sortable, getGizmoById, generateRandomDarkColor, createReleaseNoteModal, languageList, writingStyleList, toneList, toast, loadConversationList, modelSwitcher, openUpgradeModal, addModelSwitcherEventListener, dropdown, addDropdownEventListener, API_URL:true, showConfirmDialog, createContinueButton, speechToTextLanguageList, textToSpeechLanguageList, initializePromptChain, addPromptChainCreateButton, addKeyboardShortcutsModalButton, initializePromptLibrary, initializePromptHistory, updateAccountUserSetting, checkSyncAndLoad */
 const defaultPrompts = [
   { title: 'Continue', text: 'Please continue', isDefault: true },
   { title: 'Rewrite', text: 'Please rewrite your last response', isDefault: false },
@@ -9,7 +9,7 @@ const defaultPrompts = [
   { title: 'Expand', text: 'Please expand your last response', isDefault: false },
   { title: 'Summarize', text: 'Please summarize your last response', isDefault: false },
 ];
-const autoDeleteModes = [{ code: 'days', name: 'Delete chats after' }, { code: 'number', name: 'Only keep the last' }];
+const autoArchiveModes = [{ code: 'days', name: 'Archive chats after' }, { code: 'number', name: 'Only keep the last' }];
 
 function createSettingsModal(initialTab = 0) {
   const bodyContent = settingsModalContent(initialTab);
@@ -29,23 +29,25 @@ function selectedTabContent(selectedTab, hasSubscription) {
     case 3:
       return conversationTabContent(hasSubscription);
     case 4:
-      return promptInputTabContent(hasSubscription);
+      return textToSpeechTabContent(hasSubscription);
     case 5:
-      return modelsTabContent(hasSubscription);
+      return promptInputTabContent(hasSubscription);
     case 6:
-      return customPromptTabContent(hasSubscription);
+      return modelsTabContent(hasSubscription);
     case 7:
-      return exportTabContent(hasSubscription);
+      return customPromptTabContent(hasSubscription);
     case 8:
-      return splitterTabContent(hasSubscription);
+      return exportTabContent(hasSubscription);
     case 9:
+      return splitterTabContent(hasSubscription);
+    case 10:
       return newsletterTabContent(hasSubscription);
     default:
       return generalTabContent(hasSubscription);
   }
 }
 function settingsModalContent(initialTab = 0) {
-  const settingsTabs = ['General', 'Auto Sync', 'History', 'Conversation', 'Prompt Input', 'Models', 'Custom Prompts', 'Export', 'Splitter', 'Newsletter'];
+  const settingsTabs = ['General', 'Auto Sync', 'History', 'Conversation', 'Voice', 'Prompt Input', 'Models', 'Custom Prompts', 'Export', 'Splitter', 'Newsletter'];
   let activeTab = initialTab;
   // create history modal content
   const content = document.createElement('div');
@@ -108,7 +110,7 @@ function generalTabContent(hasSubscription = false) {
   darkModeSwitch.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;color:white;';
   darkModeSwitch.textContent = 'Dark mode';
   const darkModeLabel = document.createElement('label');
-  darkModeLabel.classList = 'switch';
+  darkModeLabel.classList = 'sp-switch';
   const darkModeInput = document.createElement('input');
   darkModeInput.type = 'checkbox';
   darkModeInput.checked = !!document.querySelector('html').classList.contains('dark');
@@ -124,7 +126,7 @@ function generalTabContent(hasSubscription = false) {
     }
   });
   const darkModeSlider = document.createElement('span');
-  darkModeSlider.classList = 'slider round';
+  darkModeSlider.classList = 'sp-switch-slider round';
 
   darkModeLabel.appendChild(darkModeInput);
   darkModeLabel.appendChild(darkModeSlider);
@@ -133,8 +135,11 @@ function generalTabContent(hasSubscription = false) {
   leftContent.appendChild(darkModeSwitchWrapper);
 
   // daily newsletter
-  const hideReleaseNoteSwitch = createSwitch('Hide Release Note', 'Don’t show release note when extension is updated', 'hideReleaseNote', false);
+  const hideReleaseNoteSwitch = createSwitch('Hide Release Note', 'Don’t show release note when extension is updated', 'hideReleaseNote', true);
   leftContent.appendChild(hideReleaseNoteSwitch);
+
+  const enhanceGPTStoreSwitch = createSwitch('Enhanced GPT Store', 'Get access to the full list of thousands of Custom GPTs with the ability to search and sort right from inside ChatGPT', 'enhanceGPTStore', true, refreshPage, ['Requires Refresh']);
+  leftContent.appendChild(enhanceGPTStoreSwitch);
 
   const importExportWrapper = document.createElement('div');
   importExportWrapper.style = 'display: flex; flex-direction: row; flex-wrap: wrap; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
@@ -147,7 +152,7 @@ function generalTabContent(hasSubscription = false) {
   importExportButtonWrapper.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;';
 
   const importButton = document.createElement('button');
-  importButton.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
+  importButton.classList = 'w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-token-main-surface-secondary';
   importButton.textContent = 'Import';
   importButton.addEventListener('click', () => {
     // open file picker
@@ -158,8 +163,8 @@ function generalTabContent(hasSubscription = false) {
       const file = event.target.files[0];
       const reader = new FileReader();
       reader.onload = (e) => {
-        if (document.querySelector('[id*=close-button]')) {
-          document.querySelector('[id*=close-button]').click();
+        if (document.querySelector('#modal-close-button-settings')) {
+          document.querySelector('#modal-close-button-settings').click();
         }
         const importedData = JSON.parse(e.target.result);
         const {
@@ -179,7 +184,7 @@ function generalTabContent(hasSubscription = false) {
   importExportButtonWrapper.appendChild(importButton);
 
   const exportButton = document.createElement('button');
-  exportButton.classList = 'w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800';
+  exportButton.classList = 'w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-token-main-surface-secondary';
   exportButton.textContent = 'Export';
   exportButton.addEventListener('click', () => {
     chrome.storage.sync.get(['version'], ({ version }) => {
@@ -237,7 +242,7 @@ function generalTabContent(hasSubscription = false) {
   const sponsorLink = document.createElement('a');
   sponsorLink.href = 'https://www.passionfroot.me/superpower';
   sponsorLink.target = '_blank';
-  sponsorLink.textContent = 'Advertise with us ➜';
+  sponsorLink.textContent = 'Partner with us ➜';
   sponsorLink.style = 'color: #999; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
   sponsorLink.addEventListener('mouseover', () => {
     sponsorLink.style = 'color: gold; font-size: 12px; margin: 8px 0;min-width: 25%;text-align:center;padding-right: 8px;';
@@ -290,7 +295,7 @@ function toggleCustomWidthInput(customConversationWidth) {
       if (document.querySelector('#conversation-bottom')) {
         document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${settings.conversationWidth}%`;
       }
-      document.querySelector('main').querySelector('form').style.maxWidth = `${settings.conversationWidth}%`;
+      document.querySelector('main form').style.maxWidth = `${settings.conversationWidth}%`;
     } else {
       Array.from(document.querySelectorAll('[id^=message-wrapper]')).forEach((el) => {
         el.querySelector('div').style.removeProperty('max-width');
@@ -298,7 +303,7 @@ function toggleCustomWidthInput(customConversationWidth) {
       if (document.querySelector('#conversation-bottom')) {
         document.querySelector('#conversation-bottom').firstChild.style.removeProperty('max-width');
       }
-      document.querySelector('main').querySelector('form').style.removeProperty('max-width');
+      document.querySelector('main form').style.removeProperty('max-width');
     }
   });
 }
@@ -307,10 +312,13 @@ function autoSyncTabContent(hasSubscription = false) {
   content.id = 'settings-modal-tab-content';
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
   // Auto Sync
-  const autoSyncSwitch = createSwitch('Auto Sync', 'Automatically download and sync all your conversations to your computer. Auto Sync only works when ChatGPT is open. Disabling Auto Sync will also disable some of the existing features such as the ability to search for messages and many future features that rely on Auto Sync.(Requires Refresh)', 'autoSync', true, refreshPage, ['Requires Refresh']);
+  const autoSyncSwitch = createSwitch('Auto Sync', 'Automatically download and sync all your conversations to your computer. Auto Sync only works when ChatGPT is open. Disabling Auto Sync will also disable some of the existing features such as Folders, Search and Gallery.', 'autoSync', true, refreshPage, ['Requires Refresh']);
   content.appendChild(autoSyncSwitch);
-  chrome.storage.local.get(['settings'], (result) => {
+  chrome.storage.local.get(['settings', 'totalConversations'], (result) => {
     const { autoSync } = result.settings;
+
+    const autoSyncCountSlider = createSlider('Auto Sync Count', `The number of recent conversations to be synced. For best performance set to <300. You have a total of <b class="text-gold">${result.totalConversations}</b> conversations. <a class="underline text-gold" href="https://www.youtube.com/watch?v=t2fEPVQT-X4&ab_channel=Superpower">Learn more</a>`, 'autoSyncCount', 100, 0, 1000, 100, autoSyncCountCallback, 'Requires Auto-Sync', !autoSync);
+    content.appendChild(autoSyncCountSlider);
 
     const autoRefreshAfterSyncSwitch = createSwitch('Auto Refresh After Sync', 'Automatically refresh the page after syncing conversations is completed', 'autoRefreshAfterSync', true, null, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(autoRefreshAfterSyncSwitch);
@@ -332,7 +340,7 @@ function autoSyncTabContent(hasSubscription = false) {
     resetAutoSyncButton.style.pointerEvents = !autoSync ? 'none' : 'auto';
     resetAutoSyncButton.classList = 'btn btn-warning flex justify-center gap-2 border-0 md:border';
     resetAutoSyncButton.addEventListener('click', () => {
-      showActionConfirm('Reset Auto Sync', 'Clicking on Restart will refresh the page and attempt to re-sync all your conversations', 'Restart', null, resetAutoSync, 'orange');
+      showConfirmDialog('Reset Auto Sync', 'Clicking on Restart will refresh the page and attempt to re-sync all your conversations. Your folders will be removed too.', 'Restart', null, resetAutoSync, 'orange');
     });
     content.appendChild(resetAutoSyncButton);
     const resetAutoSyncDesc = document.createElement('div');
@@ -343,9 +351,23 @@ function autoSyncTabContent(hasSubscription = false) {
 
   return content;
 }
+function autoSyncCountCallback(oldValue, newValue) {
+  if (oldValue === newValue) return;
+  showConfirmDialog(`Auto Sync Count Update: <span class="text-gold text-xs">${oldValue === '1000' ? 'All Chats' : oldValue} ➜ ${newValue === '1000' ? 'All Chats' : newValue}</span>`, 'Clicking on Confirm will refresh the page', 'Confirm', () => autoSyncCountCancelCallback(oldValue), refreshPage, 'orange');
+}
+function autoSyncCountCancelCallback(oldValue) {
+  chrome.storage.local.get(['settings'], (result) => {
+    chrome.storage.local.set({ settings: { ...result.settings, autoSyncCount: oldValue } });
+    const autoSyncCountInput = document.querySelector('#sp-range-slider-autoSyncCount');
+    autoSyncCountInput.value = oldValue;
+    const autoSyncCountSliderValue = document.querySelector('#sp-range-slider-value-autoSyncCount');
+    autoSyncCountSliderValue.innerHTML = oldValue === '1000' ? 'All Chats' : oldValue;
+  });
+}
 function resetAutoSync() {
   chrome.storage.local.set({
     conversations: {},
+    conversationsOrder: [],
     conversationsAreSynced: false,
   }, () => {
     refreshPage();
@@ -362,8 +384,8 @@ function reloadConversationList() {
   });
 }
 
-function sortConversationsByTimestamp(conversationsOrder, conversations) {
-  const folders = conversationsOrder.filter((c) => typeof c !== 'string' && c?.id !== 'trash');
+function sortConversationsByTimestamp(conversationsOrder, conversations, settings) {
+  const folders = conversationsOrder.filter((c) => typeof c !== 'string');
   // close all folders
   folders?.forEach((f) => {
     if (f) f.isOpen = false;
@@ -375,10 +397,11 @@ function sortConversationsByTimestamp(conversationsOrder, conversations) {
       folder.conversationIds = sortedFolderConversations.map((c) => c.id);
     }
   });
+  // sort folders alphabetically
+  if (settings?.autoSortFolders) {
+    folders.sort((a, b) => a.name.localeCompare(b.name));
+  }
   const conversationIds = conversationsOrder.filter((c) => typeof c === 'string');
-  const trash = conversationsOrder.find((c) => c?.id === 'trash');
-  // close trash
-  trash.isOpen = false;
 
   // sort conversationIds by last updated time
   conversationIds.sort((a, b) => {
@@ -387,14 +410,14 @@ function sortConversationsByTimestamp(conversationsOrder, conversations) {
     return bLastUpdated - aLastUpdated;
   });
 
-  const newConversationsOrder = [...folders, ...conversationIds, trash];
+  const newConversationsOrder = [...folders, ...conversationIds];
   return newConversationsOrder;
 }
 // eslint-disable-next-line no-unused-vars
 function toggleKeepFoldersAtTheTop(isChecked) {
-  chrome.storage.local.get(['conversationsOrder', 'conversations'], (result) => {
-    const { conversationsOrder, conversations } = result;
-    const newConversationsOrder = sortConversationsByTimestamp(conversationsOrder, conversations);
+  chrome.storage.local.get(['conversationsOrder', 'conversations', 'settings'], (result) => {
+    const { conversationsOrder, conversations, settings } = result;
+    const newConversationsOrder = sortConversationsByTimestamp(conversationsOrder, conversations, settings);
     chrome.storage.local.set({ conversationsOrder: newConversationsOrder }, () => reloadConversationList());
   });
 }
@@ -430,11 +453,17 @@ function historyTabContent(hasSubscription = false) {
   content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
   chrome.storage.local.get(['settings'], (result) => {
     const {
-      autoSync, autoDeleteOldChats, autoDeleteMode, autoDeleteThreshold,
+      autoSync, autoArchiveOldChats, autoArchiveMode, autoArchiveThreshold,
     } = result.settings;
 
     const showFolderCountsSwitch = createSwitch('Show Folder Counts', 'Show the number of conversations in each folder', 'showFolderCounts', true, toggleShowFolderCounts, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(showFolderCountsSwitch);
+
+    const showMyPromptHistorySwitch = createSwitch('Show My Prompt History', 'Show My Prompt History button in the sidebar', 'showMyPromptHistory', true, toggleShowMyPromptHistory, ['New']);
+    content.appendChild(showMyPromptHistorySwitch);
+
+    const showCommunityPromptsSwitch = createSwitch('Show Community Prompts', 'Show Community Prompts button in the sidebar', 'showCommunityPrompts', true, toggleShowCommunityPrompts, ['New']);
+    content.appendChild(showCommunityPromptsSwitch);
 
     const customGPTAutoFolderSwitch = createSwitch('Custom GPT Auto Folder', 'Automatically save Custom GPT Chats into separate folders', 'customGPTAutoFolder', false, toggleCustomGPTAutoFolder, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription || !autoSync);
     content.appendChild(customGPTAutoFolderSwitch);
@@ -442,47 +471,60 @@ function historyTabContent(hasSubscription = false) {
     const autoColorFoldersSwitch = createSwitch('Auto Color Folders', 'Automatically select a random color when creating folders', 'autoColorFolders', false, null, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(autoColorFoldersSwitch);
 
-    // auto delete
-    const autoDeleteOldChatsSwitch = createSwitch('Auto Delete Old Chats', 'Automatically delete old chats (<a style="text-decoration:underline; color:gold;" href="https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24" target="blank">Learn More</a>)', 'autoDeleteOldChats', false, toggleAutoDeleteOldChats, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription || !autoSync);
-    content.appendChild(autoDeleteOldChatsSwitch);
+    const autoSortFoldersSwitch = createSwitch('Auto Sort Folders', 'Automatically sort folders in alphabetical order', 'autoSortFolders', true, reloadConversationList, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(autoSortFoldersSwitch);
 
-    const autoDeleteModesWrapper = document.createElement('div');
-    autoDeleteModesWrapper.id = 'autoDeleteModesWrapper';
-    autoDeleteModesWrapper.style = 'position:relative;min-width:240px;max-width:200px;z-index:1000;display:flex;';
-    autoDeleteModesWrapper.innerHTML = dropdown('Auto-Delete-Mode', autoDeleteModes, autoDeleteMode, 'left', true);
-    if (!hasSubscription || !autoSync || !autoDeleteOldChats) {
-      autoDeleteModesWrapper.style.opacity = 0.5;
-      autoDeleteModesWrapper.style.pointerEvents = 'none';
+    const multiSelectIndicatorSwitch = createSwitch('Multi-Select Indicator', 'Automatically open the bottom sidebar when selecting multiple chats', 'multiSelectIndicator', true);
+    content.appendChild(multiSelectIndicatorSwitch);
+
+    // auto archive
+    const autoArchiveOldChatsSwitch = createSwitch('Auto Archive Old Chats', 'Automatically archive old chats (<a style="text-decoration:underline; color:gold;" href="https://www.youtube.com/watch?v=7v66-FYROuA&ab_channel=Superpower" target="blank">Learn More</a>)', 'autoArchiveOldChats', false, toggleAutoArchiveOldChats, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(autoArchiveOldChatsSwitch);
+
+    const autoArchiveModesWrapper = document.createElement('div');
+    autoArchiveModesWrapper.id = 'autoArchiveModesWrapper';
+    autoArchiveModesWrapper.style = 'position:relative;z-index:1000;display:flex;align-items:center;';
+    autoArchiveModesWrapper.innerHTML = dropdown('Auto-Archive-Mode', autoArchiveModes, autoArchiveMode, 'left', true);
+    if (!hasSubscription || !autoSync || !autoArchiveOldChats) {
+      autoArchiveModesWrapper.style.opacity = 0.5;
+      autoArchiveModesWrapper.style.pointerEvents = 'none';
     }
     // input for number of days
-    const autoDeleteThresholdInput = document.createElement('input');
-    autoDeleteThresholdInput.id = 'auto-delete-threshold-input';
-    autoDeleteThresholdInput.type = 'number';
-    autoDeleteThresholdInput.classList = 'w-20 px-4 py-2 ml-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40 text-white';
-    autoDeleteThresholdInput.value = autoDeleteThreshold;
-    autoDeleteThresholdInput.addEventListener('change', () => {
-      const curAutoDeleteThresholdInput = document.querySelector('#auto-delete-threshold-input');
-      const newValue = Math.round(curAutoDeleteThresholdInput.value);
-      curAutoDeleteThresholdInput.value = newValue;
-      chrome.storage.local.set({ settings: { ...result.settings, autoDeleteThreshold: newValue } });
+    const autoArchiveThresholdInput = document.createElement('input');
+    autoArchiveThresholdInput.id = 'auto-archive-threshold-input';
+    autoArchiveThresholdInput.type = 'number';
+    autoArchiveThresholdInput.classList = 'w-20 px-4 py-2 ml-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-token-main-surface-secondary disabled:opacity-40 text-white';
+    autoArchiveThresholdInput.value = autoArchiveThreshold;
+    autoArchiveThresholdInput.addEventListener('change', () => {
+      const curAutoArchiveThresholdInput = document.querySelector('#auto-archive-threshold-input');
+      const newValue = Math.round(curAutoArchiveThresholdInput.value);
+      curAutoArchiveThresholdInput.value = newValue;
+      chrome.storage.local.get('settings', ({ settings }) => {
+        chrome.storage.local.set({ settings: { ...settings, autoArchiveThreshold: newValue } });
+      });
     });
-    autoDeleteThresholdInput.addEventListener('input', () => {
-      const curAutoDeleteThresholdInput = document.querySelector('#auto-delete-threshold-input');
-      const newValue = Math.round(curAutoDeleteThresholdInput.value);
-      curAutoDeleteThresholdInput.value = newValue;
-      chrome.storage.local.set({ settings: { ...result.settings, autoDeleteThreshold: newValue } });
+    autoArchiveThresholdInput.addEventListener('input', () => {
+      const curAutoArchiveThresholdInput = document.querySelector('#auto-archive-threshold-input');
+      const newValue = Math.round(curAutoArchiveThresholdInput.value);
+      curAutoArchiveThresholdInput.value = newValue;
+      chrome.storage.local.get('settings', ({ settings }) => {
+        chrome.storage.local.set({ settings: { ...settings, autoArchiveThreshold: newValue } });
+      });
     });
 
-    autoDeleteModesWrapper.appendChild(autoDeleteThresholdInput);
+    autoArchiveModesWrapper.appendChild(autoArchiveThresholdInput);
 
-    const autoDeleteThresholdLabel = document.createElement('label');
-    autoDeleteThresholdLabel.id = 'auto-delete-threshold-label';
-    autoDeleteThresholdLabel.classList = 'ml-2 text-sm text-gray-300 flex items-center';
-    autoDeleteThresholdLabel.textContent = autoDeleteMode.code === 'days' ? 'days' : 'chats';
-    autoDeleteModesWrapper.appendChild(autoDeleteThresholdLabel);
+    const autoArchiveThresholdLabel = document.createElement('label');
+    autoArchiveThresholdLabel.id = 'auto-archive-threshold-label';
+    autoArchiveThresholdLabel.classList = 'ml-2 mr-4 text-sm text-gray-300 flex items-center';
+    autoArchiveThresholdLabel.textContent = autoArchiveMode.code === 'days' ? 'days' : 'chats';
+    autoArchiveModesWrapper.appendChild(autoArchiveThresholdLabel);
 
-    content.appendChild(autoDeleteModesWrapper);
-    addDropdownEventListener('Auto-Delete-Mode', autoDeleteModes, toggleAutoDeleteOldChatMode);
+    const skipAutoArchiveFolderSwitch = createSwitch('Skip Chats in Folders', 'Skip archiving chats that are in a folder', 'skipAutoArchiveFolder', false, null, ['New']);
+    autoArchiveModesWrapper.appendChild(skipAutoArchiveFolderSwitch);
+
+    content.appendChild(autoArchiveModesWrapper);
+    addDropdownEventListener('Auto-Archive-Mode', autoArchiveModes, toggleAutoArchiveOldChatMode);
 
     // add a title that says warning zone
     const warningZoneTitle = document.createElement('div');
@@ -501,15 +543,35 @@ function historyTabContent(hasSubscription = false) {
     resetFoldersButton.style.pointerEvents = !autoSync ? 'none' : 'auto';
     resetFoldersButton.classList = 'btn btn-warning flex justify-center gap-2 border-0 md:border';
     resetFoldersButton.addEventListener('click', () => {
-      showActionConfirm('Reset Folders', 'Clicking on Restart will remove all folders and allow you to recreate them again.', 'Restart', null, resetFolders, 'orange');
+      showConfirmDialog('Reset Folders', 'Clicking on Restart will remove all folders and allow you to recreate them again.', 'Restart', null, resetFolders, 'orange');
     });
     content.appendChild(resetFoldersButton);
     const resetFoldersDesc = document.createElement('div');
     resetFoldersDesc.style = 'width:100%;font-size:0.8em;color:lightslategray;margin-top:8px;';
-    resetFoldersDesc.innerText = 'This will remove all folders. The conversations inside folders will not be deleted, but your trash folder will get emptied.';
+    resetFoldersDesc.innerText = 'This will remove all folders, but the conversations inside folders will not be deleted.';
     content.appendChild(resetFoldersDesc);
   });
   return content;
+}
+function toggleShowMyPromptHistory(isChecked) {
+  if (isChecked) {
+    initializePromptHistory();
+  } else {
+    const myPromptHistoryButton = document.querySelector('#my-prompt-history-button');
+    if (myPromptHistoryButton) {
+      myPromptHistoryButton.remove();
+    }
+  }
+}
+function toggleShowCommunityPrompts(isChecked) {
+  if (isChecked) {
+    initializePromptLibrary();
+  } else {
+    const communityPromptsButton = document.querySelector('#community-prompts-button');
+    if (communityPromptsButton) {
+      communityPromptsButton.remove();
+    }
+  }
 }
 function resetFolders() {
   chrome.storage.local.remove('conversationsOrder', () => {
@@ -559,7 +621,7 @@ function toggleCustomGPTAutoFolder(isChecked) {
             newConversationOrder.unshift({
               id: gid,
               color: settings.autoColorFolders ? generateRandomDarkColor() : '#40414f',
-              name: gizmoData?.resource?.gizmo?.display?.name,
+              name: gizmoData?.resource?.gizmo?.display?.name || gid,
               conversationIds: [...new Set(customGPTConversations.filter((c) => c.gizmo_id === gid).map((c) => c.id))],
             });
           }
@@ -576,22 +638,22 @@ function toggleCustomGPTAutoFolder(isChecked) {
     });
   }
 }
-function toggleAutoDeleteOldChats(isChecked) {
-  const autoDeleteModesWrapper = document.querySelector('#autoDeleteModesWrapper');
+function toggleAutoArchiveOldChats(isChecked) {
+  const autoArchiveModesWrapper = document.querySelector('#autoArchiveModesWrapper');
   if (isChecked) {
-    autoDeleteModesWrapper.style.opacity = 1;
-    autoDeleteModesWrapper.style.pointerEvents = 'auto';
-    toast('Auto Delete Old Chats Enabled', 'warning');
+    autoArchiveModesWrapper.style.opacity = 1;
+    autoArchiveModesWrapper.style.pointerEvents = 'auto';
+    toast('Auto Archive Old Chats Enabled', 'warning');
   } else {
-    autoDeleteModesWrapper.style.opacity = 0.5;
-    autoDeleteModesWrapper.style.pointerEvents = 'none';
+    autoArchiveModesWrapper.style.opacity = 0.5;
+    autoArchiveModesWrapper.style.pointerEvents = 'none';
   }
 }
-function toggleAutoDeleteOldChatMode(mode) {
-  chrome.storage.local.get(['settings'], (result) => {
-    chrome.storage.local.set({ settings: { ...result.settings, autoDeleteMode: mode } }, () => {
-      const autoDeleteThresholdLabel = document.querySelector('#auto-delete-threshold-label');
-      autoDeleteThresholdLabel.textContent = mode.code === 'days' ? 'days' : 'chats';
+function toggleAutoArchiveOldChatMode(mode) {
+  chrome.storage.local.get('settings', ({ settings }) => {
+    chrome.storage.local.set({ settings: { ...settings, autoArchiveMode: mode } }, () => {
+      const autoArchiveThresholdLabel = document.querySelector('#auto-archive-threshold-label');
+      autoArchiveThresholdLabel.textContent = mode.code === 'days' ? 'days' : 'chats';
     });
   });
 }
@@ -603,13 +665,13 @@ function conversationTabContent(hasSubscription = false) {
     const { autoSync, customConversationWidth, conversationWidth } = result.settings;
 
     // conversation width
-    const customConversationWidthSwitch = createSwitch('Custom Conversation Width', 'OFF: Use default / ON: Set Conversation Width (30%-90%)', 'customConversationWidth', false, toggleCustomWidthInput);
+    const customConversationWidthSwitch = createSwitch('Custom Conversation Width', 'OFF: Use default / ON: Set Conversation Width (30%-90%)', 'customConversationWidth', false, toggleCustomWidthInput, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(customConversationWidthSwitch);
 
     const conversationWidthInput = document.createElement('input');
     conversationWidthInput.id = 'conversation-width-input';
     conversationWidthInput.type = 'number';
-    conversationWidthInput.classList = 'max-w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40 text-white';
+    conversationWidthInput.classList = 'max-w-full px-4 py-2 mr-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-token-main-surface-secondary disabled:opacity-40 text-white';
     conversationWidthInput.disabled = !customConversationWidth;
     conversationWidthInput.value = conversationWidth;
     conversationWidthInput.addEventListener('change', () => {
@@ -622,8 +684,10 @@ function conversationTabContent(hasSubscription = false) {
       if (document.querySelector('#conversation-bottom')) {
         document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
       }
-      document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
-      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue, customConversationWidth: true } });
+      document.querySelector('main form').style.maxWidth = `${newValue}%`;
+      chrome.storage.local.get('settings', ({ settings }) => {
+        chrome.storage.local.set({ settings: { ...settings, conversationWidth: newValue, customConversationWidth: true } });
+      });
     });
     conversationWidthInput.addEventListener('input', () => {
       const curConversationWidthInput = document.querySelector('#conversation-width-input');
@@ -635,21 +699,38 @@ function conversationTabContent(hasSubscription = false) {
       if (document.querySelector('#conversation-bottom')) {
         document.querySelector('#conversation-bottom').firstChild.style.maxWidth = `${newValue}%`;
       }
-      document.querySelector('main').querySelector('form').style.maxWidth = `${newValue}%`;
-      chrome.storage.local.set({ settings: { ...result.settings, conversationWidth: newValue, customConversationWidth: true } });
+      document.querySelector('main form').style.maxWidth = `${newValue}%`;
+      chrome.storage.local.get('settings', ({ settings }) => {
+        chrome.storage.local.set({ settings: { ...settings, conversationWidth: newValue, customConversationWidth: true } });
+      });
     });
     content.appendChild(conversationWidthInput);
 
-    const pluginDefaultOpenSwitch = createSwitch('Open Plugin Detail by Default', 'Show Plugin detail by default', 'pluginDefaultOpen', false, null, ['Requires Auto-Sync'], !autoSync);
+    const pluginDefaultOpenSwitch = createSwitch('Open Plugin Detail by Default', 'Show Plugin detail by default', 'pluginDefaultOpen', false, togglePluginDefaultOpen, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(pluginDefaultOpenSwitch);
 
-    const showMessageTimestampSwitch = createSwitch('Message Timestamp', 'Show/hide timestamps on each message', 'showMessageTimestamp', false, reloadConversationList, ['Requires Auto-Sync'], !autoSync);
+    const showMessageTimestampSwitch = createSwitch('Show Message Timestamp', 'Show timestamps on each message', 'showMessageTimestamp', false, reloadConversationList, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(showMessageTimestampSwitch);
 
-    const pinNavSwitch = createSwitch('Pin Navigation', 'Show/hide message pins for quick navigation(only when conversations are fully synced)', 'showPinNav', true, reloadConversationList, ['Requires Auto-Sync'], !autoSync);
+    const pinNavSwitch = createSwitch('Show Pin Navigation', 'Show message pins for quick navigation(only when conversations are fully synced)', 'showPinNav', true, reloadConversationList, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(pinNavSwitch);
 
-    const autoHideThreadCountSwitch = createSwitch('Auto Hide Thread Count', 'Hide the thread count (<1/2>) unless you hover over the message', 'autoHideThreadCount', true, toggleAutoHideThreadCount, ['Requires Auto-Sync'], !autoSync);
+    const showNewChatSettingsSwitch = createSwitch('Show New Chat Settings', 'Show the settings on the new chat page', 'showNewChatSettings', true, toggleShowNewChatSettings, ['Requires Auto-Sync', 'New'], !autoSync);
+    content.appendChild(showNewChatSettingsSwitch);
+
+    const showCopyButtonSwitch = createSwitch('Show Copy Button', 'Show the copy button on the bottom-right', 'showCopyButton', true, toggleShowCopyButton, ['Requires Auto-Sync', 'New'], !autoSync);
+    content.appendChild(showCopyButtonSwitch);
+
+    const showPromptChainButtonSwitch = createSwitch('Show Prompt Chain Button', 'Show the prompt chain button on the bottom-right', 'showPromptChainButton', true, toggleShowPromptChainButton, ['Requires Auto-Sync', 'New'], !autoSync);
+    content.appendChild(showPromptChainButtonSwitch);
+
+    const showKeyboardShortcutButtonSwitch = createSwitch('Show Keyboard Shortcut Button', 'Show the keyboard shortcut button on the bottom-right', 'showKeyboardShortcutButton', true, toggleShowKeyboardShortcutButtonButton, ['New']);
+    content.appendChild(showKeyboardShortcutButtonSwitch);
+
+    const showWordCountSwitch = createSwitch('Show Word/Char Count', 'Show word/char count on each message', 'showWordCount', true, reloadConversationList);
+    content.appendChild(showWordCountSwitch);
+
+    const autoHideThreadCountSwitch = createSwitch('Auto Hide Thread Count', 'Hide the thread count (<1/2>) unless you hover over the message', 'autoHideThreadCount', false, toggleAutoHideThreadCount, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(autoHideThreadCountSwitch);
 
     const autoHideTopNav = createSwitch('Auto Hide Top Navbar', 'Automatically hide the navbar at the top of the page when move the mouse out of it.', 'autoHideTopNav', true, toggleTopNav, ['Requires Auto-Sync'], !autoSync);
@@ -658,22 +739,63 @@ function conversationTabContent(hasSubscription = false) {
     const autoResetTopNav = createSwitch('Auto Reset Top Navbar', 'Automatically reset the tone, writing style, and language to default when switching to new chats', 'autoResetTopNav', false, null, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(autoResetTopNav);
 
-    const chatEndedSoundSwitch = createSwitch('Sound Alarm', 'Play a sound when the chat ends', 'chatEndedSound', false, null, ['Requires Auto-Sync'], !autoSync);
+    const chatEndedSoundSwitch = createSwitch('Sound Alarm', 'Play a sound when the ChatGPT finish responding', 'chatEndedSound', false, null, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(chatEndedSoundSwitch);
+
+    const animateFaviconSwitch = createSwitch('Animate Favicon', 'Animate the ChatGPT icon on browser tab while chat is responding', 'animateFavicon', false, null, ['Requires Auto-Sync'], !autoSync);
+    content.appendChild(animateFaviconSwitch);
 
     // copy mode
     const copyModeSwitch = createSwitch('Copy mode', 'OFF: only copy response / ON: copy both request and response', 'copyMode', false);
     content.appendChild(copyModeSwitch);
-
-    // show word counter
-    const showWordCountSwitch = createSwitch('Word/Char Count', 'Show/hide word/char count on each message', 'showWordCount', true, reloadConversationList);
-    content.appendChild(showWordCountSwitch);
 
     // auto scroll
     const autoScrollSwitch = createSwitch('Auto Scroll', 'Automatically scroll down while responding', 'autoScroll', true);
     content.appendChild(autoScrollSwitch);
   });
   return content;
+}
+function togglePluginDefaultOpen(isChecked) {
+  updateAccountUserSetting('show_expanded_code_view', isChecked);
+}
+function toggleShowNewChatSettings(isChecked) {
+  const newPageSettings = document.querySelector('#new-page-settings');
+  if (newPageSettings) {
+    if (isChecked) {
+      newPageSettings.classList.replace('hidden', 'flex');
+    } else {
+      newPageSettings.classList.replace('flex', 'hidden');
+    }
+  }
+}
+function toggleShowCopyButton(isChecked) {
+  const copyButtons = document.querySelectorAll('[id^=result-copy-button-]');
+  if (isChecked) {
+    copyButtons.forEach((el) => {
+      el.classList.replace('hidden', 'flex');
+    });
+  } else {
+    copyButtons.forEach((el) => {
+      el.classList.replace('flex', 'hidden');
+    });
+  }
+}
+function toggleShowKeyboardShortcutButtonButton(isChecked) {
+  if (isChecked) {
+    addKeyboardShortcutsModalButton();
+  } else {
+    const keyboardShortcutButton = document.querySelector('#keyboard-shortcuts-modal-button');
+    if (keyboardShortcutButton) keyboardShortcutButton.remove();
+  }
+}
+function toggleShowPromptChainButton(isChecked) {
+  if (isChecked) {
+    addPromptChainCreateButton();
+    initializePromptChain();
+  } else {
+    const promptChainCrreateButton = document.querySelector('#prompt-chain-create-button');
+    if (promptChainCrreateButton) promptChainCrreateButton.remove();
+  }
 }
 function toggleAutoHideThreadCount(isChecked) {
   const allThreadButtonsWrapper = document.querySelectorAll('[id^=thread-buttons-wrapper-]');
@@ -686,6 +808,183 @@ function toggleAutoHideThreadCount(isChecked) {
       }
     }
   });
+}
+function textToSpeechTabContent(hasSubscription = false) {
+  const content = document.createElement('div');
+  content.id = 'settings-modal-tab-content';
+  content.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start;overflow-y: scroll; width:100%; padding: 16px; margin-width:100%; height: 100%;';
+
+  // text to speech
+  const textToSpeechHeader = document.createElement('div');
+  textToSpeechHeader.style = 'display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%; margin: 8px 0;';
+  const textToSpeechLabel = document.createElement('div');
+  textToSpeechLabel.style = 'color:white;';
+  textToSpeechLabel.innerHTML = 'Text To Speech<span class="text-xs"> — ChatGPT talks to you. <a class="underline text-gold" href="https://www.youtube.com/watch?v=ckHAyrVqj-w&ab_channel=Superpower">Learn more</a></span></span>';
+  textToSpeechHeader.appendChild(textToSpeechLabel);
+
+  const ttsLanguageSelectorWrapper = document.createElement('div');
+  ttsLanguageSelectorWrapper.id = 'tts-language-selector-wrapper';
+  ttsLanguageSelectorWrapper.style = 'position:relative;width:150px;margin-left:8px;';
+  chrome.storage.local.get(['settings'], (res) => {
+    const { textToSpeechLanguage, textToSpeechAutoDetectLanguage } = res.settings;
+    ttsLanguageSelectorWrapper.innerHTML = dropdown('TTS-Language', textToSpeechLanguageList, textToSpeechLanguage, 'right', true);
+    if (textToSpeechAutoDetectLanguage) {
+      ttsLanguageSelectorWrapper.style.opacity = 0.5;
+      ttsLanguageSelectorWrapper.style.pointerEvents = 'none';
+    }
+    addDropdownEventListener('TTS-Language', textToSpeechLanguageList, (lang) => {
+      chrome.storage.local.get('settings', ({ settings }) => {
+        const textToSpeechVoiceList = speechSynthesis.getVoices().filter((v) => v.lang === lang.code).map((v) => ({ name: v.name, code: v.name }));
+
+        const ttsVoiceSelectorWrapper = document.querySelector('#tts-voice-selector-wrapper');
+        ttsVoiceSelectorWrapper.innerHTML = dropdown('TTS-Voice', textToSpeechVoiceList, textToSpeechVoiceList[0], 'right', true);
+
+        chrome.storage.local.set({ settings: { ...settings, textToSpeechLanguage: lang, textToSpeechVoice: textToSpeechVoiceList[0] } });
+
+        addDropdownEventListener('TTS-Voice', textToSpeechVoiceList, (voice) => {
+          chrome.storage.local.get('settings', ({ settings: curSettings }) => {
+            chrome.storage.local.set({ settings: { ...curSettings, textToSpeechVoice: voice } });
+          });
+        });
+      });
+    });
+  });
+
+  textToSpeechHeader.appendChild(ttsLanguageSelectorWrapper);
+
+  content.appendChild(textToSpeechHeader);
+
+  const textToSpeechWrapper = document.createElement('div');
+  textToSpeechWrapper.style = 'position:relative;display: flex; flex-flow: wrap; justify-content: start; align-items: center; width: 100%; margin: 12px 0 24px 0; padding: 8px; border-radius: 8px; background-color: rgb(30, 30, 47);';
+
+  const textToSpeechAutoDetectLanguageSwitch = createSwitch('Auto Detect Language', 'Automatically detect the language of the response', 'textToSpeechAutoDetectLanguage', false, textToSpeechAutoDetectLanguageCallback, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription);
+  textToSpeechWrapper.appendChild(textToSpeechAutoDetectLanguageSwitch);
+
+  const autoSpeakSwitch = createSwitch('Auto Speak', 'Automatically speak the response once it\'s finished', 'autoSpeak', false, autoSpeakSwitchCallback, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription);
+  textToSpeechWrapper.appendChild(autoSpeakSwitch);
+
+  const skipCodeReadingSwitch = createSwitch('Skip Reading Code', 'Skip code blocks when speaking the response', 'skipCodeReading', false, null, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription);
+  textToSpeechWrapper.appendChild(skipCodeReadingSwitch);
+
+  const ttsVoiceSelectorWrapper = document.createElement('div');
+  ttsVoiceSelectorWrapper.id = 'tts-voice-selector-wrapper';
+  ttsVoiceSelectorWrapper.style = 'position:absolute;top:10px;right:10px;width:150px;margin-left:8px;';
+  chrome.storage.local.get(['settings'], (res) => {
+    const { textToSpeechVoice, textToSpeechLanguage, textToSpeechAutoDetectLanguage } = res.settings;
+    const textToSpeechVoiceList = window.speechSynthesis.getVoices().filter((v) => v.lang === textToSpeechLanguage.code).map((v) => ({ name: v.name, code: v.name }));
+    ttsVoiceSelectorWrapper.innerHTML = dropdown('TTS-Voice', textToSpeechVoiceList, textToSpeechVoice, 'right', true);
+    if (textToSpeechAutoDetectLanguage) {
+      ttsVoiceSelectorWrapper.style.opacity = 0.5;
+      ttsVoiceSelectorWrapper.style.pointerEvents = 'none';
+    }
+    addDropdownEventListener('TTS-Voice', textToSpeechVoiceList, (voice) => {
+      chrome.storage.local.get('settings', ({ settings }) => {
+        chrome.storage.local.set({ settings: { ...settings, textToSpeechVoice: voice } });
+      });
+    });
+  });
+  textToSpeechWrapper.appendChild(ttsVoiceSelectorWrapper);
+
+  const textToSpeechRateSlider = createSlider('Rate', 'Speed at which the text is spoken', 'textToSpeechRate', 1, 0.5, 2, 0.1, null, 'Requires Auto-Sync', !hasSubscription);
+  textToSpeechWrapper.appendChild(textToSpeechRateSlider);
+
+  const textToSpeechPitchSlider = createSlider('Pitch', 'The pitch of the speech', 'textToSpeechPitch', 1, 0, 2, 0.1, null, 'Requires Auto-Sync', !hasSubscription);
+  textToSpeechWrapper.appendChild(textToSpeechPitchSlider);
+
+  const audioTestButton = document.createElement('button');
+  audioTestButton.classList = 'btn flex justify-center gap-2 btn-primary border-0 md:border';
+  audioTestButton.style = 'min-width:72px;height:34px;margin-left:auto;';
+  audioTestButton.textContent = 'Test Audio 🎧';
+  audioTestButton.disabled = !hasSubscription;
+  audioTestButton.addEventListener('click', () => {
+    chrome.storage.local.get(['settings'], (res) => {
+      const { settings } = res;
+      const utterance = new SpeechSynthesisUtterance('Superpower ChatGPT, is the best ChatGPT extension.');
+      utterance.rate = settings.textToSpeechRate || 1;
+      utterance.pitch = settings.textToSpeechPitch || 1;
+      utterance.volume = 1;
+      utterance.lang = settings.textToSpeechLanguage;
+      utterance.voice = speechSynthesis.getVoices().find((v) => v.name === settings.textToSpeechVoice.name);
+      speechSynthesis.cancel();
+      setTimeout(() => {
+        speechSynthesis.speak(utterance);
+      }, 500);
+    });
+  });
+  textToSpeechWrapper.appendChild(audioTestButton);
+
+  content.appendChild(textToSpeechWrapper);
+
+  // speech to text
+
+  const speechToTextHeader = document.createElement('div');
+  speechToTextHeader.style = 'display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%; margin: 8px 0; ';
+  const speechToTextLabel = document.createElement('div');
+  speechToTextLabel.style = 'color:white;';
+  speechToTextLabel.innerHTML = `Speech To Text${isFirefox || isOpera ? '<span class="text-xs"> (Firefox and Opera do not support <a class="underline text-gold" href="https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition#browser_compatibility">Speech Recognition</a>)</span>' : '<span class="text-xs"> — You talk to ChatGPT. <a class="underline text-gold" href="https://www.youtube.com/watch?v=ckHAyrVqj-w&ab_channel=Superpower">Learn more</a></span></span>'}`;
+  speechToTextHeader.appendChild(speechToTextLabel);
+
+  const sttLanguageSelectorWrapper = document.createElement('div');
+  sttLanguageSelectorWrapper.style = 'position:relative;width:150px;margin-left:8px;';
+  if (isFirefox || isOpera) {
+    sttLanguageSelectorWrapper.style.opacity = 0.5;
+    sttLanguageSelectorWrapper.style.pointerEvents = 'none';
+  }
+  chrome.storage.local.get(['settings'], (res) => {
+    const { speechToTextLanguage } = res.settings;
+    sttLanguageSelectorWrapper.innerHTML = dropdown('STT-Language', speechToTextLanguageList, speechToTextLanguage, 'right', true);
+    addDropdownEventListener('STT-Language', speechToTextLanguageList, (lang) => {
+      chrome.storage.local.get('settings', ({ settings }) => {
+        chrome.storage.local.set({ settings: { ...settings, speechToTextLanguage: lang } });
+      });
+    });
+  });
+  speechToTextHeader.appendChild(sttLanguageSelectorWrapper);
+
+  content.appendChild(speechToTextHeader);
+
+  const speechToTextWrapper = document.createElement('div');
+  speechToTextWrapper.style = 'display: flex; flex-flow: wrap; justify-content: start; align-items: center; width: 100%; margin: 12px 0; padding: 8px; border-radius: 8px; background-color: rgb(30, 30, 47);';
+  if (isFirefox || isOpera) {
+    speechToTextWrapper.style.opacity = 0.5;
+    speechToTextWrapper.style.pointerEvents = 'none';
+  }
+  const speechToTextInterimResultsSwitch = createSwitch('Interim Results', 'Show interim results while speaking', 'speechToTextInterimResults', true, null, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription);
+  speechToTextWrapper.appendChild(speechToTextInterimResultsSwitch);
+
+  const autoSubmitWhenReleaseAltSwitch = createSwitch('Auto Submit When Release Alt', 'Automatically submit the message when you release the Alt key', 'autoSubmitWhenReleaseAlt', false, null, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription);
+  speechToTextWrapper.appendChild(autoSubmitWhenReleaseAltSwitch);
+
+  content.appendChild(speechToTextWrapper);
+
+  return content;
+}
+function textToSpeechAutoDetectLanguageCallback(isChecked) {
+  const ttsLanguageSelectorWrapper = document.querySelector('#tts-language-selector-wrapper');
+  const ttsVoiceSelectorWrapper = document.querySelector('#tts-voice-selector-wrapper');
+  if (isChecked) {
+    ttsLanguageSelectorWrapper.style.opacity = 0.5;
+    ttsLanguageSelectorWrapper.style.pointerEvents = 'none';
+    ttsVoiceSelectorWrapper.style.opacity = 0.5;
+    ttsVoiceSelectorWrapper.style.pointerEvents = 'none';
+  } else {
+    ttsLanguageSelectorWrapper.style.opacity = 1;
+    ttsLanguageSelectorWrapper.style.pointerEvents = 'auto';
+    ttsVoiceSelectorWrapper.style.opacity = 1;
+    ttsVoiceSelectorWrapper.style.pointerEvents = 'auto';
+  }
+}
+function autoSpeakSwitchCallback(isChecked) {
+  if (isChecked) {
+    const utterance = new SpeechSynthesisUtterance('Auto Speak is enabled.');
+    chrome.storage.local.get(['settings'], (result) => {
+      utterance.lang = result.settings.textToSpeechLanguage;
+      utterance.voice = speechSynthesis.getVoices().find((v) => v.name === result.settings.textToSpeechVoice.name);
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      speechSynthesis.speak(utterance);
+    });
+  }
 }
 function promptInputTabContent(hasSubscription = false) {
   const content = document.createElement('div');
@@ -700,7 +999,7 @@ function promptInputTabContent(hasSubscription = false) {
     const showGpt4Counter = createSwitch('Show GPT-4 Counter', 'Show the number of GPT-4 messages in the last 3 hours', 'showGpt4Counter', true, toggleGpt4Counter, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(showGpt4Counter);
 
-    const showExamplePromptsSwitch = createSwitch('Show Example Prompts', 'Show the example prompts when starting a new chat', 'showExamplePrompts', true, null, ['Requires Auto-Sync'], !autoSync);
+    const showExamplePromptsSwitch = createSwitch('Show Example Prompts', 'Show the example prompts when starting a new chat or using Custom GPTs', 'showExamplePrompts', true, null, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(showExamplePromptsSwitch);
 
     // prompt template
@@ -727,13 +1026,13 @@ function modelsTabContent(hasSubscription = false) {
   betaTag.style = 'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; font-size: 0.7em;margin-top:8px;';
   betaTag.textContent = 'Requires Auto-Sync';
   content.appendChild(betaTag);
-  chrome.storage.local.get(['settings', 'models', 'unofficialModels', 'customModels'], (result) => {
+  chrome.storage.local.get(['settings', 'models', 'unofficialModels', 'customModels', 'selectedModel'], (result) => {
     const {
-      models, unofficialModels, customModels, settings,
+      models, unofficialModels, customModels, settings, selectedModel,
     } = result;
-    const allModels = [...models, ...unofficialModels, ...customModels];
+    const allModels = [...(models || []), ...(unofficialModels || []), ...(customModels || [])];
     const { autoSync } = result.settings;
-    modelSwitcherWrapper.innerHTML = modelSwitcher(allModels, settings.selectedModel, idPrefix, customModels, settings.autoSync, true);
+    modelSwitcherWrapper.innerHTML = modelSwitcher(allModels, selectedModel, idPrefix, customModels, settings.autoSync, true);
     addModelSwitcherEventListener(idPrefix, true);
     if (autoSync) {
       modelSwitcherWrapper.style.pointerEvents = 'all';
@@ -808,7 +1107,7 @@ function modelsTabContent(hasSubscription = false) {
       newCustomModelSlug.style.borderColor = '#ff4a4a';
     }
     if (!newCustomModelSlug.value.trim() || !newCustomModelText.value.trim()) return;
-    chrome.storage.local.get(['models', 'unofficialModels', 'customModels', 'settings'], (res) => {
+    chrome.storage.local.get(['models', 'unofficialModels', 'customModels', 'settings', 'selectedModel'], (res) => {
       const allModels = [...res.models, ...res.unofficialModels, ...res.customModels];
       const newCustomModels = (res.customModels && res.customModels.length > 0) ? res.customModels : [];
       if (allModels.map((k) => k?.slug?.toLowerCase()).includes(newCustomModelSlug.value.trim().toLowerCase())) {
@@ -827,7 +1126,7 @@ function modelsTabContent(hasSubscription = false) {
         modelSwitcherWrappers.forEach((wrapper) => {
           const curIdPrefix = wrapper.id.split('model-switcher-wrapper-')[1];
           const newAllModels = [...res.models, ...res.unofficialModels, ...newCustomModels];
-          wrapper.innerHTML = modelSwitcher(newAllModels, res.settings.selectedModel, curIdPrefix, newCustomModels, res.settings.autoSync, true);
+          wrapper.innerHTML = modelSwitcher(newAllModels, res.selectedModel, curIdPrefix, newCustomModels, res.settings.autoSync, true);
           addModelSwitcherEventListener(curIdPrefix, true);
         });
         // clear the input fields
@@ -849,12 +1148,11 @@ function modelsTabContent(hasSubscription = false) {
   return content;
 }
 function toggleCustomPromptsButtonVisibility(isChecked) {
-  const customPromptsButton = document.querySelector('#continue-conversation-button-wrapper');
-  if (!customPromptsButton) return;
   if (isChecked) {
-    customPromptsButton.style.display = 'flex';
+    createContinueButton();
   } else {
-    customPromptsButton.style.display = 'none';
+    const customPromptsButton = document.querySelector('#continue-conversation-button-wrapper');
+    customPromptsButton?.remove();
   }
 }
 function customPromptTabContent(hasSubscription = false) {
@@ -903,7 +1201,7 @@ function customPromptTabContent(hasSubscription = false) {
 
       const helperText = document.createElement('div');
       helperText.style = 'color: #999; font-size: 12px; margin: 8px 0;';
-      helperText.textContent = 'Tip: You can use @promptTitle anywhere in your prompt input to automatically replace it with the prompt text. For this feature to work make sure you don\'t have any space in the prompt title. Smart replace is not case sensitive.';
+      helperText.textContent = 'Tip: You can use $promptTitle anywhere in your prompt input to automatically replace it with the prompt text. For this feature to work make sure you don\'t have any space in the prompt title. Smart replace is not case sensitive.';
 
       const repeatedNameError = document.createElement('div');
       repeatedNameError.id = 'repeated-name-error';
@@ -940,7 +1238,7 @@ function customPromptTabContent(hasSubscription = false) {
             repeatedNameError.style.visibility = 'visible';
             return;
           }
-          newCustomPrompts.push({ title: newCustomPromptTitle.value.trim(), text: newCustomPromptText.value.trim(), isDefault: false });
+          newCustomPrompts.unshift({ title: newCustomPromptTitle.value.trim(), text: newCustomPromptText.value.trim(), isDefault: false });
           chrome.storage.local.set({ customPrompts: newCustomPrompts }, () => {
             // add new custom prompt right after curNewCustomPromptWrapper
             const curNewCustomPromptWrapper = document.getElementById('new-custom-prompt-wrapper');
@@ -962,6 +1260,7 @@ function customPromptTabContent(hasSubscription = false) {
       newCustomPromptWrapper.appendChild(newCustomPromptButtonWrapper);
       // insert after customPromptSectionWrapper
       customPromptSectionWrapper.parentNode.insertBefore(newCustomPromptWrapper, customPromptSectionWrapper.nextSibling);
+      newCustomPromptTitle.focus();
     });
     customPromptSectionWrapper.appendChild(customPromptSection);
     customPromptSectionWrapper.appendChild(newCustomPromptButton);
@@ -985,13 +1284,11 @@ function customPromptTabContent(hasSubscription = false) {
         name: 'custom-prompts-list',
         pull: true,
         // eslint-disable-next-line func-names, object-shorthand, no-unused-vars
-        put: function (to, from, dragged) {
-          return from.el.id !== 'folder-content-trash';
-        },
+        put: true,
       },
       direction: 'vertical',
       invertSwap: true,
-      draggable: '#custom-prompt-row',
+      handle: '#custom-prompt-drag-handle',
       onEnd: (event) => {
         const { oldIndex, newIndex } = event;
         chrome.storage.local.get(['customPrompts'], (res) => {
@@ -1058,7 +1355,7 @@ function createPromptRow(promptTitle, promptText, isDefault, promptObjectName) {
   promptRow.appendChild(dragPromptButton);
   const promptLabel = document.createElement('div');
   promptLabel.style = 'min-width: 100px; max-width:100px; margin-right: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;color:white;text-transform: capitalize;';
-  promptLabel.innerHTML = `<div style="display:flex;"><b style="position:relative;margin-right:4px;bottom:2px;">@</b>${promptTitle}</div>`;
+  promptLabel.innerHTML = `<div style="display:flex;"><b style="position:relative;margin-right:4px;bottom:2px;">$</b>${promptTitle}</div>`;
   promptLabel.title = promptTitle;
   promptLabel.dir = 'auto';
   const promptInput = document.createElement('textarea');
@@ -1153,7 +1450,7 @@ function exportTabContent(hasSubscription = false) {
   const exportModeHelper = document.createElement('div');
   exportModeHelper.style = 'font-size: 12px; color: #999;';
   const exportModeLabel = document.createElement('label');
-  exportModeLabel.classList = 'switch';
+  exportModeLabel.classList = 'sp-switch';
   const exportModeInput = document.createElement('input');
   exportModeInput.type = 'checkbox';
   chrome.storage.local.get('settings', ({ settings }) => {
@@ -1168,7 +1465,7 @@ function exportTabContent(hasSubscription = false) {
     });
   });
   const exportModeSlider = document.createElement('span');
-  exportModeSlider.classList = 'slider round';
+  exportModeSlider.classList = 'sp-switch-slider round';
 
   exportModeLabel.appendChild(exportModeInput);
   exportModeLabel.appendChild(exportModeSlider);
@@ -1183,9 +1480,9 @@ function exportTabContent(hasSubscription = false) {
   const betaTag = document.createElement('span');
   betaTag.style = 'background-color: #ff9800; color: black; padding: 2px 4px; border-radius: 8px; margin-left: 8px; font-size: 0.7em;';
   betaTag.textContent = 'Coming soon';
+  exportNamingFormatLabel.appendChild(betaTag);
   content.appendChild(exportModeSwitchWrapper);
   content.appendChild(exportNamingFormatLabel);
-  exportNamingFormatLabel.appendChild(betaTag);
   return content;
 }
 function splitterTabContent(hasSubscription = false) {
@@ -1208,21 +1505,25 @@ function splitterTabContent(hasSubscription = false) {
     const autoSplitChunkSizeInput = document.createElement('input');
     autoSplitChunkSizeInput.id = 'split-prompt-limit-input';
     autoSplitChunkSizeInput.type = 'number';
-    autoSplitChunkSizeInput.classList = 'w-full px-4 py-2 mb-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-gray-800 disabled:opacity-40';
+    autoSplitChunkSizeInput.classList = 'w-full px-4 py-2 mb-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-token-main-surface-secondary disabled:opacity-40';
     autoSplitChunkSizeInput.value = result.settings.autoSplitLimit;
     autoSplitChunkSizeInput.addEventListener('change', () => {
       const curAutoSplitChunkSizeInput = document.querySelector('#split-prompt-limit-input');
       const newValue = Math.round(curAutoSplitChunkSizeInput.value);
 
       curAutoSplitChunkSizeInput.value = newValue;
-      chrome.storage.local.set({ settings: { ...result.settings, autoSplitLimit: newValue } });
+      chrome.storage.local.get('settings', ({ settings }) => {
+        chrome.storage.local.set({ settings: { ...settings, autoSplitLimit: newValue } });
+      });
     });
     autoSplitChunkSizeInput.addEventListener('input', () => {
       const curAutoSplitChunkSizeInput = document.querySelector('#split-prompt-limit-input');
       const newValue = Math.round(curAutoSplitChunkSizeInput.value);
 
       curAutoSplitChunkSizeInput.value = newValue;
-      chrome.storage.local.set({ settings: { ...result.settings, autoSplitLimit: newValue } });
+      chrome.storage.local.get('settings', ({ settings }) => {
+        chrome.storage.local.set({ settings: { ...settings, autoSplitLimit: newValue } });
+      });
     });
 
     // splitter initial prompt
@@ -1325,7 +1626,75 @@ function newsletterTabContent(hasSubscription = false) {
 
   return content;
 }
+function createSlider(title, subtitle, settingsKey, defaultValue, min, max, step, callback = null, tags = [], disabled = false) {
+  const sliderWrapper = document.createElement('div');
+  sliderWrapper.style = 'display: flex; flex-direction:column; justify-content: flex-start; align-items: flex-start; width: 100%; margin: 8px 0;';
+  const sliderLabel = document.createElement('div');
+  sliderLabel.style = 'display:flex; align-items: center; width: 100%; margin: 8px 0; color:white;';
+  const sliderTitle = document.createElement('div');
+  sliderTitle.style = 'min-width: fit-content; font-size: 16px;';
+  sliderTitle.innerHTML = title;
+  const sliderSubtitle = document.createElement('div');
+  sliderSubtitle.style = 'font-size: 12px; color: #999;';
+  sliderSubtitle.innerHTML = subtitle;
+  sliderLabel.appendChild(sliderTitle);
+  const sliderElement = document.createElement('input');
+  sliderElement.id = `sp-range-slider-${settingsKey}`;
+  sliderElement.classList = 'sp-range-slider';
+  sliderElement.style = 'width: 100%; margin: 8px';
+  sliderElement.type = 'range';
+  sliderElement.min = min;
+  sliderElement.max = max;
+  sliderElement.step = step;
+  sliderElement.disabled = disabled;
+  const sliderValue = document.createElement('span');
+  sliderValue.id = `sp-range-slider-value-${settingsKey}`;
+  sliderValue.style = 'min-width: fit-content;font-size: 14px; color: #999; margin: 0 16px;';
+  sliderValue.textContent = defaultValue;
 
+  if (settingsKey) {
+    chrome.storage.local.get('settings', ({ settings }) => {
+      const settingValue = settings[settingsKey];
+      if (settingValue === undefined && defaultValue !== undefined) {
+        settings[settingsKey] = defaultValue;
+        sliderValue.textContent = defaultValue;
+        chrome.storage.local.set(settings);
+      } else {
+        sliderElement.value = settingValue;
+        sliderValue.textContent = (settingValue === '1000' && settingsKey === 'autoSyncCount') ? 'All Chats' : settingValue;
+      }
+    });
+    sliderElement.addEventListener('input', () => {
+      sliderValue.textContent = (sliderElement.value === '1000' && settingsKey === 'autoSyncCount') ? 'All Chats' : sliderElement.value;
+    });
+    sliderElement.addEventListener('change', () => {
+      chrome.storage.local.get('settings', ({ settings }) => {
+        const oldValue = settings[settingsKey];
+        settings[settingsKey] = sliderElement.value;
+        sliderValue.textContent = (sliderElement.value === '1000' && settingsKey === 'autoSyncCount') ? 'All Chats' : sliderElement.value;
+        chrome.storage.local.set({ settings }, () => {
+          if (callback) {
+            callback(oldValue, sliderElement.value);
+          }
+        });
+      });
+    });
+  } else {
+    sliderElement.value = defaultValue;
+    sliderValue.textContent = defaultValue;
+    sliderElement.addEventListener('change', () => {
+      if (callback) {
+        callback(sliderElement.value);
+      }
+    });
+  }
+  sliderLabel.appendChild(sliderValue);
+  sliderLabel.appendChild(sliderElement);
+
+  sliderWrapper.appendChild(sliderLabel);
+  sliderWrapper.appendChild(sliderSubtitle);
+  return sliderWrapper;
+}
 function createSwitch(title, subtitle, settingsKey, defaultValue, callback = null, tags = [], disabled = false) {
   const switchWrapper = document.createElement('div');
   switchWrapper.style = 'display: flex; flex-direction: column; justify-content: start; align-items: start; width: 100%; margin: 8px 0;';
@@ -1333,7 +1702,7 @@ function createSwitch(title, subtitle, settingsKey, defaultValue, callback = nul
   switchElement.style = 'display: flex; flex-direction: row; justify-content: start; align-items: center; width: 100%; margin: 8px 0;color:white;';
   switchElement.innerHTML = title;
   const label = document.createElement('label');
-  label.classList = 'switch';
+  label.classList = 'sp-switch';
   label.style.opacity = disabled ? '0.5' : '1';
   const input = document.createElement('input');
   input.id = `switch-${title.toLowerCase().replaceAll(' ', '-')}`;
@@ -1342,7 +1711,7 @@ function createSwitch(title, subtitle, settingsKey, defaultValue, callback = nul
   const betaTagWrapper = document.createElement('div');
   tags.forEach((tag) => {
     const betaTag = document.createElement('span');
-    betaTag.style = `${tag === '⚡️ Requires Pro Account' ? 'background-color: #19c37d; color: black;' : 'background-color: #ff9800; color: black;'}  padding: 2px 4px; border-radius: 8px; font-size: 0.7em;margin-right:8px;`;
+    betaTag.style = `${tag === '⚡️ Requires Pro Account' ? 'background-color: #19c37d; color: black;' : tag === 'New' ? 'background-color: #ef4146; color: white;' : 'background-color: #ff9800; color: black;'}  padding: 2px 4px; border-radius: 8px; font-size: 0.7em;margin-right:8px;`;
     betaTag.textContent = tag;
     if (tag === '⚡️ Requires Pro Account') {
       betaTag.role = 'button';
@@ -1366,25 +1735,49 @@ function createSwitch(title, subtitle, settingsKey, defaultValue, callback = nul
       }
     });
     input.addEventListener('change', () => {
-      chrome.storage.local.get('settings', ({ settings }) => {
-        settings[settingsKey] = input.checked;
-        chrome.storage.local.set({ settings }, () => {
+      chrome.runtime.sendMessage({
+        checkHasSubscription: true,
+        detail: {
+          forceRefresh: false,
+        },
+      }, (hasSubscription) => {
+        if (!hasSubscription && tags.includes('⚡️ Requires Pro Account')) {
+          toast('This feature is only available for Pro users. Please upgrade to Pro to use this feature.', 'error');
+          input.checked = defaultValue;
+        } else {
+          chrome.storage.local.get('settings', ({ settings }) => {
+            settings[settingsKey] = input.checked;
+            chrome.storage.local.set({ settings }, () => {
+              if (callback) {
+                callback(input.checked);
+              }
+            });
+          });
+        }
+      });
+    });
+  } else {
+    chrome.runtime.sendMessage({
+      checkHasSubscription: true,
+      detail: {
+        forceRefresh: false,
+      },
+    }, (hasSubscription) => {
+      if (!hasSubscription && tags.includes('⚡️ Requires Pro Account')) {
+        toast('This feature is only available for Pro users. Please upgrade to Pro to use this feature.', 'error');
+        input.checked = defaultValue;
+      } else {
+        input.checked = defaultValue;
+        input.addEventListener('change', () => {
           if (callback) {
             callback(input.checked);
           }
         });
-      });
-    });
-  } else {
-    input.checked = defaultValue;
-    input.addEventListener('change', () => {
-      if (callback) {
-        callback(input.checked);
       }
     });
   }
   const slider = document.createElement('span');
-  slider.classList = 'slider round';
+  slider.classList = 'sp-switch-slider round';
 
   label.appendChild(input);
   label.appendChild(slider);
@@ -1489,8 +1882,7 @@ function settingsModalActions() {
   upgradeToPro.id = 'upgrade-to-pro-button-settings';
   upgradeToPro.classList = 'flex flex-wrap px-3 py-1 items-center rounded-md bg-gold hover:bg-gold-dark transition-colors duration-200 text-black cursor-pointer text-sm ml-auto font-bold';
   upgradeToPro.style.width = '230px';
-  upgradeToPro.innerHTML = '<div class="flex w-full"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="width:20px; height:20px; margin-right:6px;position:relative; top:10px;" stroke="purple" fill="purple"><path d="M240.5 224H352C365.3 224 377.3 232.3 381.1 244.7C386.6 257.2 383.1 271.3 373.1 280.1L117.1 504.1C105.8 513.9 89.27 514.7 77.19 505.9C65.1 497.1 60.7 481.1 66.59 467.4L143.5 288H31.1C18.67 288 6.733 279.7 2.044 267.3C-2.645 254.8 .8944 240.7 10.93 231.9L266.9 7.918C278.2-1.92 294.7-2.669 306.8 6.114C318.9 14.9 323.3 30.87 317.4 44.61L240.5 224z"/></svg> Upgrade to Pro</div><div style="font-size:10px;font-weight:400;margin-left:28px;" class="flex w-full">Get GPT Store, Image Gallery, and more</div>';
-  // make the button shake every 5 seconds
+  upgradeToPro.innerHTML = '<div class="flex w-full"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="width:20px; height:20px; margin-right:6px;position:relative; top:10px;" stroke="purple" fill="purple"><path d="M240.5 224H352C365.3 224 377.3 232.3 381.1 244.7C386.6 257.2 383.1 271.3 373.1 280.1L117.1 504.1C105.8 513.9 89.27 514.7 77.19 505.9C65.1 497.1 60.7 481.1 66.59 467.4L143.5 288H31.1C18.67 288 6.733 279.7 2.044 267.3C-2.645 254.8 .8944 240.7 10.93 231.9L266.9 7.918C278.2-1.92 294.7-2.669 306.8 6.114C318.9 14.9 323.3 30.87 317.4 44.61L240.5 224z"/></svg> Upgrade to Pro</div><div style="font-size:10px;font-weight:400;margin-left:28px;" class="flex w-full">GPT Store, Image Gallery, Voice & more</div>';
 
   chrome.runtime.sendMessage({
     checkHasSubscription: true,
@@ -1502,13 +1894,14 @@ function settingsModalActions() {
       upgradeToPro.classList = 'flex px-3 py-3 items-center rounded-md bg-gold hover:bg-gold-dark transition-colors duration-200 text-black cursor-pointer text-sm ml-auto font-bold';
       upgradeToPro.style.width = 'auto';
       upgradeToPro.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="width:20px; height:20px;margin-right:6px;" stroke="purple" fill="purple"><path d="M240.5 224H352C365.3 224 377.3 232.3 381.1 244.7C386.6 257.2 383.1 271.3 373.1 280.1L117.1 504.1C105.8 513.9 89.27 514.7 77.19 505.9C65.1 497.1 60.7 481.1 66.59 467.4L143.5 288H31.1C18.67 288 6.733 279.7 2.044 267.3C-2.645 254.8 .8944 240.7 10.93 231.9L266.9 7.918C278.2-1.92 294.7-2.669 306.8 6.114C318.9 14.9 323.3 30.87 317.4 44.61L240.5 224z"/></svg> Pro account';
-    } else {
-      setInterval(() => {
-        upgradeToPro.classList.add('animate-shake');
-        setTimeout(() => {
-          upgradeToPro.classList.remove('animate-shake');
-        }, 1000);
-      }, 7000);
+      // } else {
+      // make the button shake every 5 seconds
+      //   setInterval(() => {
+      //     upgradeToPro.classList.add('animate-shake');
+      //     setTimeout(() => {
+      //       upgradeToPro.classList.remove('animate-shake');
+      //     }, 1000);
+      //   }, 7000);
     }
     upgradeToPro.addEventListener('click', () => {
       openUpgradeModal(hasSubscription);
@@ -1525,15 +1918,11 @@ function addSettingsButton() {
   if (document.querySelector('#settings-button')) return;
   // create the setting button by copying the nav button
   const settingsButton = document.createElement('a');
-  settingsButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-gray-500/10 transition-colors duration-200 text-white cursor-pointer text-sm';
-  settingsButton.textContent = 'Settings';
+  settingsButton.classList = 'flex py-3 px-3 items-center gap-3 rounded-md hover:bg-token-sidebar-surface-secondary transition-colors duration-200 text-token-text-primary cursor-pointer text-sm';
+  settingsButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-4 h-4 text-token-text-primary" fill="currentColor"><path d="M160 256C160 202.1 202.1 160 256 160C309 160 352 202.1 352 256C352 309 309 352 256 352C202.1 352 160 309 160 256zM256 208C229.5 208 208 229.5 208 256C208 282.5 229.5 304 256 304C282.5 304 304 282.5 304 256C304 229.5 282.5 208 256 208zM293.1 .0003C315.3 .0003 334.6 15.19 339.8 36.74L347.6 69.21C356.1 73.36 364.2 78.07 371.9 83.28L404 73.83C425.3 67.56 448.1 76.67 459.2 95.87L496.3 160.1C507.3 179.3 503.8 203.6 487.8 218.9L463.5 241.1C463.8 246.6 464 251.3 464 256C464 260.7 463.8 265.4 463.5 270L487.8 293.1C503.8 308.4 507.3 332.7 496.3 351.9L459.2 416.1C448.1 435.3 425.3 444.4 404 438.2L371.9 428.7C364.2 433.9 356.1 438.6 347.6 442.8L339.8 475.3C334.6 496.8 315.3 512 293.1 512H218.9C196.7 512 177.4 496.8 172.2 475.3L164.4 442.8C155.9 438.6 147.8 433.9 140.1 428.7L107.1 438.2C86.73 444.4 63.94 435.3 52.85 416.1L15.75 351.9C4.66 332.7 8.168 308.4 24.23 293.1L48.47 270C48.16 265.4 48 260.7 48 255.1C48 251.3 48.16 246.6 48.47 241.1L24.23 218.9C8.167 203.6 4.66 179.3 15.75 160.1L52.85 95.87C63.94 76.67 86.73 67.56 107.1 73.83L140.1 83.28C147.8 78.07 155.9 73.36 164.4 69.21L172.2 36.74C177.4 15.18 196.7 0 218.9 0L293.1 .0003zM205.5 103.6L194.3 108.3C181.6 113.6 169.8 120.5 159.1 128.7L149.4 136.1L94.42 119.9L57.31 184.1L98.81 223.6L97.28 235.6C96.44 242.3 96 249.1 96 256C96 262.9 96.44 269.7 97.28 276.4L98.81 288.4L57.32 327.9L94.42 392.1L149.4 375.9L159.1 383.3C169.8 391.5 181.6 398.4 194.3 403.7L205.5 408.4L218.9 464H293.1L306.5 408.4L317.7 403.7C330.4 398.4 342.2 391.5 352.9 383.3L362.6 375.9L417.6 392.1L454.7 327.9L413.2 288.4L414.7 276.4C415.6 269.7 416 262.9 416 256C416 249.1 415.6 242.3 414.7 235.6L413.2 223.6L454.7 184.1L417.6 119.9L362.6 136.1L352.9 128.7C342.2 120.5 330.4 113.6 317.7 108.3L306.5 103.6L293.1 48H218.9L205.5 103.6z"/></svg> Settings';
   settingsButton.title = 'CMD/CTRL + SHIFT + S';
 
-  const settingsButtonIcon = document.createElement('img');
-  settingsButtonIcon.style = 'width: 16px; height: 16px;';
-  settingsButtonIcon.src = chrome.runtime.getURL('icons/settings.png');
   settingsButton.id = 'settings-button';
-  settingsButton.prepend(settingsButtonIcon);
   settingsButton.style = `${settingsButton.style.cssText}; width: 100%;`;
   // Add click event listener to setting button
   settingsButton.addEventListener('click', () => {
@@ -1541,99 +1930,132 @@ function addSettingsButton() {
     createSettingsModal();
   });
   const userMenu = nav.querySelector('#user-menu');
-  userMenu.prepend(settingsButton);
+  userMenu?.prepend(settingsButton);
 }
-// eslint-disable-next-line no-unused-vars
-function initializeSettings() {
-  // get dark mode from html tag class="dark"
-  // create setting storage
-  chrome.runtime.sendMessage({
-    checkHasSubscription: true,
-    detail: {
-      forceRefresh: true,
-    },
-  }, (hasSubscription) => {
-    initializeUpgradeButton(hasSubscription);
 
-    chrome.storage.local.get(['settings', 'presetPrompts', 'selectedConversations', 'customPrompts', 'customInstructionProfiles'], (result) => {
-      let newCustomPrompts = Array.isArray(result.customPrompts)
-        ? result.customPrompts
-        : [
-          ...(result.presetPrompts ? Object.keys(result.presetPrompts).map((key) => ({ title: key, text: result.presetPrompts[key], isDefault: false })) : []),
-          ...(result.customPrompts ? Object.keys(result.customPrompts).map((key) => ({ title: key, text: result.customPrompts[key], isDefault: false })) : []),
-        ];
-      if (newCustomPrompts.length === 0) {
-        newCustomPrompts = defaultPrompts;
-      }
-      const hasDefault = newCustomPrompts.find((prompt) => prompt.isDefault);
-      if (!hasDefault) {
-        newCustomPrompts[0].isDefault = true;
-      }
-      chrome.storage.local.set({
-        settings: {
-          ...result.settings,
-          autoScroll: result.settings?.autoScroll !== undefined ? result.settings.autoScroll : true,
-          autoSync: result.settings?.autoSync !== undefined ? result.settings.autoSync : true,
-          autoRefreshAfterSync: result.settings?.autoRefreshAfterSync !== undefined ? result.settings.autoRefreshAfterSync : true,
-          safeMode: result.settings?.safeMode !== undefined ? result.settings.safeMode : true,
-          promptHistory: result.settings?.promptHistory !== undefined ? result.settings.promptHistory : true,
-          copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
-          autoResetTopNav: result.settings?.autoResetTopNav !== undefined ? result.settings.autoResetTopNav : false,
-          hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
-          showExamplePrompts: result.settings?.showExamplePrompts !== undefined ? result.settings.showExamplePrompts : true,
-          showMessageTimestamp: result.settings?.showMessageTimestamp !== undefined ? result.settings.showMessageTimestamp : false,
-          showCustomPromptsButton: result.settings?.showCustomPromptsButton !== undefined ? result.settings.showCustomPromptsButton : true,
-          pluginDefaultOpen: result.settings?.pluginDefaultOpen !== undefined ? result.settings.pluginDefaultOpen : false,
-          showWordCount: result.settings?.showWordCount !== undefined ? result.settings.showWordCount : true,
-          hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
-          hideReleaseNote: result.settings?.hideReleaseNote !== undefined ? result.settings.hideReleaseNote : false,
-          showNewsletterOnUpdate: result.settings?.showNewsletterOnUpdate !== undefined ? result.settings.showNewsletterOnUpdate : !hasSubscription,
-          chatEndedSound: result.settings?.chatEndedSound !== undefined ? result.settings.chatEndedSound : false,
-          autoColorFolders: result.settings?.autoColorFolders !== undefined ? result.settings.autoColorFolders : false,
-          customGPTAutoFolder: result.settings?.customGPTAutoFolder !== undefined ? result.settings.customGPTAutoFolder : false,
-          customInstruction: result.settings?.customInstruction !== undefined ? result.settings.customInstruction : '',
-          useCustomInstruction: result.settings?.useCustomInstruction !== undefined ? result.settings.useCustomInstruction : false,
-          customConversationWidth: result.settings?.customConversationWidth !== undefined ? result.settings.customConversationWidth : false,
-          conversationWidth: result.settings?.conversationWidth !== undefined ? result.settings.conversationWidth : 50,
-          autoHideThreadCount: result.settings?.autoHideThreadCount !== undefined ? result.settings.autoHideThreadCount : true,
-          autoDeleteOldChats: result.settings?.autoDeleteOldChats !== undefined ? result.settings.autoDeleteOldChats : false,
-          autoDeleteMode: result.settings?.autoDeleteMode !== undefined ? result.settings.autoDeleteMode : autoDeleteModes[0],
-          autoDeleteThreshold: result.settings?.autoDeleteThreshold !== undefined ? result.settings.autoDeleteThreshold : 7,
-          saveHistory: result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
-          promptTemplate: result.settings?.promptTemplate !== undefined ? result.settings.promptTemplate : true,
-          emailNewsletter: result.settings?.emailNewsletter !== undefined ? result.settings.emailNewsletter : false,
-          autoClick: result.settings?.autoClick !== undefined ? result.settings.autoClick : false,
-          showGpt4Counter: result.settings?.showGpt4Counter !== undefined ? result.settings.showGpt4Counter : true,
-          autoSummarize: result.settings?.autoSummarize !== undefined ? result.settings.autoSummarize : false,
-          autoSplit: result.settings?.autoSplit !== undefined ? result.settings.autoSplit : true,
-          autoSplitLimit: result.settings?.autoSplitLimit !== undefined ? result.settings.autoSplitLimit : 24000,
-          autoSplitInitialPrompt: result.settings?.autoSplitInitialPrompt !== undefined ? result.settings?.autoSplitInitialPrompt : `Act like a document/text loader until you load and remember the content of the next text/s or document/s.
+// eslint-disable-next-line no-unused-vars
+function initializeSettings(hasSubscription) {
+  // listen to autoSyncChange and update it in window.localStorage to be able to access it from arkose.js
+  chrome.storage.onChanged.addListener((e) => {
+    if (e.settings && e.settings?.newValue?.autoSync !== e.settings?.oldValue?.autoSync) {
+      window.localStorage.setItem('sp/autoSync', e.settings.newValue.autoSync);
+    }
+    if (e.settings && e.settings?.newValue?.enhanceGPTStore !== e.settings?.oldValue?.enhanceGPTStore) {
+      window.localStorage.setItem('sp/enhanceGPTStore', e.settings.newValue.enhanceGPTStore);
+    }
+  });
+
+  chrome.storage.local.get(['settings', 'presetPrompts', 'selectedConversations', 'customPrompts', 'customInstructionProfiles', 'openAiUserSettings'], (result) => {
+    let newCustomPrompts = Array.isArray(result.customPrompts)
+      ? result.customPrompts
+      : [
+        ...(result.presetPrompts ? Object.keys(result.presetPrompts).map((key) => ({ title: key, text: result.presetPrompts[key], isDefault: false })) : []),
+        ...(result.customPrompts ? Object.keys(result.customPrompts).map((key) => ({ title: key, text: result.customPrompts[key], isDefault: false })) : []),
+      ];
+    if (newCustomPrompts.length === 0) {
+      newCustomPrompts = defaultPrompts;
+    }
+    const hasDefault = newCustomPrompts.find((prompt) => prompt.isDefault);
+    if (!hasDefault) {
+      newCustomPrompts[0].isDefault = true;
+    }
+    window.localStorage.setItem('sp/autoSync', result.settings?.autoSync !== undefined ? result.settings.autoSync : true);
+    window.localStorage.setItem('sp/enhanceGPTStore', result.settings?.enhanceGPTStore !== undefined ? result.settings.enhanceGPTStore : true);
+    chrome.storage.local.set({
+      settings: {
+        ...result.settings,
+        animateFavicon: result.settings?.animateFavicon !== undefined ? result.settings.animateFavicon : false,
+        autoScroll: result.settings?.autoScroll !== undefined ? result.settings.autoScroll : true,
+        autoSync: result.settings?.autoSync !== undefined ? result.settings.autoSync : true,
+        autoSyncCount: result.settings?.autoSyncCount !== undefined ? result.settings.autoSyncCount : 100,
+        autoRefreshAfterSync: result.settings?.autoRefreshAfterSync !== undefined ? result.settings.autoRefreshAfterSync : true,
+        dontShowAutoSyncWarning: result.settings?.dontShowAutoSyncWarning !== undefined ? result.settings.dontShowAutoSyncWarning : false,
+        safeMode: result.settings?.safeMode !== undefined ? result.settings.safeMode : true,
+        promptHistory: result.settings?.promptHistory !== undefined ? result.settings.promptHistory : true,
+        copyMode: result.settings?.copyMode !== undefined ? result.settings.copyMode : false,
+        autoResetTopNav: result.settings?.autoResetTopNav !== undefined ? result.settings.autoResetTopNav : false,
+        hideBottomSidebar: result.settings?.hideBottomSidebar !== undefined ? result.settings.hideBottomSidebar : false,
+        showExamplePrompts: result.settings?.showExamplePrompts !== undefined ? result.settings.showExamplePrompts : true,
+        showMessageTimestamp: result.settings?.showMessageTimestamp !== undefined ? result.settings.showMessageTimestamp : false,
+        showCustomPromptsButton: result.settings?.showCustomPromptsButton !== undefined ? result.settings.showCustomPromptsButton : true,
+        pluginDefaultOpen: result.openAiUserSettings?.settings?.show_expanded_code_view ? result.openAiUserSettings?.settings?.show_expanded_code_view : result.settings?.pluginDefaultOpen !== undefined ? result.settings.pluginDefaultOpen : false,
+        showWordCount: result.settings?.showWordCount !== undefined ? result.settings.showWordCount : true,
+        hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
+        hideReleaseNote: result.settings?.hideReleaseNote !== undefined ? result.settings.hideReleaseNote : true,
+        showNewsletterOnUpdate: result.settings?.showNewsletterOnUpdate !== undefined ? result.settings.showNewsletterOnUpdate : true,
+        chatEndedSound: result.settings?.chatEndedSound !== undefined ? result.settings.chatEndedSound : false,
+        autoColorFolders: result.settings?.autoColorFolders !== undefined ? result.settings.autoColorFolders : false,
+        autoSortFolders: result.settings?.autoSortFolders !== undefined ? result.settings.autoSortFolders : true,
+        customGPTAutoFolder: result.settings?.customGPTAutoFolder !== undefined ? result.settings.customGPTAutoFolder : false,
+        customInstruction: result.settings?.customInstruction !== undefined ? result.settings.customInstruction : '',
+        useCustomInstruction: result.settings?.useCustomInstruction !== undefined ? result.settings.useCustomInstruction : false,
+        customConversationWidth: result.settings?.customConversationWidth !== undefined ? result.settings.customConversationWidth : false,
+        conversationWidth: result.settings?.conversationWidth !== undefined ? result.settings.conversationWidth : 50,
+        autoHideThreadCount: result.settings?.autoHideThreadCount !== undefined ? result.settings.autoHideThreadCount : false,
+        autoArchiveOldChats: result.settings?.autoArchiveOldChats !== undefined ? result.settings.autoArchiveOldChats : false,
+        skipAutoArchiveFolder: result.settings?.skipAutoArchiveFolder !== undefined ? result.settings.skipAutoArchiveFolder : false,
+        autoArchiveMode: result.settings?.autoArchiveMode !== undefined ? result.settings.autoArchiveMode : autoArchiveModes[0],
+        autoArchiveThreshold: result.settings?.autoArchiveThreshold !== undefined ? result.settings.autoArchiveThreshold : 7,
+        saveHistory: result.settings?.saveHistory !== undefined ? result.settings.saveHistory : true,
+        promptTemplate: result.settings?.promptTemplate !== undefined ? result.settings.promptTemplate : true,
+        enhanceGPTStore: result.settings?.enhanceGPTStore !== undefined ? result.settings.enhanceGPTStore : true,
+        emailNewsletter: result.settings?.emailNewsletter !== undefined ? result.settings.emailNewsletter : false,
+        autoClick: result.settings?.autoClick !== undefined ? result.settings.autoClick : false,
+        showGpt4Counter: result.settings?.showGpt4Counter !== undefined ? result.settings.showGpt4Counter : true,
+        autoSummarize: result.settings?.autoSummarize !== undefined ? result.settings.autoSummarize : false,
+        autoSplit: result.settings?.autoSplit !== undefined ? result.settings.autoSplit : true,
+        autoSplitLimit: result.settings?.autoSplitLimit !== undefined ? result.settings.autoSplitLimit : 24000,
+        autoSplitInitialPrompt: result.settings?.autoSplitInitialPrompt !== undefined ? result.settings?.autoSplitInitialPrompt : `Act like a document/text loader until you load and remember the content of the next text/s or document/s.
 There might be multiple files, each file is marked by name in the format ### DOCUMENT NAME.
 I will send them to you in chunks. Each chunk starts will be noted as [START CHUNK x/TOTAL], and the end of this chunk will be noted as [END CHUNK x/TOTAL], where x is the number of current chunks, and TOTAL is the number of all chunks I will send you.
 I will split the message in chunks, and send them to you one by one. For each message follow the instructions at the end of the message.
 Let's begin:
 
 `,
-          autoSplitChunkPrompt: result.settings?.autoSplitChunkPrompt !== undefined ? result.settings?.autoSplitChunkPrompt : `Reply with OK: [CHUNK x/TOTAL]
+        autoSplitChunkPrompt: result.settings?.autoSplitChunkPrompt !== undefined ? result.settings?.autoSplitChunkPrompt : `Reply with OK: [CHUNK x/TOTAL]
 Don't reply with anything else!`,
-          showFolderCounts: result.settings?.showFolderCounts !== undefined ? result.settings.showFolderCounts : true,
-          autoHideTopNav: result.settings?.autoHideTopNav !== undefined ? result.settings.autoHideTopNav : false,
-          navOpen: result.settings?.navOpen !== undefined ? result.settings.navOpen : true,
-          showPinNav: result.settings?.showPinNav !== undefined ? result.settings.showPinNav : true,
-          selectedLanguage: result.settings?.selectedLanguage || languageList.find((language) => language.code === 'default'),
-          selectedTone: result.settings?.selectedTone || toneList.find((tone) => tone.code === 'default'),
-          selectedWritingStyle: result.settings?.selectedWritingStyle || writingStyleList.find((writingStyle) => writingStyle.code === 'default'),
-          exportMode: result.settings?.exportMode || 'both',
-          historyFilter: result.settings?.historyFilter || 'favorites',
-          selectedLibrarySortBy: result.settings?.selectedLibrarySortBy || { name: 'New', code: 'recent' },
-          selectedLibraryCategory: result.settings?.selectedLibraryCategory || { name: 'All', code: 'all' },
-          selectedLibraryLanguage: result.settings?.selectedLibraryLanguage || { name: 'All', code: 'all' },
-          selectedPromptLanguage: result.settings?.selectedPromptLanguage || { name: 'Select', code: 'select' },
+        showFolderCounts: result.settings?.showFolderCounts !== undefined ? result.settings.showFolderCounts : true,
+        autoHideTopNav: result.settings?.autoHideTopNav !== undefined ? result.settings.autoHideTopNav : false,
+        navOpen: result.settings?.navOpen !== undefined ? result.settings.navOpen : true,
+        showPinNav: result.settings?.showPinNav !== undefined ? result.settings.showPinNav : true,
+        selectedLanguage: result.settings?.selectedLanguage || languageList.find((language) => language.code === 'default'),
+        selectedTone: result.settings?.selectedTone || toneList.find((tone) => tone.code === 'default'),
+        selectedWritingStyle: result.settings?.selectedWritingStyle || writingStyleList.find((writingStyle) => writingStyle.code === 'default'),
+        exportMode: result.settings?.exportMode || 'both',
+        historyFilter: result.settings?.historyFilter || 'favorites',
+        selectedLibrarySortBy: result.settings?.selectedLibrarySortBy || { name: 'New', code: 'recent' },
+        selectedLibraryCategory: result.settings?.selectedLibraryCategory || { name: 'All', code: 'all' },
+        selectedLibraryLanguage: result.settings?.selectedLibraryLanguage || { name: 'All', code: 'all' },
+        selectedPromptLanguage: result.settings?.selectedPromptLanguage || { name: 'Select', code: 'select' },
+        multiSelectIndicator: result.settings?.multiSelectIndicator !== undefined ? result.settings.multiSelectIndicator : true,
+        // text to speech
+        autoSpeak: result.settings?.autoSpeak !== undefined ? result.settings.autoSpeak && hasSubscription : false,
+        skipCodeReading: result.settings?.skipCodeReading !== undefined ? result.settings.skipCodeReading : false,
+        textToSpeechLanguage: result.settings?.textToSpeechLanguage !== undefined ? result.settings?.textToSpeechLanguage : { name: 'English (United Kingdom)', code: 'en-GB' },
+        textToSpeechAutoDetectLanguage: result.settings?.textToSpeechAutoDetectLanguage !== undefined ? result.settings?.textToSpeechAutoDetectLanguage : false,
+        textToSpeechVoice: result.settings?.textToSpeechVoice !== undefined ? result.settings?.textToSpeechVoice : {
+          name: 'Google UK English Male',
+          code: 'Google UK English Male',
         },
-        presetPrompts: {},
-        customInstructionProfiles: result.customInstructionProfiles !== undefined ? result.customInstructionProfiles : [],
-        customPrompts: newCustomPrompts,
-      }, () => addSettingsButton());
+        showNewChatSettings: result.settings?.showNewChatSettings !== undefined ? result.settings.showNewChatSettings : true,
+        showMyPromptHistory: result.settings?.showMyPromptHistory !== undefined ? result.settings.showMyPromptHistory : true,
+        showCommunityPrompts: result.settings?.showCommunityPrompts !== undefined ? result.settings.showCommunityPrompts : true,
+        showCopyButton: result.settings?.showCopyButton !== undefined ? result.settings.showCopyButton : true,
+        showKeyboardShortcutButton: result.settings?.showKeyboardShortcutButton !== undefined ? result.settings.showKeyboardShortcutButton : true,
+        showPromptChainButton: result.settings?.showPromptChainButton !== undefined ? result.settings.showPromptChainButton : true,
+        textToSpeechRate: result.settings?.textToSpeechRate !== undefined ? result.settings?.textToSpeechRate : 1,
+        textToSpeechPitch: result.settings?.textToSpeechPitch !== undefined ? result.settings?.textToSpeechPitch : 1,
+        // speech to text
+        speechToTextLanguage: result.settings?.speechToTextLanguage !== undefined ? result.settings?.speechToTextLanguage : { name: 'English (United Kingdom)', code: 'en-GB' },
+        speechToTextInterimResults: result.settings?.speechToTextInterimResults !== undefined ? result.settings?.speechToTextInterimResults : true,
+        autoSubmitWhenReleaseAlt: result.settings?.autoSubmitWhenReleaseAlt !== undefined ? result.settings.autoSubmitWhenReleaseAlt && hasSubscription : false,
+      },
+      presetPrompts: {},
+      customInstructionProfiles: result.customInstructionProfiles !== undefined ? result.customInstructionProfiles : [],
+      customPrompts: newCustomPrompts,
+    }, () => {
+      addSettingsButton();
+      checkSyncAndLoad();
     });
   });
 }

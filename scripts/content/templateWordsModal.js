@@ -12,7 +12,7 @@ function templateWordsModalContent(templateWords) {
   const content = document.createElement('div');
   content.id = 'modal-content-template-words';
   content.style = 'position:relative;margin: 16px';
-  const textAreaElement = document.querySelector('main form textarea');
+  const textAreaElement = document.querySelector('#prompt-textarea');
 
   const promptPreviewTitle = document.createElement('div');
   promptPreviewTitle.style = 'width: 100%;color:white;text-transform: capitalize;margin-bottom: 8px; font-size: 20px; font-weight: bold; color: #bbb;';
@@ -25,8 +25,9 @@ function templateWordsModalContent(templateWords) {
 
   content.appendChild(promptPreview);
 
-  templateWords.forEach((templateWord) => {
+  templateWords.forEach((templateWord, index) => {
     const templateWordDiv = document.createElement('div');
+    templateWordDiv.id = `template-word-row-${index}`;
     templateWordDiv.style = 'display: flex; flex-wrap:wrap;justify-content: space-between; align-items: center;width: 100%; margin-bottom: 12px;';
     const templateWordLabel = document.createElement('label');
     templateWordLabel.style = 'width: 100%;color:white;text-transform: capitalize;margin-bottom: 8px;';
@@ -53,7 +54,7 @@ function templateWordsModalActions(templateWords) {
   submitButton.id = 'modal-submit-button';
 
   submitButton.addEventListener('click', (e) => {
-    const textAreaElement = document.querySelector('main form textarea');
+    const textAreaElement = document.querySelector('#prompt-textarea');
     // replace template words in text area value with the input values associated with them
     let newValue = textAreaElement.value;
     templateWords.forEach((templateWord) => {
@@ -62,12 +63,12 @@ function templateWordsModalActions(templateWords) {
       newValue = newValue.replace(templateWord, templateWordInputValue);
     });
     textAreaElement.value = newValue;
-    const closeButton = document.querySelector('[id*=close-button]');
+    const closeButton = document.querySelector('#modal-close-button-template-words');
     if (closeButton) {
       closeButton.click();
     }
     if (!e.shiftKey) {
-      const chatSubmitButton = document.querySelector('main form textarea ~ button');
+      const chatSubmitButton = document.querySelector('#prompt-textarea ~ button');
       chatSubmitButton.click();
     }
   });

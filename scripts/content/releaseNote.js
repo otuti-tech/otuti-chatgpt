@@ -83,9 +83,7 @@ function initializeReleaseNote() {
     // get lastSeenReleaseNoteVersion from storage
     chrome.storage.local.get(['settings'], (res) => {
       const { settings } = res;
-      if (settings?.hideReleaseNote) {
-        return;
-      }
+      if (settings?.hideReleaseNote) return;
       chrome.storage.sync.get(['lastSeenReleaseNoteVersion'], (result) => {
         const { lastSeenReleaseNoteVersion } = result;
         // if lastSeenReleaseNoteVersion is not equal to current app version
@@ -106,5 +104,5 @@ function initializeReleaseNote() {
         }
       });
     });
-  }, 3000);
+  }, 60000);
 }

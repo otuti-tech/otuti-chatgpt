@@ -1,17 +1,19 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global TurndownService, conversationSettingsMenu, addConversationSettingsMenuEventListener, submitChat, openSubmitPromptModal, showHideTextAreaElement, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, initializeStopGeneratingResponseButton, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, languageList, writingStyleList, toneList, arkoseTrigger, createFullSizeFileWrapper, addFullSizeFileWrapperEventListener, addUploadFileButton, getMousePosition, renderAllDalleImages, getGizmoById, initializeNavbar, replacePageContent, replaceTextAreaElemet, addFinalCompletionClassToLastMessageWrapper, highlightSearch, getGizmoUserActionSettings, actionAllowedRenderer, actionDeniedRenderer, updateLastMessagePluginDropdown, initializeAutoSave, renderAllPythonImages, getDownloadUrlFromFileId, getDownloadUrlFromSandBoxPath, toast, downloadFileFrmoUrl */
+/* global TurndownService, conversationSettingsMenu, addConversationSettingsMenuEventListener, submitChat, openSubmitPromptModal, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, initializeStopGeneratingResponseButton, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, languageList, writingStyleList, toneList, arkoseTrigger, createFullSizeFileWrapper, addFullSizeFileWrapperEventListener, addUploadFileButton, getMousePosition, renderAllDalleImages, getGizmoById, initializeNavbar, replacePageContent, replaceTextAreaElement, addFinalCompletionClassToLastMessageWrapper, highlightSearch, getGizmoUserActionSettings, actionAllowedRenderer, actionDeniedRenderer, updateLastMessagePluginDropdown, initializeAutoSave, renderAllPythonImages, getDownloadUrlFromFileId, getDownloadUrlFromSandBoxPath, toast, unarchiveConversation, downloadFileFrmoUrl, unarchiveConversationById, openUpgradeModal, textToSpeechLanguageList, registerWebsocket */
 
+let volumeIconInterval;
+let speakingMessageId;
 function showCustomInstructionTooltip(event, aboutUser, aboutModel) {
   const { x, y } = getMousePosition(event);
   const translateX = Math.min(x - 225, window.innerWidth - 450);
   const translateY = y + 10;
-  return `<div id="custom-instruction-tooltip" data-radix-popper-content-wrapper="" style="position: fixed; left: 0px; top: 0px; transform: translate3d(${translateX}px, ${translateY}px, 0px); min-width: max-content; z-index: auto; --radix-popper-anchor-width: 20px; --radix-popper-anchor-height: 22px; --radix-popper-available-width: 891.59375px; --radix-popper-available-height: 905px; --radix-popper-transform-origin: 50% 0px;"><div data-side="bottom" data-align="center" data-state="open" role="dialog" id="radix-:r2f:" class="relative max-h-[450px] animate-slideDownAndFade select-none overflow-y-auto whitespace-pre-line rounded-xl border-gray-100 bg-white p-4 text-sm text-gray-600 shadow-xs dark:bg-gray-900 dark:text-white sm:max-w-lg md:max-w-xl" tabindex="-1" style="min-width:450px; max-width: 450px; --radix-popover-content-transform-origin: var(--radix-popper-transform-origin); --radix-popover-content-available-width: var(--radix-popper-available-width); --radix-popover-content-available-height: var(--radix-popper-available-height); --radix-popover-trigger-width: var(--radix-popper-anchor-width); --radix-popover-trigger-height: var(--radix-popper-anchor-height);"><div class="mb-5 mt-1 border-b border-black/10 pb-5 dark:border-white/10"><div class="flex flex-row items-center gap-2 text-gray-500">Custom instructions are on and can only be changed at the beginning of the chat.</div></div><div class="flex flex-col gap-7"><div class="flex flex-col gap-3"><div class="font-medium text-gray-600 dark:text-gray-200">What would you like ChatGPT to know about you to provide better responses?</div><div style="user-select: text;" class="flex flex-row gap-1 text-gray-500">${aboutUser}</div></div><div class="flex flex-col gap-3"><div class="font-medium text-gray-600 dark:text-gray-200">How would you like ChatGPT to respond?</div><div style="user-select: text;" class="flex flex-row gap-1 text-gray-500">${aboutModel}</div></div></div></div></div>`;
+  return `<div id="custom-instruction-tooltip" data-radix-popper-content-wrapper="" style="position: fixed; left: 0px; top: 0px; transform: translate3d(${translateX}px, ${translateY}px, 0px); min-width: max-content; z-index: auto; --radix-popper-anchor-width: 20px; --radix-popper-anchor-height: 22px; --radix-popper-available-width: 891.59375px; --radix-popper-available-height: 905px; --radix-popper-transform-origin: 50% 0px;"><div data-side="bottom" data-align="center" data-state="open" role="dialog" id="radix-:r2f:" class="relative max-h-[450px] animate-slideDownAndFade select-none overflow-y-auto whitespace-pre-line rounded-xl border-gray-100 bg-white p-4 text-sm text-token-text-primary shadow-xs dark:bg-gray-900 dark:text-white sm:max-w-lg md:max-w-xl" tabindex="-1" style="min-width:450px; max-width: 450px; --radix-popover-content-transform-origin: var(--radix-popper-transform-origin); --radix-popover-content-available-width: var(--radix-popper-available-width); --radix-popover-content-available-height: var(--radix-popper-available-height); --radix-popover-trigger-width: var(--radix-popper-anchor-width); --radix-popover-trigger-height: var(--radix-popper-anchor-height);"><div class="mb-5 mt-1 border-b border-black/10 pb-5 dark:border-white/10"><div class="flex flex-row items-center gap-2 text-token-text-primary">Custom instructions are on and can only be changed at the beginning of the chat.</div></div><div class="flex flex-col gap-7"><div class="flex flex-col gap-3"><div class="font-medium text-token-text-tertiary">What would you like ChatGPT to know about you to provide better responses?</div><div style="user-select: text;" class="flex flex-row gap-1 text-token-text-primary">${aboutUser || '&nbsp;'}</div></div><div class="flex flex-col gap-3"><div class="font-medium text-token-text-tertiary">How would you like ChatGPT to respond?</div><div style="user-select: text;" class="flex flex-row gap-1 text-token-text-primary">${aboutModel || '&nbsp;'}</div></div></div></div></div>`;
 }
 
 function UpdatePathWithGizmoName(conversationId, gizmoId) {
   getGizmoById(gizmoId).then((gizmoData) => {
-    const newGizmoPath = gizmoId ? `g/${gizmoData?.resource?.gizmo?.short_url}/` : '';
+    const newGizmoPath = (gizmoId && gizmoData?.resource) ? `g/${gizmoData?.resource?.gizmo?.short_url}/` : '';
     window.history.pushState({}, '', `https://chat.openai.com/${newGizmoPath}c/${conversationId}`);
   });
 }
@@ -42,11 +44,12 @@ function addPinNav(sortedNodes) {
       observePinButton(messagePinButton);
     });
     const main = document.querySelector('main');
-
+    if (!main) return;
     main.appendChild(pinNav);
   });
 }
 function loadConversationFromNode(conversationId, newMessageId, oldMessageId, searchValue = '') {
+  speechSynthesis.cancel();
   chrome.storage.sync.get(['name', 'avatar'], (result) => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {
       const fullConversation = res.conversations?.[conversationId];
@@ -106,20 +109,28 @@ function loadConversationFromNode(conversationId, newMessageId, oldMessageId, se
         addFinalCompletionClassToLastMessageWrapper();
         renderAllDalleImages(fullConversation);
         renderAllPythonImages(fullConversation);
-        showHideTextAreaElement();
+        addMissingGizmoAvatars();
+        replaceTextAreaElement(settings);
         addConversationsEventListeners(fullConversation.id);
         initializeStopGeneratingResponseButton();
         addPinNav(sortedNodes);
         initializeNavbar(fullConversation);
         updateTotalCounter();
+        if (!searchValue) {
+          const textAreaElement = document.querySelector('#prompt-textarea');
+          textAreaElement?.focus();
+          textAreaElement?.setSelectionRange(textAreaElement.value.length, textAreaElement.value.length);
+        }
       });
     });
   });
 }
 
 // eslint-disable-next-line no-unused-vars
-function loadConversation(conversationId, searchValue = '', focusOnInput = true) {
-  //  = true;
+function loadConversation(conversationId, searchValue = '', isArchived = false) {
+  registerWebsocket();
+  speechSynthesis.cancel();
+  removeTextInputExtras();
   const suggestionsWrapper = document.querySelector('#suggestions-wrapper');
   if (suggestionsWrapper) suggestionsWrapper.remove();
   scrolUpDetected = false;
@@ -135,7 +146,7 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
         getGizmoById(fullConversation.gizmo_id).then((gizmoData) => {
           const { settings, conversationsOrder } = res;
           // remove fileWrapperElement
-          const fileWrapperElement = document.querySelector('main form #file-wrapper-element');
+          const fileWrapperElement = document.querySelector('#prompt-input-form #file-wrapper-element');
           if (fileWrapperElement) {
             fileWrapperElement.remove();
           }
@@ -151,15 +162,14 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
           }
           if (!fullConversation || !fullConversation?.current_node) return;
           const main = document.querySelector('main');
+          if (!main) return;
           main.style.position = 'relative';
-          const outerDiv = document.createElement('div');
-          outerDiv.classList = 'flex-1 overflow-hidden';
           const innerDiv = document.createElement('div');
           innerDiv.classList = 'h-full overflow-y-auto';
           innerDiv.id = 'conversation-inner-div';
           addScrollDetector(innerDiv);
           const conversationDiv = document.createElement('div');
-          conversationDiv.classList = 'flex flex-col items-center text-sm h-full dark:bg-gray-800';
+          conversationDiv.classList = 'flex flex-col items-center text-sm h-full bg-token-main-surface-primary';
           //--------
           // traverse up the current node to get all the parent nodes
           const sortedNodes = [];
@@ -189,11 +199,11 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
           const systemMessage = [...sortedNodes].reverse().find((node) => node?.message?.role === 'system' || node?.message?.author?.role === 'system');
           const customInstrucionProfile = systemMessage?.message?.metadata?.user_context_message_data || undefined;
 
-          let messageDiv = `<div id="conversation-top" class="w-full flex relative items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-gray-800 dark:text-gray-100 group bg-gray-50 dark:bg-[#444654]" style="min-height:56px;"><span id="conversation-top-title" class="flex">${folderName ? `<strong>${folderName}  &nbsp;&nbsp;&nbsp;› &nbsp;&nbsp;&nbsp;</strong>` : ''}${fullConversation.title}${customInstrucionProfile ? '<span id="custom-instruction-info-icon" style="display:flex;">&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="none" class="ml-0.5 mt-0.5 h-4 w-4 flex-shrink-0 text-gray-600 dark:text-gray-200 sm:mb-0.5 sm:mt-0 sm:h-5 sm:w-5"><path d="M8.4375 8.4375L8.46825 8.4225C8.56442 8.37445 8.67235 8.35497 8.77925 8.36637C8.88615 8.37776 8.98755 8.41955 9.07143 8.48678C9.15532 8.55402 9.21818 8.64388 9.25257 8.74574C9.28697 8.8476 9.29145 8.95717 9.2655 9.0615L8.7345 11.1885C8.70836 11.2929 8.7127 11.4026 8.74702 11.5045C8.78133 11.6065 8.84418 11.6965 8.9281 11.7639C9.01202 11.8312 9.1135 11.8731 9.2205 11.8845C9.32749 11.8959 9.43551 11.8764 9.53175 11.8282L9.5625 11.8125M15.75 9C15.75 9.88642 15.5754 10.7642 15.2362 11.5831C14.897 12.4021 14.3998 13.1462 13.773 13.773C13.1462 14.3998 12.4021 14.897 11.5831 15.2362C10.7642 15.5754 9.88642 15.75 9 15.75C8.11358 15.75 7.23583 15.5754 6.41689 15.2362C5.59794 14.897 4.85382 14.3998 4.22703 13.773C3.60023 13.1462 3.10303 12.4021 2.76381 11.5831C2.42459 10.7642 2.25 9.88642 2.25 9C2.25 7.20979 2.96116 5.4929 4.22703 4.22703C5.4929 2.96116 7.20979 2.25 9 2.25C10.7902 2.25 12.5071 2.96116 13.773 4.22703C15.0388 5.4929 15.75 7.20979 15.75 9ZM9 6.1875H9.006V6.1935H9V6.1875Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>' : ''}</span>${conversationSettingsMenu(fullConversation, hasSubscription)}</div>`;
-          if (fullConversation.archived) {
-            messageDiv = '<div id="conversation-top"></div><div style="display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; color:white; background-color: #ff0000; position: sticky; top: 0; z-index: 1000;">This is an archived chat. You can read archived chats, but you cannot continue them.</div>';
-          }
+          let messageDiv = `<div id="conversation-top" class="w-full flex relative items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-token-text-primary group bg-token-main-surface-tertiary" style="min-height:56px;"><span id="conversation-top-title" class="flex">${folderName ? `<strong>${folderName}  &nbsp;&nbsp;&nbsp;› &nbsp;&nbsp;&nbsp;</strong>` : ''}${fullConversation.title}${customInstrucionProfile ? '<span id="custom-instruction-info-icon" style="display:flex;align-items:center;">&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="none" class="ml-0.5 mt-0.5 h-4 w-4 flex-shrink-0 text-token-text-primary sm:mb-0.5 sm:mt-0 sm:h-5 sm:w-5"><path d="M8.4375 8.4375L8.46825 8.4225C8.56442 8.37445 8.67235 8.35497 8.77925 8.36637C8.88615 8.37776 8.98755 8.41955 9.07143 8.48678C9.15532 8.55402 9.21818 8.64388 9.25257 8.74574C9.28697 8.8476 9.29145 8.95717 9.2655 9.0615L8.7345 11.1885C8.70836 11.2929 8.7127 11.4026 8.74702 11.5045C8.78133 11.6065 8.84418 11.6965 8.9281 11.7639C9.01202 11.8312 9.1135 11.8731 9.2205 11.8845C9.32749 11.8959 9.43551 11.8764 9.53175 11.8282L9.5625 11.8125M15.75 9C15.75 9.88642 15.5754 10.7642 15.2362 11.5831C14.897 12.4021 14.3998 13.1462 13.773 13.773C13.1462 14.3998 12.4021 14.897 11.5831 15.2362C10.7642 15.5754 9.88642 15.75 9 15.75C8.11358 15.75 7.23583 15.5754 6.41689 15.2362C5.59794 14.897 4.85382 14.3998 4.22703 13.773C3.60023 13.1462 3.10303 12.4021 2.76381 11.5831C2.42459 10.7642 2.25 9.88642 2.25 9C2.25 7.20979 2.96116 5.4929 4.22703 4.22703C5.4929 2.96116 7.20979 2.25 9 2.25C10.7902 2.25 12.5071 2.96116 13.773 4.22703C15.0388 5.4929 15.75 7.20979 15.75 9ZM9 6.1875H9.006V6.1935H9V6.1875Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>' : ''}</span>${conversationSettingsMenu(hasSubscription)}</div>`;
 
+          if (isArchived) {
+            messageDiv = '<div id="conversation-top"></div><div id="top-nav-archive-message" style="display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; color:white; background-color: #444554; position: sticky; top: 0; z-index: 999;">With Superpower ChatGPT, you can continue archived conversations without unarchiving them. <button id="top-nav-unarchive-button" class="ml-2 btn relative btn-primary"><div class="flex w-full gap-2 items-center justify-center"><div class="flex items-center gap-1"><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="18" width="18" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0V0z"></path><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.83 1H5.42l.82-1zM5 19V8h14v11H5zm3-5h2.55v3h2.9v-3H16l-4-4z"></path></svg>Unarchive</div></div></button> </div>';
+          }
           messageDiv.id = 'conversation-wrapper';
           for (let i = 0; i < sortedNodes.length; i += 1) {
             const { message, threadCount, threadIndex } = sortedNodes[i];
@@ -232,47 +242,37 @@ function loadConversation(conversationId, searchValue = '', focusOnInput = true)
           totalCounter.style = 'position: absolute; top: 0px; right: 0px; font-size: 10px; color: rgb(153, 153, 153); opacity: 0.8;';
           bottomDivContent.appendChild(totalCounter);
           innerDiv.appendChild(conversationDiv);
-          outerDiv.appendChild(innerDiv);
           replacePageContent(innerDiv);
           if (searchValue) {
             // const get conversationList node
             const conversationTopTitle = document.querySelector('#conversation-top-title');
             highlightSearch([conversationTopTitle, conversationDiv], searchValue);
           }
-          let textAreaElement = document.querySelector('main form textarea');
-          if (!textAreaElement) {
-            replaceTextAreaElemet(settings);
-            textAreaElement = document.querySelector('main form textarea');
-          }
+
           // has to be before scrollIntoView to render the images first
           renderAllDalleImages(fullConversation);
           renderAllPythonImages(fullConversation);
-
-          if (!searchValue) {
-            if (focusOnInput) {
-              if (textAreaElement) {
-                textAreaElement.focus();
-                const tempVal = textAreaElement.value;
-                textAreaElement.value = '';
-                textAreaElement.value = tempVal;
-              }
-            }
-            innerDiv.scrollTop = innerDiv.scrollHeight;
-            innerDiv.style = 'scroll-behavior: smooth;';
-          }
+          addMissingGizmoAvatars();
           addFinalCompletionClassToLastMessageWrapper();
-          showHideTextAreaElement();
           addConversationsEventListeners(fullConversation.id);
           addConversationSettingsMenuEventListener(fullConversation.id);
           initializeStopGeneratingResponseButton();
           addPinNav(sortedNodes);
           initializeNavbar(fullConversation);
+          replaceTextAreaElement(settings);
           updateTotalCounter();
           if (fullConversation.gizmo_id) {
             getGizmoUserActionSettings(fullConversation.gizmo_id, true);
           }
           if (settings.autoClick) {
             document.querySelector('#auto-click-button').click();
+          }
+          if (!searchValue) {
+            innerDiv.scrollTop = innerDiv.scrollHeight;
+            innerDiv.style = 'scroll-behavior: smooth;';
+            const textAreaElement = document.querySelector('#prompt-textarea');
+            textAreaElement?.focus();
+            textAreaElement?.setSelectionRange(textAreaElement.value.length, textAreaElement.value.length);
           }
         });
       });
@@ -289,7 +289,7 @@ function updateTotalCounter() {
   let totalCharacters = 0;
   allMessages.forEach((message) => {
     const text = message.innerText;
-    const words = text.split(/[ /]/);
+    const words = text.split(/\s+/).filter((word) => word !== '');
 
     totalWords += words.length;
     totalCharacters += text.replace(/\n/g, '').length;
@@ -318,6 +318,26 @@ function addCopyCodeButtonsEventListeners() {
     });
   });
 }
+function removeTextInputExtras() {
+  const taggedGizmoWrapper = document.querySelector('#tagged-gizmo-wrapper');
+  if (taggedGizmoWrapper) taggedGizmoWrapper.remove();
+  const replyToPreviewElement = document.querySelector('#reply-to-preview-wrapper');
+  if (replyToPreviewElement) replyToPreviewElement.remove();
+  const fileWrapperElement = document.querySelector('#file-wrapper-element');
+  if (fileWrapperElement) fileWrapperElement.remove();
+}
+function addMissingGizmoAvatars() {
+  const missingGizmoAvatars = document.querySelectorAll('[id^="gizmo-avatar"][src*="wikimedia"]');
+  missingGizmoAvatars.forEach((avatar) => {
+    const gizmoId = avatar.dataset.gizmoid;
+    getGizmoById(gizmoId).then((gizmoData) => {
+      const avatarSrc = gizmoData?.resource?.gizmo?.display?.profile_picture_url;
+      if (avatarSrc) {
+        avatar.src = avatarSrc;
+      }
+    });
+  });
+}
 function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = false) {
   const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
   let messageEditButtons = document.querySelectorAll('[id^="message-edit-button-"]');
@@ -332,6 +352,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
   let continueButtons = document.querySelectorAll('[id^="message-continue-button-"]');
   let assetButtons = document.querySelectorAll('[id^="asset-"]');
   let messagePluginToggleButtons = document.querySelectorAll('[id^="message-plugin-toggle-"]');
+  let textToSpeechButtons = document.querySelectorAll('[id^="text-to-speech-button-"]');
   // all a element with href starting with sandbox
   let sandboxLinks = document.querySelectorAll('a[href^="sandbox:/"]');
   // get all a tags inside role=presentation
@@ -340,6 +361,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
   const toolActionRequestDenyButtons = document.querySelectorAll('[id^="tool-action-request-deny-"]');
   const toolActionRequestOauthButtons = document.querySelectorAll('[id^="tool-action-request-oauth-"]');
   const customInstructionInfoIcon = document.querySelector('#custom-instruction-info-icon');
+  const unarchiveButton = document.querySelector('#top-nav-unarchive-button');
   if (onlyUpdateLastMessage) {
     messageEditButtons = Array.from(messageEditButtons).slice(-1);
     addToLibraryButtons = Array.from(addToLibraryButtons).slice(-1);
@@ -357,9 +379,20 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
     sandboxLinks = lastMessageWrapper?.querySelectorAll('a[href^="sandbox:/"]');
     regenerateResponseButtons = Array.from(regenerateResponseButtons).slice(-1);
     continueButtons = Array.from(continueButtons).slice(-1);
+    textToSpeechButtons = Array.from(textToSpeechButtons).slice(-1);
   }
   if (customInstructionInfoIcon) {
     addCustomInstructionInfoIconEventListener(conversationId, customInstructionInfoIcon);
+  }
+  if (unarchiveButton) {
+    unarchiveButton.addEventListener('click', () => {
+      // api call to unarchive conversation
+      unarchiveConversation(conversationId).then(() => {
+        loadConversation(conversationId);
+        // update conversationsOrder + conversations
+        unarchiveConversationById(conversationId, true);
+      });
+    });
   }
   addCopyCodeButtonsEventListeners();
   messageEditButtons.forEach((btn) => {
@@ -396,7 +429,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
       saveButton.innerText = 'Save & Submit';
       saveButton.addEventListener('click', () => {
         messageEditWrapper.style.display = 'block';
-        chrome.storage.local.get(['conversations', 'settings', 'models', 'account'], (result) => {
+        chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account'], (result) => {
           const conversation = result.conversations[conversationId];
           const message = conversation.mapping[messageId];
           arkoseTrigger();
@@ -452,7 +485,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
             newMessage = generateInstructions(conversation, result.settings, newMessage, true);// forceAddInstructions=true
           }
           isGenerating = true;
-          submitChat(newMessage, conversation, newMessageId, parentId, result.settings, result.account, result.models);
+          submitChat(newMessage, conversation, newMessageId, parentId, result.settings, result.account, result.models, result.selectedModel);
           // }
         });
       });
@@ -554,6 +587,8 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
         // create a new div that only contains the message text nodes
         const assistantTextOnlyElements = document.createElement('div');
         messageTextNodes.forEach((node) => {
+          // replace all >< with >\n< to make it easier to copy
+          node.innerHTML = node.innerHTML.replace(/></g, '>\n<');
           assistantTextOnlyElements.appendChild(node.cloneNode(true));
         });
 
@@ -584,6 +619,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
         // create a new div that only contains the message text nodes
         const assistantTextOnlyElements = document.createElement('div');
         messageTextNodes.forEach((node) => {
+          node.innerHTML = node.innerHTML.replace(/></g, '>\n<');
           assistantTextOnlyElements.appendChild(node.cloneNode(true));
         });
 
@@ -613,6 +649,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
         // create a new div that only contains the message text nodes
         const assistantTextOnlyElements = document.createElement('div');
         messageTextNodes.forEach((node) => {
+          node.innerHTML = node.innerHTML.replace(/></g, '>\n<');
           assistantTextOnlyElements.appendChild(node.cloneNode(true));
         });
 
@@ -700,11 +737,135 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
       });
     });
   });
+  textToSpeechButtons.forEach((btn) => {
+    const button = btn.cloneNode(true);
+    btn.parentNode.replaceChild(button, btn);
+    button.addEventListener('click', () => {
+      chrome.runtime.sendMessage({
+        checkHasSubscription: true,
+        detail: {
+          forceRefresh: false,
+        },
+      }, (hasSubscription) => {
+        if (hasSubscription) {
+          clearInterval(volumeIconInterval);
+          // stop all other speech
+          speechSynthesis.cancel();
+          // set all other buttons to default color
+          const allButtons = document.querySelectorAll('[id^="text-to-speech-button-"]');
+          allButtons.forEach((b) => {
+            const volumeIcon = b.querySelector('svg > path');
+            volumeIcon.style.fill = 'currentColor';
+          });
+          // when speech ends, set button icon back to default
+
+          const messageId = button.id.split('text-to-speech-button-').pop();
+
+          if (speakingMessageId !== messageId) {
+            speakingMessageId = messageId;
+            // go up from button to get element with id starting with message-wrapper
+            const messageWrapper = button.closest('[id^="message-wrapper-"]');
+            const allMessageTextElements = messageWrapper.querySelectorAll('[id^="message-text-"]');
+
+            // animate button icon to indicate that it's playing
+            const volumeIcon = button.querySelector('svg > path');
+            volumeIconInterval = setInterval(
+              () => {
+                if (volumeIcon.style.fill === 'gold') {
+                  volumeIcon.style.fill = 'currentColor';
+                } else {
+                  volumeIcon.style.fill = 'gold';
+                }
+              },
+              500,
+            );
+            setTimeout(() => {
+              const utterances = [];
+              chrome.storage.local.get(['settings'], (result) => {
+                let messageText = '';
+                allMessageTextElements.forEach((element) => {
+                  // clone element and replace all pre elements with "Skipped Code"
+                  const elementClone = element.cloneNode(true);
+                  if (result.settings.skipCodeReading) {
+                    const allPreElements = elementClone.querySelectorAll('pre');
+                    allPreElements.forEach((pre) => {
+                      pre.innerText = 'Skipped Code!';
+                    });
+                  } else {
+                    // remove any id=code-header
+                    const allCodeHeaders = elementClone.querySelectorAll('#code-header');
+                    allCodeHeaders.forEach((codeHeader) => {
+                      codeHeader.remove();
+                    });
+                  }
+                  messageText += `${elementClone.innerText}\n`;
+                });
+                const utterance = new SpeechSynthesisUtterance(messageText);
+                utterance.addEventListener('error', (e) => {
+                  if (e.error === 'not-allowed') {
+                    toast('To enable AutoSpeak, please click anywhere on the page');
+                  }
+                });
+                utterances.push(utterance);
+                utterance.rate = result.settings.textToSpeechRate || 1;
+                utterance.pitch = result.settings.textToSpeechPitch || 1;
+                utterance.volume = 1;
+                utterance.addEventListener('end', () => {
+                  clearInterval(volumeIconInterval);
+                  volumeIcon.style.fill = 'currentColor';
+                  speakingMessageId = '';
+                });
+                if (result.settings.textToSpeechAutoDetectLanguage) {
+                  chrome.i18n.detectLanguage(messageText, (res) => {
+                    const detectedLanguage = res.languages[0].language;
+                    utterance.lang = textToSpeechLanguageList.find((l) => l.code.startsWith(detectedLanguage))?.code || result.settings.textToSpeechLanguage;
+                    utterance.voice = speechSynthesis.getVoices().find((v) => v.lang === utterance.lang);
+                    speechSynthesis.cancel();
+                    setTimeout(() => {
+                      speechSynthesis.speak(utterance);
+                      const r = setInterval(() => {
+                        if (!speechSynthesis.speaking) {
+                          clearInterval(r);
+                        } else {
+                          speechSynthesis.pause();
+                          speechSynthesis.resume();
+                        }
+                      }, 10000);
+                    }, 500);
+                  });
+                } else {
+                  utterance.lang = result.settings.textToSpeechLanguage;
+                  utterance.voice = speechSynthesis.getVoices().find((v) => v.name === result.settings.textToSpeechVoice.name);
+                  speechSynthesis.cancel();
+                  setTimeout(() => {
+                    speechSynthesis.speak(utterance);
+                    const r = setInterval(() => {
+                      if (!speechSynthesis.speaking) {
+                        clearInterval(r);
+                      } else {
+                        speechSynthesis.pause();
+                        speechSynthesis.resume();
+                      }
+                    }, 10000);
+                  }, 500);
+                }
+              });
+            }, 100);
+          } else {
+            speakingMessageId = '';
+          }
+        } else {
+          toast('⚡️ Text to speech requires the Pro Subscription.', 'success', 6000);
+          openUpgradeModal();
+        }
+      });
+    });
+  });
   regenerateResponseButtons.forEach((btn) => {
     const button = btn.cloneNode(true);
     btn.parentNode.replaceChild(button, btn);
     button.addEventListener('click', () => {
-      chrome.storage.local.get(['conversations', 'settings', 'models', 'account'], (result) => {
+      chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account'], (result) => {
         const conversation = result.conversations[conversationId];
         const messageId = button.id.split('message-regenerate-button-').pop();
         const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
@@ -724,7 +885,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
         const fileAttachments = lastUserMessage.message?.metadata?.attachments || [];
         messageWrapper.remove();
         isGenerating = true;
-        submitChat(newMessage, conversation, lastUserChatMessageId, lastUserMessageParentId, result.settings, result.account, result.models, imageAssets, fileAttachments, false, true);
+        submitChat(newMessage, conversation, lastUserChatMessageId, lastUserMessageParentId, result.settings, result.account, result.models, result.selectedModel, imageAssets, fileAttachments, false, true);
       });
     });
   });
@@ -732,11 +893,11 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
     const button = btn.cloneNode(true);
     btn.parentNode.replaceChild(button, btn);
     button.addEventListener('click', () => {
-      chrome.storage.local.get(['conversations', 'settings', 'models', 'account'], (result) => {
+      chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account'], (result) => {
         const conversation = result.conversations[conversationId];
         isGenerating = true;
         btn.classList.remove('md:group-[.final-completion]:visible');
-        submitChat(null, conversation, conversation.current_node, conversation.current_node, result.settings, result.account, result.models, [], [], true);
+        submitChat(null, conversation, conversation.current_node, conversation.current_node, result.settings, result.account, result.models, result.selectedModel, [], [], true);
       });
     });
   });
@@ -756,11 +917,11 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
         chrome.storage.local.set({ conversations }, () => {
           const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
           const icon = button.querySelector('path');
-          let defaultCalsses = 'dark:bg-gray-800';
+          let defaultCalsses = 'bg-token-main-surface-secondary';
           if (messageWrapper.getAttribute('data-role') === 'user') {
-            defaultCalsses = ['dark:bg-gray-800'];
+            defaultCalsses = ['bg-token-main-surface-secondary'];
           } else {
-            defaultCalsses = ['bg-gray-50', 'dark:bg-[#444654]'];
+            defaultCalsses = ['bg-token-main-surface-tertiary'];
           }
           if (isPinned) {
             icon.setAttribute('fill', '#aaa');
@@ -898,7 +1059,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
   addMessagePluginToggleButtonsEventListeners(messagePluginToggleButtons);
 }
 function submitActionResponse(conversationId, parentMessageId, domain, actionType) {
-  chrome.storage.local.get(['conversations', 'settings', 'models', 'account'], (result) => {
+  chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account'], (result) => {
     const toolActionRequestWrapper = document.querySelector(`#tool-action-request-wrapper-${parentMessageId}`);
     const responseNode = actionType === 'allow' ? actionAllowedRenderer(domain) : actionDeniedRenderer(domain);
     if (toolActionRequestWrapper) {
@@ -930,7 +1091,7 @@ function submitActionResponse(conversationId, parentMessageId, domain, actionTyp
       timestamp_: 'absolute',
     };
     updateLastMessagePluginDropdown();
-    submitChat('', conversation, messageId, parentMessageId, result.settings, result.account, result.models, [], [], false, false, authorRole, authorName, metadata);
+    submitChat('', conversation, messageId, parentMessageId, result.settings, result.account, result.models, result.selectedModel, [], [], false, false, authorRole, authorName, metadata);
   });
 }
 function addMessagePluginToggleButtonsEventListeners(messagePluginToggleButtons) {
@@ -954,6 +1115,7 @@ function addMessagePluginToggleButtonsEventListeners(messagePluginToggleButtons)
 function addCustomInstructionInfoIconEventListener(conversationId, customInstructionInfoIcon) {
   chrome.storage.local.get(['conversations'], (result) => {
     const conversation = result.conversations[conversationId];
+    if (!conversation) return;
     const allSystemMessages = Object.values(conversation.mapping)?.filter((node) => node?.message?.role === 'system' || node?.message?.author?.role === 'system');
     const systemMessageWithCustomInstruction = allSystemMessages.find((node) => node?.message?.metadata?.user_context_message_data);
     const customInstrucionProfile = systemMessageWithCustomInstruction?.message?.metadata?.user_context_message_data || undefined;
@@ -999,7 +1161,7 @@ function showCitationTooltip(e, citationElement) {
   const citationDomain = citationUrl.hostname;
   const { x, y } = citationElement.getBoundingClientRect();
   if (!citationTitle) return;
-  const citationTooltip = `<div id="citation-tooltip" data-radix-popper-content-wrapper="" style="position: fixed; left: 0px; top: 0px; transform: translate3d(${x}px, ${y - 30}px, 0px); min-width: max-content; z-index: auto; --radix-popper-anchor-width: 25px; --radix-popper-anchor-height: 21px; --radix-popper-available-width: 753.3125px; --radix-popper-available-height: 535px; --radix-popper-transform-origin: 50% 34px;"><div data-side="top" data-align="center" data-state="delayed-open" class="relative rounded-lg border border-white/20 bg-black p-1 shadow-xs transition-opacity max-w-sm" style="--radix-tooltip-content-transform-origin: var(--radix-popper-transform-origin); --radix-tooltip-content-available-width: var(--radix-popper-available-width); --radix-tooltip-content-available-height: var(--radix-popper-available-height); --radix-tooltip-trigger-width: var(--radix-popper-anchor-width); --radix-tooltip-trigger-height: var(--radix-popper-anchor-height);"><span class="flex items-center whitespace-pre-wrap px-2 py-1 text-center font-medium normal-case text-white text-sm"><a href="${citationUrl.href}" target="_blank" rel="noreferrer" class="text-xs !no-underline"><div class="flex items-center gap-2">${citationUrl.host ? `<div class="flex shrink-0 items-center justify-center"><img src="https://icons.duckduckgo.com/ip3/${citationDomain}.ico" alt="Favicon" width="16" height="16" class="my-0"></div>` : ''}<div class="max-w-xs truncate">${citationTitle}</div>${citationUrl.host ? '<div class="shrink-0"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-xs" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></div>' : ''}</div></a></span></div></div>`;
+  const citationTooltip = `<div id="citation-tooltip" data-radix-popper-content-wrapper="" style="position: fixed; left: 0px; top: 0px; transform: translate3d(${x}px, ${y - 30}px, 0px); min-width: max-content; z-index: auto; --radix-popper-anchor-width: 25px; --radix-popper-anchor-height: 21px; --radix-popper-available-width: 753.3125px; --radix-popper-available-height: 535px; --radix-popper-transform-origin: 50% 34px;"><div data-side="top" data-align="center" data-state="delayed-open" class="relative rounded-lg border border-token-border-light bg-black p-1 shadow-xs transition-opacity max-w-sm" style="--radix-tooltip-content-transform-origin: var(--radix-popper-transform-origin); --radix-tooltip-content-available-width: var(--radix-popper-available-width); --radix-tooltip-content-available-height: var(--radix-popper-available-height); --radix-tooltip-trigger-width: var(--radix-popper-anchor-width); --radix-tooltip-trigger-height: var(--radix-popper-anchor-height);"><span class="flex items-center whitespace-pre-wrap px-2 py-1 text-center font-medium normal-case text-token-text-primary text-sm"><a href="${citationUrl.href}" target="_blank" rel="noreferrer" class="text-xs !no-underline"><div class="flex items-center gap-2">${citationUrl.host ? `<div class="flex shrink-0 items-center justify-center"><img src="https://icons.duckduckgo.com/ip3/${citationDomain}.ico" alt="Favicon" width="16" height="16" class="my-0"></div>` : ''}<div class="max-w-xs truncate">${citationTitle}</div>${citationUrl.host ? '<div class="shrink-0"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-xs" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></div>' : ''}</div></a></span></div></div>`;
   const existingTooltip = document.querySelector('#citation-tooltip');
   if (existingTooltip) return;
   document.body.insertAdjacentHTML('beforeend', citationTooltip);

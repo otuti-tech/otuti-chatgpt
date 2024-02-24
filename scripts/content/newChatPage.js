@@ -1,111 +1,117 @@
 // eslint-disable-next-line no-unused-vars
-/* global createSwitch, gptSVG, getUserSystemMessage, setUserSystemMessage, profileDropdown, profileDropdownButton, handleQueryParams, updateOutOfDateConversation, arkoseWasInitialized, notSelectedClassList, runningPromptChainSteps:true, runningPromptChainIndex:true, replaceTextAreaElemet, showHideTextAreaElement, initializeNavbar, replacePageContent, languageList, writingStyleList, toneList, getExamplePrompts, addInputFormActionWrapper, getGizmoUserActionSettings */
+/* global createSwitch, gptSVG, getUserSystemMessage, setUserSystemMessage, profileDropdown, profileDropdownButton, handleQueryParams, updateOutOfDateConversation, arkoseWasInitialized, notSelectedClassList, runningPromptChainSteps:true, runningPromptChainStepIndex:true, replaceTextAreaElement, initializeNavbar, replacePageContent, languageList, writingStyleList, toneList, getExamplePrompts, getGizmoUserActionSettings, removeTextInputExtras, registerWebsocket */
 
 // eslint-disable-next-line no-unused-vars
 function showNewChatPage(gizmoResource = null, shouldResetSearch = true) {
-  if (shouldResetSearch) {
+  if (arkoseWasInitialized()) {
+    registerWebsocket();
+    removeTextInputExtras();
+    speechSynthesis.cancel();
     // clear search box
     const searchBox = document.querySelector('#conversation-search');
     if (searchBox?.value) {
-      searchBox.value = '';
-      searchBox.dispatchEvent(new Event('input'), { bubbles: true });
+      if (shouldResetSearch) {
+        searchBox.value = '';
+        searchBox.dispatchEvent(new Event('input'), { bubbles: true });
+      }
     }
-  }
-  if (gizmoResource) {
-    getGizmoUserActionSettings(gizmoResource.gizmo.id, true);
-  }
-  // update out of date conversation
-  updateOutOfDateConversation();
-
-  const targetPath = gizmoResource ? `/g/${gizmoResource.gizmo?.short_url}` : '/';
-  if (!arkoseWasInitialized()) {
-    window.location.href = `https://chat.openai.com${targetPath}`;
-    return;
-  }
-  // chatStreamIsClosed = true;
-  chrome.storage.local.get(['conversationsAreSynced', 'settings', 'models', 'unofficialModels', 'customModels'], (result) => {
-    const pluginDropdownButton = document.querySelector('#navbar-plugins-dropdown-button');
-    if (pluginDropdownButton) {
-      pluginDropdownButton.disabled = false;
-      pluginDropdownButton.style.opacity = 1;
-      pluginDropdownButton.title = '';
+    if (gizmoResource?.gizmo?.id) {
+      getGizmoUserActionSettings(gizmoResource?.gizmo?.id, true);
     }
+    // update out of date conversation
+    updateOutOfDateConversation();
 
-    const {
-      conversationsAreSynced, settings, models, unofficialModels, customModels,
-    } = result;
-    const {
-      selectedLanguage, selectedModel, selectedTone, selectedWritingStyle, showExamplePrompts, autoResetTopNav,
-    } = settings;
-    const allModels = [...models, ...unofficialModels, ...customModels];
-    const newSelectedModel = gizmoResource ? allModels.find((m) => m.slug === 'gpt-4-gizmo') : selectedModel;
+    const targetPath = gizmoResource?.gizmo?.short_url ? `/g/${gizmoResource.gizmo?.short_url}` : '/';
+    const textAreaElement = document.querySelector('#prompt-textarea');
 
-    chrome.storage.local.set({
-      settings: {
-        ...settings,
+    if (textAreaElement && !arkoseWasInitialized()) {
+      window.location.href = `https://chat.openai.com${targetPath}`;
+      return;
+    }
+    // chatStreamIsClosed = true;
+    chrome.storage.local.get(['settings', 'models', 'unofficialModels', 'customModels'], (result) => {
+      const pluginDropdownButton = document.querySelector('#navbar-plugins-dropdown-button');
+      if (pluginDropdownButton) {
+        pluginDropdownButton.disabled = false;
+        pluginDropdownButton.style.opacity = 1;
+        pluginDropdownButton.title = '';
+      }
+
+      const {
+        settings, models, unofficialModels, customModels, selectedModel,
+      } = result;
+      const {
+        selectedLanguage, selectedTone, selectedWritingStyle, showExamplePrompts, autoResetTopNav,
+      } = settings;
+      const allModels = [...(models || []), ...(unofficialModels || []), ...(customModels || [])];
+      const newSelectedModel = gizmoResource?.gizmo ? allModels.find((m) => m.slug === 'gpt-4-gizmo') : selectedModel;
+
+      chrome.storage.local.set({
         selectedModel: newSelectedModel,
-        autoClick: false,
-        selectedLanguage: autoResetTopNav ? languageList.find((language) => language.code === 'default') : selectedLanguage,
-        selectedTone: autoResetTopNav ? toneList.find((tone) => tone.code === 'default') : selectedTone,
-        selectedWritingStyle: autoResetTopNav ? writingStyleList.find((writingStyle) => writingStyle.code === 'default') : selectedWritingStyle,
-      },
-    }, () => {
-      if (autoResetTopNav) {
-        document.querySelectorAll('#language-list-dropdown li')?.[0]?.click();
-        document.querySelectorAll('#tone-list-dropdown li')?.[0]?.click();
-        document.querySelectorAll('#writing-style-list-dropdown li')?.[0]?.click();
+        settings: {
+          ...settings,
+          autoClick: false,
+          selectedLanguage: autoResetTopNav ? languageList.find((language) => language.code === 'default') : selectedLanguage,
+          selectedTone: autoResetTopNav ? toneList.find((tone) => tone.code === 'default') : selectedTone,
+          selectedWritingStyle: autoResetTopNav ? writingStyleList.find((writingStyle) => writingStyle.code === 'default') : selectedWritingStyle,
+        },
+      }, () => {
+        if (autoResetTopNav) {
+          document.querySelectorAll('#language-list-dropdown li')?.[0]?.click();
+          document.querySelectorAll('#tone-list-dropdown li')?.[0]?.click();
+          document.querySelectorAll('#writing-style-list-dropdown li')?.[0]?.click();
+        }
+        document.querySelector('#auto-click-button')?.classList?.replace('btn-primary', 'btn-neutral');
+      });
+      runningPromptChainSteps = undefined;
+      runningPromptChainStepIndex = 0;
+      const runningPromptChainStepCount = document.querySelector('#running-prompt-chain-step-count');
+      if (runningPromptChainStepCount) runningPromptChainStepCount.remove();
+      document.title = `ChatGPT ${gizmoResource?.gizmo ? ` - ${gizmoResource?.gizmo?.display?.name}` : ''}`;
+      const focusedConversations = document.querySelectorAll('.selected');
+      focusedConversations.forEach((c) => {
+        c.classList = notSelectedClassList;
+      });
+      const { href, search } = new URL(window.location.toString());
+      if (href !== `https://chat.openai.com${targetPath}`) {
+        window.history.replaceState({}, '', `https://chat.openai.com${targetPath}`);
       }
-      document.querySelector('#auto-click-button')?.classList?.replace('btn-primary', 'btn-neutral');
-    });
-    runningPromptChainSteps = undefined;
-    runningPromptChainIndex = 0;
-    document.title = `ChatGPT ${gizmoResource ? ` - ${gizmoResource?.gizmo?.display?.name}` : ''}`;
-    if (!conversationsAreSynced) return;
-    const focusedConversations = document.querySelectorAll('.selected');
-    focusedConversations.forEach((c) => {
-      c.classList = notSelectedClassList;
-    });
-    const { href, search } = new URL(window.location.toString());
-    if (href !== `https://chat.openai.com${targetPath}`) {
-      window.history.replaceState({}, '', `https://chat.openai.com${targetPath}`);
-    }
-    replacePageContent(newChatPage(gizmoResource));
+      replacePageContent(newChatPage(gizmoResource));
 
-    initializeNavbar();
-    const pinNav = document.querySelector('#pin-nav');
-    if (pinNav) {
-      pinNav.remove();
-    }
-    let textAreaElement = document.querySelector('main form textarea');
-    if (!textAreaElement) {
-      replaceTextAreaElemet(settings);
-      textAreaElement = document.querySelector('main form textarea');
-    }
+      initializeNavbar();
+      const pinNav = document.querySelector('#pin-nav');
+      if (pinNav) {
+        pinNav.remove();
+      }
 
-    textAreaElement.focus();
-    const tempVal = textAreaElement.value;
-    textAreaElement.value = '';
-    textAreaElement.value = tempVal;
-
-    showHideTextAreaElement();
-    if (showExamplePrompts) {
-      if (gizmoResource) {
-        const examplePrompts = {
-          items: gizmoResource?.gizmo?.display?.prompt_starters.map((prompt) => ({
-            title: prompt,
-            description: '',
-            prompt,
-          })),
-        };
-        loadExamplePrompts(examplePrompts);
+      replaceTextAreaElement(settings);
+      if (searchBox?.value) {
+        searchBox.focus();
       } else {
-        getExamplePrompts().then((examplePrompts) => {
-          loadExamplePrompts(examplePrompts);
-        });
+        textAreaElement?.focus();
+        textAreaElement?.setSelectionRange(textAreaElement.value.length, textAreaElement.value.length);
       }
-    }
-    handleQueryParams(search);
-  });
+      if (showExamplePrompts) {
+        if (gizmoResource) {
+          const examplePrompts = {
+            items: gizmoResource?.gizmo?.display?.prompt_starters.map((prompt) => ({
+              title: prompt,
+              description: '',
+              prompt,
+            })),
+          };
+          loadExamplePrompts(examplePrompts);
+        } else {
+          getExamplePrompts().then((examplePrompts) => {
+            loadExamplePrompts(examplePrompts);
+          });
+        }
+      }
+      handleQueryParams(search);
+    });
+  } else {
+    window.location.href = 'https://chat.openai.com';
+  }
 }
 
 function headerContent(gizmoResource = null) {
@@ -113,17 +119,19 @@ function headerContent(gizmoResource = null) {
   const subtitle = gizmoResource ? gizmoResource?.gizmo?.display?.description : '';
   const creator = gizmoResource ? gizmoResource?.gizmo?.author?.display_name || 'community builder' : '';
   const authorLink = gizmoResource ? gizmoResource?.gizmo?.author?.link_to || '' : '';
-  const logo = gizmoResource ? `<img src="${gizmoResource?.gizmo?.display?.profile_picture_url}" class="h-full w-full bg-token-surface-secondary dark:bg-token-surface-tertiary" alt="GPT" width="80" height="80">` : gptSVG;
+  const numConversationsStr = gizmoResource ? gizmoResource?.gizmo?.vanity_metrics?.num_conversations_str || '' : '';
+  const logo = gizmoResource ? `<img src="${gizmoResource?.gizmo?.display?.profile_picture_url}" class="h-full w-full bg-token-main-surface-secondary dark:bg-token-main-surface-tertiary" alt="GPT" width="80" height="80">` : gptSVG;
   const creatorElement = authorLink ? `<a href="${authorLink}" target="_blank" class="underline">${creator}</a>` : creator;
   const creatorTooltipName = (creator && creator !== 'community builder') ? creator : `${title}'s builder`;
-  return `<div class="mb-3 h-[72px] w-[72px]"><div id="header-gizmo-logo" class="gizmo-shadow-stroke relative flex h-full items-center justify-center rounded-full bg-white text-black overflow-hidden">${logo}</div></div><div class="flex flex-col items-center gap-0 p-2"><div id="header-gizmo-title" class="text-center text-2xl font-medium">${title}</div>${gizmoResource ? `<div id="header-gizmo-subtitle" class="max-w-md text-center text-xl font-normal text-token-text-secondary">${subtitle}</div><div class="mt-1 flex items-center gap-1 text-token-text-tertiary"><div id="header-gizmo-creator" class="text-sm text-token-text-tertiary">By ${creatorElement}</div><span title="${creatorTooltipName} can't view your chats" class="pt-[1px]" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-xs"><path d="M13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12V16C11 16.5523 11.4477 17 12 17C12.5523 17 13 16.5523 13 16V12Z" fill="currentColor"></path><path d="M12 9.5C12.6904 9.5 13.25 8.94036 13.25 8.25C13.25 7.55964 12.6904 7 12 7C11.3096 7 10.75 7.55964 10.75 8.25C10.75 8.94036 11.3096 9.5 12 9.5Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12Z" fill="currentColor"></path></svg></span></div>` : '<div class="h-10"></div>'}</div>`;
+  return `<div class="mb-3 h-12 w-12"><div id="header-gizmo-logo" class="gizmo-shadow-stroke relative flex h-full items-center justify-center rounded-full bg-white text-black overflow-hidden">${logo}</div></div><div class="flex flex-col items-center gap-2"><div id="header-gizmo-title" class="text-center text-2xl font-medium">${title}</div>${gizmoResource ? `<div class="flex items-center gap-1 text-token-text-tertiary font-normal"><div id="header-gizmo-creator" class="text-sm text-token-text-tertiary">By ${creatorElement}</div><span title="${creatorTooltipName} can't view your chats" class="pt-[1px]" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-xs"><path d="M13 12C13 11.4477 12.5523 11 12 11C11.4477 11 11 11.4477 11 12V16C11 16.5523 11.4477 17 12 17C12.5523 17 13 16.5523 13 16V12Z" fill="currentColor"></path><path d="M12 9.5C12.6904 9.5 13.25 8.94036 13.25 8.25C13.25 7.55964 12.6904 7 12 7C11.3096 7 10.75 7.55964 10.75 8.25C10.75 8.94036 11.3096 9.5 12 9.5Z" fill="currentColor"></path><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM4 12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12Z" fill="currentColor"></path></svg></span> — <div class="flex text-sm text-token-text-tertiary items-end">${numConversationsStr ? `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm mr-1"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.52242 6.53608C9.7871 4.41979 12.1019 3 14.75 3C18.7541 3 22 6.24594 22 10.25C22 11.9007 21.4474 13.4239 20.5183 14.6425L21.348 15.97C21.5407 16.2783 21.5509 16.6668 21.3746 16.9848C21.1984 17.3027 20.8635 17.5 20.5 17.5H15.4559C14.1865 19.5963 11.883 21 9.25 21C9.18896 21 9.12807 20.9992 9.06735 20.9977C9.04504 20.9992 9.02258 21 9 21H3.5C3.13647 21 2.80158 20.8027 2.62536 20.4848C2.44913 20.1668 2.45933 19.7783 2.652 19.47L3.48171 18.1425C2.55263 16.9239 2 15.4007 2 13.75C2 9.99151 4.85982 6.90116 8.52242 6.53608ZM10.8938 6.68714C14.106 7.43177 16.5 10.3113 16.5 13.75C16.5 14.3527 16.4262 14.939 16.2871 15.5H18.6958L18.435 15.0828C18.1933 14.6961 18.2439 14.1949 18.5579 13.8643C19.4525 12.922 20 11.651 20 10.25C20 7.35051 17.6495 5 14.75 5C13.2265 5 11.8535 5.64888 10.8938 6.68714ZM8.89548 19C8.94178 18.9953 8.98875 18.9938 9.03611 18.9957C9.107 18.9986 9.17831 19 9.25 19C11.3195 19 13.1112 17.8027 13.9668 16.0586C14.3079 15.363 14.5 14.5804 14.5 13.75C14.5 10.8505 12.1495 8.5 9.25 8.5C9.21772 8.5 9.18553 8.50029 9.15341 8.50087C6.2987 8.55218 4 10.8828 4 13.75C4 15.151 4.54746 16.422 5.44215 17.3643C5.75613 17.6949 5.80666 18.1961 5.56498 18.5828L5.30425 19H8.89548Z" fill="currentColor"></path></svg><div title="Number of conversations" class="text-sm flex">${numConversationsStr}</div>` : ''}</div></div><div id="header-gizmo-subtitle" class="max-w-md text-center text-sm font-normal text-token-text-primary">${subtitle}</div>` : '<div class="h-10"></div>'}</div>`;
 }
 function suggestionColumn(suggestions, columnNumber = 0) {
-  return suggestions.map((suggestion, index) => `${suggestion?.title ? `<span data-projection-id="107" style="opacity: 1; transform: none;"><button id="prompt-starter-${columnNumber * 2 + index}" class="btn relative btn-neutral group w-full whitespace-nowrap rounded-xl text-left text-gray-700 dark:text-gray-300 md:whitespace-normal" as="button"><div class="flex w-full gap-2 items-center justify-center"><div class="flex w-full items-center justify-between"><div class="flex flex-col overflow-hidden"><div class="truncate font-normal">${suggestion?.title}</div><div class="truncate opacity-50">${suggestion?.description || ''}</div></div><div class="absolute bottom-0 right-0 top-0 flex items-center rounded-xl bg-gradient-to-l from-gray-100 from-[60%] pl-6 pr-2 text-gray-700 opacity-0 group-hover:opacity-100 dark:from-gray-700 dark:text-gray-200"><span class="" data-state="closed"><div class="rounded-lg bg-token-surface-secondary p-1"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="icon-sm text-token-text-primary"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div></span></div></div></div></button></span>` : ''}`).join('');
+  return suggestions.map((suggestion, index) => `${suggestion?.title ? `<span data-projection-id="107" style="opacity: 1; transform: none;"><button id="prompt-starter-${columnNumber * 2 + index}" class="btn relative btn-neutral group w-full whitespace-nowrap rounded-xl text-left md:whitespace-normal" as="button"><div class="flex w-full gap-2 items-center justify-center"><div class="flex w-full items-center justify-between"><div class="flex flex-col overflow-hidden"><div class="truncate font-normal text-token-text-primary">${suggestion?.title}</div><div class="truncate text-token-text-tertiary">${suggestion?.description || ''}</div></div><div class="absolute bottom-0 right-0 top-0 flex items-center rounded-xl bg-gradient-to-l from-gray-100 from-[60%] pl-6 pr-2 opacity-0 group-hover:opacity-100 text-token-text-primary"><span class="" data-state="closed"><div class="rounded-lg bg-token-main-surface-secondary p-1"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="icon-sm text-token-text-primary"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div></span></div></div></div></button></span>` : ''}`).join('');
 }
 function loadExamplePrompts(examplePrompts) {
+  if (!examplePrompts?.items?.length) return;
   // randomize the order of the example prompts
-  examplePrompts.items.sort(() => Math.random() - 0.5);
+  examplePrompts?.items?.sort(() => Math.random() - 0.5);
   const existingSuggestionsWrapper = document.querySelector('#suggestions-wrapper');
   if (existingSuggestionsWrapper) existingSuggestionsWrapper.remove();
   const suggestionsWrapper = `<div id="suggestions-wrapper" class="grow" style="z-index:1000;"><div class="absolute bottom-full left-0 mb-4 flex w-full grow gap-2 pb-1 sm:pb-0 md:static md:mb-0 md:max-w-none"><div class="grid w-full grid-flow-row grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2"><div class="flex flex-col gap-2">${suggestionColumn([examplePrompts.items[0], examplePrompts.items[2]], 0)}</div><div class="flex flex-col gap-2">${suggestionColumn([examplePrompts.items[1], examplePrompts.items[3]], 1)}</div></div></div></div>`;
@@ -131,15 +139,14 @@ function loadExamplePrompts(examplePrompts) {
   // check if still on new chat page
   const { pathname } = new URL(window.location.toString());
   if (pathname === '/' || pathname.startsWith('/g/g-')) {
-    const inputFormActionWrapper = addInputFormActionWrapper();
+    const inputFormActionWrapper = document.querySelector('#input-form-action-wrapper');
     if (inputFormActionWrapper) {
-      inputFormActionWrapper.innerHTML = '';
       inputFormActionWrapper.insertAdjacentHTML('beforeend', suggestionsWrapper);
       const suggestions = document.querySelectorAll('#suggestions-wrapper [id^="prompt-starter-"]');
       suggestions.forEach((suggestion) => {
         const suggestionIndex = suggestion.id.split('-').pop();
         suggestion.addEventListener('click', () => {
-          const textAreaElement = document.querySelector('main form textarea');
+          const textAreaElement = document.querySelector('#prompt-textarea');
           textAreaElement.value = examplePrompts.items[suggestionIndex].prompt;
           // remove all suggestion buttons
           const curSuggestionsWrapper = document.querySelector('#suggestions-wrapper');
@@ -149,7 +156,7 @@ function loadExamplePrompts(examplePrompts) {
           textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
           textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
           setTimeout(() => {
-            const submitButton = document.querySelector('main form textarea ~ button');
+            const submitButton = document.querySelector('#prompt-textarea ~ button');
             submitButton.click();
           }, 100);
         });
@@ -160,15 +167,15 @@ function loadExamplePrompts(examplePrompts) {
 // eslint-disable-next-line no-unused-vars
 function newChatPage(gizmoResource = null) {
   const outerDiv = document.createElement('div');
-  outerDiv.classList = 'h-full dark:bg-gray-800';
+  outerDiv.classList = 'h-full bg-token-main-surface-secondary';
   outerDiv.style = 'scroll-behavior: smooth;';
 
   const innerDiv = document.createElement('div');
-  innerDiv.classList = 'flex flex-col items-center text-sm h-full dark:bg-gray-800;';
+  innerDiv.classList = 'flex flex-col items-center text-sm h-full bg-token-main-surface-primary';
   outerDiv.appendChild(innerDiv);
 
   const body = document.createElement('div');
-  body.classList = 'text-gray-800 w-full md:max-w-2xl lg:max-w-3xl md:h-full md:flex md:flex-col px-6 dark:text-gray-100';
+  body.classList = 'text-token-text-primary w-full md:max-w-2xl lg:max-w-3xl md:h-full md:flex md:flex-col px-6';
   innerDiv.appendChild(body);
 
   const header = document.createElement('div');
@@ -180,24 +187,34 @@ function newChatPage(gizmoResource = null) {
   content.classList = 'flex items-center justify-center text-center gap-3.5';
   body.appendChild(content);
 
-  const settings = document.createElement('div');
-  settings.id = 'new-page-settings';
-  settings.classList = 'flex flex-col items-start justify-end border border-gray-500 rounded-md p-4';
-  settings.style = 'width: 600px;';
-  content.appendChild(settings);
-  settings.style.minHeight = '260px';
+  const settingsWrpper = document.createElement('div');
+  settingsWrpper.id = 'new-page-settings';
+  settingsWrpper.classList = 'hidden flex-col items-start justify-end border border-gray-500 rounded-md p-4';
+  chrome.storage.local.get(['settings'], (result) => {
+    const { settings: { showNewChatSettings } } = result;
+    if (showNewChatSettings || typeof showNewChatSettings === 'undefined') {
+      settingsWrpper.classList = 'flex flex-col items-start justify-end border border-gray-500 rounded-md p-4';
+    }
+  });
+  settingsWrpper.style = 'width: 600px; min-height: 260px;';
+  content.appendChild(settingsWrpper);
   // custom instruction settings
   const customInstructionSettings = customInstructionSettingsElement();
-  settings.appendChild(customInstructionSettings);
+  settingsWrpper.appendChild(customInstructionSettings);
 
   // divider
   const divider = document.createElement('div');
   divider.classList = 'border border-gray-500';
   divider.style = 'width: 70%; height: 1px; background-color: #e5e7eb; margin: 16px auto;';
-  settings.appendChild(divider);
+  settingsWrpper.appendChild(divider);
+  chrome.storage.local.get(['account'], (r) => {
+    const chatgptAccountId = document?.cookie?.split('; ')?.find((row) => row?.startsWith('_account'))?.split('=')?.[1];
 
-  const saveHistorySwitch = createSwitch('<span style="color:#8e8ea0 !important;">Chat History & Training</span>', '<div class="text-left">Save new chats to your history and allow them to be used to improve ChatGPT via model training. Unsaved chats will be deleted from our systems within 30 days. <a href="https://help.openai.com/en/articles/7730893" target="_blank" class="underline" rel="noreferrer">Learn more</a></div>', 'saveHistory', true);
-  settings.appendChild(saveHistorySwitch);
+    const isTeam = chatgptAccountId ? r?.account?.accounts?.[chatgptAccountId]?.account?.plan_type === 'team' || false : false;
+
+    const saveHistorySwitch = createSwitch(`<span style="color:#8e8ea0 !important;">Chat History${isTeam ? '' : ' & Training'}</span>`, `<div class="text-left">Save new chats to your history${isTeam ? '' : ' and allow them to be used to improve ChatGPT via model training'}. Unsaved chats will be deleted from our systems within 30 days. <a href="https://help.openai.com/en/articles/7730893" target="_blank" class="underline" rel="noreferrer">Learn more</a></div>`, 'saveHistory', true);
+    settingsWrpper.appendChild(saveHistorySwitch);
+  });
   const bottom = document.createElement('div');
   bottom.classList = 'w-full h-32 md:h-48 flex-shrink-0';
   innerDiv.appendChild(bottom);
@@ -241,9 +258,10 @@ function customInstructionSettingsElement() {
       const { customInstructionProfiles, customInstructionProfileIsEnabled } = result;
       let newCustomInstructionProfiles = customInstructionProfiles;
       const selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
-      if (!selectedProfile || selectedProfile.aboutUser.replace(/[^a-zA-Z]/g, '') !== systemMessage?.about_user_message?.replace(/[^a-zA-Z]/g, '') || selectedProfile.aboutModel.replace(/[^a-zA-Z]/g, '') !== systemMessage?.about_model_message?.replace(/[^a-zA-Z]/g, '')) {
+
+      if (!selectedProfile || selectedProfile.aboutUser.replace(/[^a-zA-Z]/g, '') !== (systemMessage?.about_user_message)?.toString()?.replace(/[^a-zA-Z]/g, '') || selectedProfile?.aboutModel?.replace(/[^a-zA-Z]/g, '') !== (systemMessage?.about_model_message)?.toString()?.replace(/[^a-zA-Z]/g, '')) {
         newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
-          if (p.aboutModel.replace(/[^a-zA-Z]/g, '') === systemMessage?.about_model_message?.replace(/[^a-zA-Z]/g, '') && p.aboutUser.replace(/[^a-zA-Z]/g, '') === systemMessage?.about_user_message?.replace(/[^a-zA-Z]/g, '')) {
+          if (p.aboutModel.replace(/[^a-zA-Z]/g, '') === (systemMessage?.about_model_message)?.toString()?.replace(/[^a-zA-Z]/g, '') && p.aboutUser.replace(/[^a-zA-Z]/g, '') === (systemMessage?.about_user_message)?.toString()?.replace(/[^a-zA-Z]/g, '')) {
             return { ...p, isSelected: true };
           }
           if (p.isSelected) {

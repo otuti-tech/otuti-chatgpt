@@ -1,5 +1,6 @@
-/* global navigation, initializeStorage, initializeSidebar, initializeInput, initializeContinue, initializeExport, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, initializeAnnouncement, initializeReleaseNote, initializeReplaceDeleteConversationButton, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, openLinksInNewTab, initializeKeyboardShortcuts, addQuickAccessMenuEventListener, upgradeCustomInstructions, addAutoSyncToggleButton, addSounds, initializeAutoRefreshAccount, observeOriginalExplore, removeGrammerly */
+/* global navigation, initializeStorage, initializeSidebar, initializeInput, initializeContinue, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, initializeAnnouncement, initializeReleaseNote, initializeSelectActionButton, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, openLinksInNewTab, initializeKeyboardShortcuts, addQuickAccessMenuEventListener, upgradeCustomInstructions, addAutoSyncToggleButton, addSounds, closeMenusEventListener, initializeAutoRefreshAccount, observeOriginalExplore, removeGrammerly, showAutoSyncWarning, startSpeechToText, initializeUpgradeButton */
 // let initialized = false;
+let initializTimeout;
 function observeNav() {
   // wathc document and once it has nav and nav has 3 childnodes initialize
   // const bodyObserverCallback = function (mutationsList, observer) {
@@ -13,7 +14,8 @@ function observeNav() {
   //     }
   //   });
   // };
-  const mainObserverCallback = function (mutationsList, observer) {
+  // eslint-disable-next-line func-names
+  const mainObserverCallback = function (mutationsList, _observer) {
     mutationsList.forEach((mutation) => {
       if (mutation.type === 'childList') {
         if (document.querySelector('grammarly-extension')) {
@@ -31,47 +33,66 @@ function observeNav() {
 }
 // eslint-disable-next-line no-unused-vars
 function initialize() {
-  observeOriginalExplore();
-  initializeStorage().then(() => {
-    setTimeout(() => {
-      initializeSettings();
-      initializeAutoRefreshAccount();
-      initializeSidebar();
-      initializeInput();
-      openLinksInNewTab();
-      addQuickAccessMenuEventListener();
-      upgradeCustomInstructions();
-      initializeExport();
-      initializeContinue();
-      initializeNewsletter();
-      initializeAnnouncement();
-      initializeReleaseNote();
-      initializePromptLibrary();
-      initializePromptHistory();
-      addDevIndicator();
-      initializeKeyboardShortcuts();
-      addSounds();
-      setTimeout(() => {
-        chrome.storage.local.get(['settings'], (result) => {
-          const { settings } = result;
-          if (typeof settings?.autoSync === 'undefined' || settings?.autoSync) {
-            initializeAutoSave();
-          } else {
-            addAutoSyncToggleButton();
-            initializeTimestamp();
-            updateNewChatButtonNotSynced();
-            addAsyncInputEvents();
-            navigation.addEventListener('navigate', () => {
-              setTimeout(() => {
-                addAsyncInputEvents();
-              }, 500);
-            });
-          }
-          removeGrammerly();
-          initializeReplaceDeleteConversationButton();
-        });
-      });
-    }, 100);
+  clearTimeout(initializTimeout);
+  if (window.location.pathname.includes('/admin')) return;
+  const settingsButton = document.querySelector('#settings-button');
+  if (settingsButton) return;
+
+  chrome.runtime.sendMessage({
+    checkHasSubscription: true,
+    detail: {
+      forceRefresh: true,
+    },
+  }, (hasSubscription) => {
+    closeMenusEventListener();
+    initializeSettings(hasSubscription);
+    initializeUpgradeButton(hasSubscription);
+    initializeAutoRefreshAccount();
+    initializeSidebar();
+    initializeInput();
+    startSpeechToText();
+    openLinksInNewTab();
+    addQuickAccessMenuEventListener();
+    upgradeCustomInstructions();
+    initializeSelectActionButton();
+    initializeContinue();
+    initializeNewsletter();
+    initializeAnnouncement();
+    initializeReleaseNote();
+    initializePromptLibrary();
+    initializePromptHistory();
+    addDevIndicator();
+    initializeKeyboardShortcuts();
+    addSounds();
   });
 }
+// eslint-disable-next-line no-unused-vars
+function checkSyncAndLoad() {
+  chrome.storage.local.get(['settings'], (result) => {
+    const { settings } = result;
+    if ((typeof settings?.autoSync === 'undefined' || settings?.autoSync)) {
+      initializeAutoSave();
+      navigation.addEventListener('navigate', () => {
+        initializTimeout = setTimeout(() => {
+          initialize();
+        }, 500);
+      });
+    } else {
+      showAutoSyncWarning(settings);
+      addAutoSyncToggleButton();
+      initializeTimestamp();
+      updateNewChatButtonNotSynced();
+      addAsyncInputEvents();
+      navigation.addEventListener('navigate', () => {
+        initializTimeout = setTimeout(() => {
+          initialize();
+        }, 1000);
+      });
+    }
+    removeGrammerly();
+  });
+}
+
+initializeStorage();
 observeNav();
+observeOriginalExplore();

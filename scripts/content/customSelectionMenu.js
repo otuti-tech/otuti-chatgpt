@@ -1,5 +1,5 @@
 /* global isDescendant */
-function customSelectionMenuShow(x, y, selection) {
+function customSelectionMenuShow(x, y, _selection) {
   const menu = document.getElementById('custom-selection-menu');
   if (!menu) return;
   menu.style.display = 'block';
@@ -19,19 +19,28 @@ function customSelectionMenuQuote() {
   }
   const selectedTextHtml = container.innerHTML;
 
-  const textAreaElement = document.querySelector('main form textarea');
+  const textAreaElement = document.querySelector('#prompt-textarea');
   if (!textAreaElement) return;
   textAreaElement.focus();
   const existingReplyToPreviewElement = document.getElementById('reply-to-preview-wrapper');
   if (existingReplyToPreviewElement) existingReplyToPreviewElement.remove();
 
-  const replyToPreviewElement = `<div id="reply-to-preview-wrapper" class="relative bg-token-surface-secondary p-5 text-token-text-primary dark:bg-token-surface-tertiary rounded-t-2xl"><button id="reply-to-preview-wrapper-close-button" class="absolute right-4 top-5 text-sm font-bold"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md text-token-text-secondary hover:text-token-text-primary"><path d="M6.34315 6.34338L17.6569 17.6571M17.6569 6.34338L6.34315 17.6571" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><div class="text-sm text-token-text-tertiary">Replying to:</div><div class="mt-2 max-h-32 overflow-y-auto whitespace-pre-wrap break-words border-l-2 border-token-border-heavy px-3"><span id="reply-to-preview-content" class="pointer-events-none">${selectedTextHtml}</span></div></div>`;
+  const taggedGizmoElement = document.getElementById('tagged-gizmo-wrapper');
+
+  const replyToPreviewElement = `<div id="reply-to-preview-wrapper" class="relative bg-token-main-surface-secondary p-5 text-token-text-primary dark:bg-token-main-surface-tertiary ${taggedGizmoElement ? '' : 'rounded-t-2xl'}"><button id="reply-to-preview-wrapper-close-button" class="absolute right-4 top-5 text-sm font-bold"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md text-token-text-secondary hover:text-token-text-primary"><path d="M6.34315 6.34338L17.6569 17.6571M17.6569 6.34338L6.34315 17.6571" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><div class="text-sm text-token-text-tertiary">Replying to:</div><div class="mt-2 max-h-32 overflow-y-auto whitespace-pre-wrap break-words border-l-2 border-token-border-heavy px-3"><span id="reply-to-preview-content" class="pointer-events-none">${selectedTextHtml}</span></div></div>`;
+  const fileWrapperElement = document.querySelector('#file-wrapper-element');
   // add replyToElement right before textAreaElement
-  textAreaElement.insertAdjacentHTML('beforebegin', replyToPreviewElement);
+  if (fileWrapperElement) {
+    fileWrapperElement.insertAdjacentHTML('beforebegin', replyToPreviewElement);
+  } else {
+    textAreaElement.insertAdjacentHTML('beforebegin', replyToPreviewElement);
+  }
   // add event listener to remove replyToElement when click on close button
   const closeButton = document.querySelector('#reply-to-preview-wrapper-close-button');
   if (!closeButton) return;
-  closeButton.addEventListener('click', () => {
+  closeButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     const curReplyToPreviewElement = document.getElementById('reply-to-preview-wrapper');
     if (curReplyToPreviewElement) curReplyToPreviewElement.remove();
   });

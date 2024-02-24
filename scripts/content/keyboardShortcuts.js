@@ -1,4 +1,5 @@
-/* global isWindows, createModal, settingsModalActions, initializePluginStoreModal, addPluginStoreEventListener, showNewChatPage, createPromptChainListModal, toast */
+// eslint-disable-next-line no-unused-vars
+/* global isWindows, createModal, settingsModalActions, initializePluginStoreModal, addPluginStoreEventListener, volumeIconInterval, speakingMessageId:true, showNewChatPage, createPromptChainListModal, toast */
 
 // eslint-disable-next-line no-unused-vars
 function createKeyboardShortcutsModal(version) {
@@ -11,6 +12,9 @@ function buttonGenerator(buttonTexts) {
   const newButtonTexts = buttonTexts.map((buttonText) => {
     if (!isMac && buttonText.includes('⌘')) {
       buttonText = buttonText.replace('⌘', 'CTRL');
+    }
+    if (!isMac && buttonText.includes('⌥')) {
+      buttonText = buttonText.replace('⌥', 'Alt');
     }
     return buttonText;
   });
@@ -47,6 +51,10 @@ function keyboardShortcutsModalContent() {
       <td>Open Settings</td>
     </tr>
     <tr>
+      <td>${buttonGenerator(['⌘', 'Shift', '⌫'])}</td>
+      <td>Delete Current Conversation</td>
+    </tr>
+    <tr>
       <td>${buttonGenerator(['⌘', 'Shift', 'S'])}</td>
       <td>Toggle Sidebar</td>
     </tr>
@@ -55,7 +63,7 @@ function keyboardShortcutsModalContent() {
       <td>Open Plugin Store</td>
     </tr>
     <tr>
-      <td>${buttonGenerator(['⌘', 'Alt', 'Y'])}</td>
+      <td>${buttonGenerator(['⌘', '⌥', 'Y'])}</td>
       <td>Open Gallery</td>
     </tr>
     <tr>
@@ -64,10 +72,10 @@ function keyboardShortcutsModalContent() {
     </tr>
     <tr>
       <td>${buttonGenerator(['⌘', 'Shift', 'X'])}</td>
-      <td>Open Prompt Chain List (or SHIFT + Click on New Prompt Chain button <span style="display:inline-block;width:32px;height:24px;"><img src="chrome-extension://amhmeenmapldpjdedekalnfifgnpfnkc/icons/new-prompt-chain.png"></span>)</td>
+      <td>Open Prompt Chain List (or SHIFT + Click on New Prompt Chain button <span style="display:inline-block;width:32px;height:24px;"><img src="${chrome.runtime.getURL('icons/new-prompt-chain.png')}"></span>)</td>
     </tr>
     <tr>
-      <td>${buttonGenerator(['⌘', 'Alt', 'C'])}</td>
+      <td>${buttonGenerator(['⌘', '⌥', 'C'])}</td>
       <td>Open New Prompt Chain Modal</td>
     </tr>
     <tr>
@@ -75,19 +83,19 @@ function keyboardShortcutsModalContent() {
       <td>Open Keyboard Shortcut Modal</td>
     </tr>
     <tr>
-      <td>${buttonGenerator(['⌘', 'Alt', 'H'])}</td>
+      <td>${buttonGenerator(['⌘', '⌥', 'H'])}</td>
       <td>Hide/Show the Sidebar</td>
     </tr>
     <tr>
-      <td>${buttonGenerator(['⌘', 'Alt', 'S'])}</td>
+      <td>${buttonGenerator(['⌘', '⌥', 'S'])}</td>
       <td>Enable/Disable Auto Splitter</td>
     </tr>
     <tr>
-      <td>${buttonGenerator(['⌘', 'Alt', 'A'])}</td>
+      <td>${buttonGenerator(['⌘', '⌥', 'A'])}</td>
       <td>Enable/Disable Auto-Sync</td>
     </tr>
     <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', '<span class="text-sm flex items-center justify-center" style="min-width:100px;">Click on <span style="display:inline-block;margin-left:8px;"><img class="w-4 h-4" src="chrome-extension://amhmeenmapldpjdedekalnfifgnpfnkc/icons/new-folder.png"></span></span>'])}</td>
+      <td>${buttonGenerator(['⌘', 'Shift', `<span class="text-sm flex items-center justify-center" style="min-width:100px;">Click on <span style="display:inline-block;margin-left:8px;"><img class="w-4 h-4" src="${chrome.runtime.getURL('icons/new-folder.png')}"></span></span>`])}</td>
       <td>Reset the order of chats from newest to oldest (removes all folders)</td>
     </tr>
     <tr>
@@ -95,7 +103,7 @@ function keyboardShortcutsModalContent() {
       <td>Reset Auto Sync</td>
     </tr>
     <tr>
-      <td>${buttonGenerator(['Alt', 'Shift', 'N'])}</td>
+      <td>${buttonGenerator(['⌥', 'Shift', 'N'])}</td>
       <td>Open New Chat Page</td>
     </tr>
     <tr>
@@ -103,7 +111,7 @@ function keyboardShortcutsModalContent() {
       <td>Copy last response</td>
     </tr>
     <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', 'Alt', 'C'])}</td>
+      <td>${buttonGenerator(['⌘', 'Shift', '⌥', 'C'])}</td>
       <td>Copy last response (HTML)</td>
     </tr>
     <tr>
@@ -147,7 +155,7 @@ function showPluginStore() {
 function registerShortkeys() {
   document.addEventListener('keydown', (e) => {
     if (e.metaKey || (isWindows() && e.ctrlKey)) {
-      const onDiscoveryPage = window.location.pathname.includes('/gpts/discovery');
+      const onDiscoveryPage = window.location.pathname.includes('/gpts');
       if (e.key === 'f' || e.key === 'F') {
         let searchbox = document.querySelector('#gizmo-search-bar');
         if (!onDiscoveryPage) {
@@ -162,13 +170,23 @@ function registerShortkeys() {
     }
     // esc
     if (e.keyCode === 27) {
+      // stop speaking
+      speechSynthesis.cancel();
+      clearInterval(volumeIconInterval);
+      speakingMessageId = '';
+      const allTextToSpeechButtons = document.querySelectorAll('[id^="text-to-speech-button-"]');
+      allTextToSpeechButtons.forEach((b) => {
+        const volumeIcon = b.querySelector('svg > path');
+        volumeIcon.style.fill = 'currentColor';
+      });
+      // close modals
       if (document.querySelector('[id*=close-button]')) {
         document.querySelector('[id*=close-button]').click();
       } else if (document.querySelector('[id*=cancel-button]')) {
         document.querySelector('[id*=cancel-button]').click();
       } else if (document.querySelector('#quick-access-menu')) {
         document.querySelector('#quick-access-menu').remove();
-        document.querySelector('main form textarea').focus();
+        document.querySelector('#prompt-textarea').focus();
       } else {
         const stopGeneratingResponseButton = document.querySelector('#stop-generating-response-button');
         if (stopGeneratingResponseButton) {
@@ -226,6 +244,14 @@ function registerShortkeys() {
       const keyboardShortcutsModal = document.querySelector('#modal-keyboard-shortcuts');
       if (!keyboardShortcutsModal) {
         createKeyboardShortcutsModal();
+      }
+    }
+    // cmnd + shift + ⌫
+    if ((e.metaKey || (isWindows() && e.ctrlKey)) && e.shiftKey && e.keyCode === 8) {
+      e.preventDefault();
+      const deleteConversationButton = document.querySelector('#conversation-setting-menu-option-delete');
+      if (deleteConversationButton) {
+        deleteConversationButton.click();
       }
     }
     // cmnd + alt + c
@@ -372,8 +398,8 @@ function addKeyboardShortcutsModalButton() {
   const keyboardShortcutsModalButton = document.createElement('button');
   keyboardShortcutsModalButton.id = 'keyboard-shortcuts-modal-button';
   keyboardShortcutsModalButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" height="1.5em" viewBox="0 0 576 512" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="0" fill="currentColor"><path d="M64 112c-8.8 0-16 7.2-16 16V384c0 8.8 7.2 16 16 16H512c8.8 0 16-7.2 16-16V128c0-8.8-7.2-16-16-16H64zM0 128C0 92.7 28.7 64 64 64H512c35.3 0 64 28.7 64 64V384c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V128zM176 320H400c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H176c-8.8 0-16-7.2-16-16V336c0-8.8 7.2-16 16-16zm-72-72c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H120c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H120c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H200c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H200c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H280c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H280c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H360c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H360c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16zm64 96c0-8.8 7.2-16 16-16h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H440c-8.8 0-16-7.2-16-16V248zm16-96h16c8.8 0 16 7.2 16 16v16c0 8.8-7.2 16-16 16H440c-8.8 0-16-7.2-16-16V168c0-8.8 7.2-16 16-16z"/></svg>';
-  keyboardShortcutsModalButton.classList = 'absolute flex items-center justify-center bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-gray-900 dark:hover:text-gray-200 text-xs font-sans cursor-pointer rounded-md z-10';
-  keyboardShortcutsModalButton.style = 'bottom: 3rem;right: 3rem;width: 2rem;height: 2rem;flex-wrap:wrap;border: 1px solid;';
+  keyboardShortcutsModalButton.classList = 'absolute flex items-center justify-center border border-token-border-light text-token-text-secondary hover:text-token-text-primary text-xs font-sans cursor-pointer rounded-md z-10 bg-token-main-surface-primary';
+  keyboardShortcutsModalButton.style = 'bottom: 3rem;right: 3rem;width: 2rem;height: 2rem;flex-wrap:wrap;';
   keyboardShortcutsModalButton.addEventListener('click', () => {
     createKeyboardShortcutsModal();
   });
@@ -382,5 +408,10 @@ function addKeyboardShortcutsModalButton() {
 // eslint-disable-next-line no-unused-vars
 function initializeKeyboardShortcuts() {
   registerShortkeys();
-  addKeyboardShortcutsModalButton();
+  chrome.storage.local.get(['settings'], (result) => {
+    const { settings } = result;
+    if (settings?.showKeyboardShortcutButton || typeof settings?.showKeyboardShortcutButton === 'undefined') {
+      addKeyboardShortcutsModalButton();
+    }
+  });
 }

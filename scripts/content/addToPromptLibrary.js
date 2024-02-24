@@ -1,4 +1,4 @@
-/* global fetchPrompts, promptLibraryPageNumber, toast, categoryList, languageList, addDropdownEventListener, dropdown */
+/* global fetchPrompts, gizmoCreatorProfile, promptLibraryPageNumber, toast, categoryList, languageList, addDropdownEventListener, dropdown */
 //
 let selectedCategories = [];
 function createCategorySelector(categories = []) {
@@ -87,7 +87,8 @@ function validateFields() {
 function openSubmitPromptModal(text = '', modelSlug = '', promptId = null, title = '', categories = [], language = '', refreshPromptLibrary = false, hideFullPrompt = false) {
   selectedCategories = categories;
   const submitPromptModal = document.createElement('div');
-  submitPromptModal.style = 'position:fixed;top:0px;left:0px;width:100%;height:100%;background-color:rgba(0,0,0,0.7);z-index:1000;display:flex;align-items:center;justify-content:center;z-index:10001;overflow-y: scroll; max-height: 100vh;';
+  submitPromptModal.style = 'position:fixed;top:0px;left:0px;width:100%;height:100%;z-index:1000;display:flex;align-items:center;justify-content:center;z-index:10001;overflow-y: scroll; max-height: 100vh;';
+  submitPromptModal.classList = 'bg-black/50 dark:bg-gray-600/70';
   submitPromptModal.id = 'submit-prompt-modal';
   submitPromptModal.addEventListener('click', (e) => {
     if (e.target.id === 'submit-prompt-modal') {
@@ -95,7 +96,7 @@ function openSubmitPromptModal(text = '', modelSlug = '', promptId = null, title
     }
   });
   const submitPromptModalContent = document.createElement('div');
-  submitPromptModalContent.style = 'width:800px;max-width:90%;background-color:#0b0d0e;border-radius:4px;padding:16px;display:flex;flex-direction:column;align-items:start;justify-content:start;border:solid 2px lightslategray;';
+  submitPromptModalContent.style = 'width:800px;max-width:90%;background-color:#0b0d0e;border-radius:8px;padding:16px;display:flex;flex-direction:column;align-items:start;justify-content:start;box-shadow: rgb(0 0 0 / 72%) 0px 0px 20px 0px;border:solid 1px #555;';
   submitPromptModalContent.id = 'submit-prompt-modal-content';
   const modalTitle = document.createElement('div');
   modalTitle.style = 'color:white;font-size:1.25rem;margin-bottom: 8px;';
@@ -192,14 +193,24 @@ function openSubmitPromptModal(text = '', modelSlug = '', promptId = null, title
   });
   submitPromptModalContent.appendChild(urlInput);
   submitPromptModal.appendChild(submitPromptModalContent);
-  chrome.storage.sync.get(['nickname', 'url'], (result) => {
-    if (result.nickname && !result.nickname.includes('@')) {
-      nicknameInput.value = result.nickname;
-    }
-    if (result.url) {
-      urlInput.value = result.url;
-    }
-    urlInput.style.border = '1px solid #565869';
+  gizmoCreatorProfile().then((profile) => {
+    const profileName = profile?.name;
+    const profileWebsiteUrl = profile?.website_url;
+    chrome.storage.sync.get(['nickname', 'url'], (result) => {
+      if (result.nickname && !result.nickname.includes('@')) {
+        nicknameInput.value = result.nickname;
+      }
+      if (profileName) {
+        nicknameInput.value = profileName;
+      }
+      if (result.url) {
+        urlInput.value = result.url;
+      }
+      if (profileWebsiteUrl) {
+        urlInput.value = profileWebsiteUrl;
+      }
+      urlInput.style.border = '1px solid #565869';
+    });
   });
   // const hideFullPromptSwitch = createSwitch('Hide full prompt', 'Only show the first 5 lines of the prompt to other users', null, hideFullPrompt);
   // submitPromptModalContent.appendChild(hideFullPromptSwitch);

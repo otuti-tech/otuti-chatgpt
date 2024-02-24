@@ -1,53 +1,5 @@
-/* global ChatGPTIcon, getAllConversations, formatTime, formatDate, shiftKeyPressed: true */
-function showAllCheckboxes() {
-  const conversationList = document.querySelector('#conversation-list');
-  const chatButtons = conversationList.querySelectorAll('a');
-  chatButtons.forEach((button) => {
-    const checkbox = button.querySelector('#checkbox');
-    if (!checkbox) return;
-    const checkboxWrapper = checkbox.parentNode;
-    checkboxWrapper.style.width = '100%';
-    checkboxWrapper.style.display = 'block';
-  });
-}
-function hideAllButLastCheckboxes(lastCheckboxId) {
-  const conversationList = document.querySelector('#conversation-list');
-  const chatButtons = conversationList.querySelectorAll('a');
-  chatButtons.forEach((button) => {
-    const checkbox = button.querySelector('#checkbox');
-    if (!checkbox) return;
-    checkbox.checked = false;
-    const checkboxWrapper = checkbox.parentNode;
-    checkboxWrapper.style.width = '40px';
-    if (button.id !== `conversation-button-${lastCheckboxId}`) {
-      checkboxWrapper.style.display = 'none';
-    }
-  });
-}
-// eslint-disable-next-line no-unused-vars
-function resetSelection() {
-  const newChatButton = document.querySelector('nav > :nth-child(2)').querySelector('a');
-  if (newChatButton?.textContent.toLocaleLowerCase() === 'clear selection') {
-    newChatButton.innerHTML = ChatGPTIcon();
-    const exportAllButton = document.querySelector('#export-all-button');
-    const deleteConversationButton = document.querySelector('#delete-conversations-button');
-    // regext export...selected with export all
-    exportAllButton.innerHTML = exportAllButton.innerHTML.replace(/Export \d+ Selected/, 'Export All');
-    deleteConversationButton.innerHTML = deleteConversationButton.innerHTML.replace(/Delete \d+ Selected/, 'Delete All');
-    chrome.storage.local.set({ selectedConversations: [], lastSelectedConversation: null });
-  }
+/* global ChatGPTIcon, hideAllButLastCheckboxes,  showAllCheckboxes, getAllConversations, formatTime, updateButtonsAfterSelection, formatDate, shiftKeyPressed: true */
 
-  const conversationList = document.querySelector('#conversation-list');
-  const chatButtons = conversationList.querySelectorAll('a');
-  chatButtons.forEach((button) => {
-    const checkbox = button.querySelector('#checkbox');
-    if (!checkbox) return;
-    checkbox.checked = false;
-    const checkboxWrapper = checkbox.parentNode;
-    checkboxWrapper.style.width = '40px';
-    checkboxWrapper.style.display = 'none';
-  });
-}
 function updateTimestamp(conversationList) {
   if (!conversationList) return;
   const chatButtons = conversationList.querySelectorAll('a');
@@ -61,7 +13,7 @@ function updateTimestamp(conversationList) {
           button.classList = 'flex p-3 items-center gap-3 relative rounded-md hover:bg-gray-100 dark:hover:bg-[#2A2B32] cursor-pointer break-all bg-gray-50 gizmo:bg-white gizmo:hover:bg-gray-100 hover:pr-4 dark:bg-black group';
           button.style = 'padding: 0.75rem !important; gap: 0.75rem !important;';
           // prepen svg html to button
-          const bubbleIcon = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
+          const bubbleIcon = '<svg class="text-token-text-primary" stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>';
           button.insertAdjacentHTML('afterbegin', bubbleIcon);
           // button first div child
           const chatTitle = button.querySelector('div');
@@ -73,6 +25,7 @@ function updateTimestamp(conversationList) {
           timestamp.id = 'timestamp';
           timestamp.style = 'font-size: 10px; color: lightslategray; position: absolute; bottom: 0px; left: 40px;';
           const conversation = conversations[index];
+          if (!conversation) return;
           button.id = `conversation-button-${conversation.id}`;
           const updateTime = formatTime(conversation.update_time);
           // convert create time from GMT to local time
@@ -118,7 +71,7 @@ function updateTimestamp(conversationList) {
                   if (newSelectedConversations.length === 0) {
                     hideAllButLastCheckboxes(conversation.id);
                   }
-                  updateButtonsAfterSelection(selectedConversations, newSelectedConversations);
+                  updateButtonsAfterSelection(newSelectedConversations);
                 });
               }
               if (event.target.checked && ((!event.shiftKey && !shiftKeyPressed) || selectedConversations.length === 0)) {
@@ -131,7 +84,7 @@ function updateTimestamp(conversationList) {
                   if (newSelectedConversations.length === 1) {
                     showAllCheckboxes();
                   }
-                  updateButtonsAfterSelection(selectedConversations, newSelectedConversations);
+                  updateButtonsAfterSelection(newSelectedConversations);
                 });
               }
               if (event.target.checked && (event.shiftKey || shiftKeyPressed) && selectedConversations.length > 0) {
@@ -187,7 +140,7 @@ function updateTimestamp(conversationList) {
                   }
 
                   chrome.storage.local.set({ selectedConversations: newSelectedConversations });
-                  updateButtonsAfterSelection(selectedConversations, newSelectedConversations);
+                  updateButtonsAfterSelection(newSelectedConversations);
                 }
                 chrome.storage.local.set({ lastSelectedConversation: conversation });
               }
@@ -219,28 +172,7 @@ function updateTimestamp(conversationList) {
     });
   });
 }
-function updateButtonsAfterSelection(previousSelectedConversations, newSelectedConversations) {
-  const previousText = previousSelectedConversations.length === 0 ? 'All' : `${previousSelectedConversations.length} Selected`;
-  const newText = newSelectedConversations.length === 0 ? 'All' : `${newSelectedConversations.length} Selected`;
-  const newChatButton = document.querySelector('nav > :nth-child(2)').querySelector('a');
-  // chenge export all to export selected
-  const exportAllButton = document.querySelector('#export-all-button');
-  if (exportAllButton) {
-    exportAllButton.innerHTML = exportAllButton.innerHTML.replace(`Export ${previousText}`, `Export ${newText}`);
-  }
-  const deleteConversationsButton = document.querySelector('#delete-conversations-button');
-  if (deleteConversationsButton) {
-    deleteConversationsButton.innerHTML = deleteConversationsButton.innerHTML.replace(`Delete ${previousText}`, `Delete ${newText}`);
-  }
-  if (!newChatButton) return;
-  if (newSelectedConversations.length > 0) {
-    // show an x svg followed by clear selection
-    newChatButton.innerHTML = '<div class="h-7 w-7 flex-shrink-0"><div class="gizmo-shadow-stroke relative flex h-full items-center justify-center rounded-full bg-white text-black"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div></div>Clear selection';
-  } else {
-    // show a plus svg followed by new chat
-    newChatButton.innerHTML = ChatGPTIcon();
-  }
-}
+
 function addTimestamp() {
   const conversationList = document.querySelector('#conversation-list');
   updateTimestamp(conversationList);
@@ -252,7 +184,7 @@ function addTimestamp() {
 // eslint-disable-next-line no-unused-vars
 function initializeTimestamp() {
   chrome.storage.local.get(['selectedConversations'], (result) => {
-    const newChatButton = document.querySelector('nav > :nth-child(2)').querySelector('a');
+    const newChatButton = document.querySelector('#nav-gap').querySelector('a');
     if (!newChatButton) return;
     if (result.selectedConversations?.length > 0) {
       newChatButton.innerHTML = '<div class="h-7 w-7 flex-shrink-0"><div class="gizmo-shadow-stroke relative flex h-full items-center justify-center rounded-full bg-white text-black"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div></div>Clear selection';

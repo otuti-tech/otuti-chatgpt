@@ -9,7 +9,7 @@ function feedbackModal(rating) {
     <div class="fixed inset-0 bg-gray-500/75 transition-opacity dark:bg-gray-800/75"></div>
     <div class="fixed inset-0 z-50 overflow-y-auto">
     <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-      <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all dark:bg-gray-900 sm:my-8 sm:w-full sm:p-6 sm:max-w-lg"
+      <div class="relative transform overflow-hidden rounded-lg px-4 pt-5 pb-4 text-left shadow-xl transition-all bg-token-main-surface-secondary sm:my-8 sm:w-full sm:p-6 sm:max-w-lg"
       id="headlessui-dialog-panel-:r1:" data-headlessui-state="open">
       <div class="flex items-center sm:flex">
         <div
@@ -22,13 +22,13 @@ function feedbackModal(rating) {
           </path>
         </svg></div>
         <div class="mt-3 text-center sm:mt-0 sm:text-left">
-        <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200"
+        <h3 class="text-lg font-medium leading-6 text-token-text-primary"
           id="headlessui-dialog-title-:r2:" data-headlessui-state="open">Provide
           additional feedback</h3>
         </div>
       </div>
       <form><textarea id="feedback-other" placeholder="What would the ideal answer have been?"
-        rows="3" class="mt-4 mb-1 w-full rounded-md dark:bg-gray-800 dark:focus:border-white dark:focus:ring-white" tabindex="0" style="height: 90px; overflow-y: hidden;"></textarea></form>
+        rows="3" class="mt-4 mb-1 w-full rounded-md bg-token-main-surface-secondary dark:focus:border-white dark:focus:ring-white" tabindex="0" style="height: 90px; overflow-y: hidden;"></textarea></form>
       <div class="mt-5 flex flex-col gap-3 sm:mt-4 sm:flex-row-reverse"><button id="feedback-submit"
         class="btn flex justify-center gap-2 btn-neutral">Submit feedback</button></div>
       </div>
@@ -62,7 +62,7 @@ function feedbackModal(rating) {
           </path>
         </svg></div>
         <div class="mt-3 text-center sm:mt-0 sm:text-left">
-        <h3 class="text-lg font-medium leading-6 text-gray-900 dark:text-gray-200"
+        <h3 class="text-lg font-medium leading-6 text-token-text-primary"
           id="headlessui-dialog-title-:r2:" data-headlessui-state="open">Provide additional feedback</h3>
         </div>
       </div>
@@ -72,17 +72,17 @@ function feedbackModal(rating) {
         <div class="form-check"><input
           class="form-check-input float-left mt-1 mr-2 h-4 w-4 cursor-pointer appearance-none rounded-sm border border-gray-300 bg-white bg-contain bg-center bg-no-repeat align-top transition duration-200 checked:border-blue-600 checked:bg-blue-600 focus:outline-none"
           type="checkbox" id="feedback-harmful" value=""><label
-          class="form-check-label inline-block text-gray-800 dark:text-gray-100" for="feedback-harmful">This
+          class="form-check-label inline-block text-token-text-primary" for="feedback-harmful">This
           is harmful / unsafe</label></div>
         <div class="form-check"><input
           class="form-check-input float-left mt-1 mr-2 h-4 w-4 cursor-pointer appearance-none rounded-sm border border-gray-300 bg-white bg-contain bg-center bg-no-repeat align-top transition duration-200 checked:border-blue-600 checked:bg-blue-600 focus:outline-none"
           type="checkbox" id="feedback-false" value=""><label
-          class="form-check-label inline-block text-gray-800 dark:text-gray-100" for="feedback-false">This
+          class="form-check-label inline-block text-token-text-primary" for="feedback-false">This
           isn't true</label></div>
         <div class="form-check"><input
           class="form-check-input float-left mt-1 mr-2 h-4 w-4 cursor-pointer appearance-none rounded-sm border border-gray-300 bg-white bg-contain bg-center bg-no-repeat align-top transition duration-200 checked:border-blue-600 checked:bg-blue-600 focus:outline-none"
           type="checkbox" id="feedback-not-helpful" value=""><label
-          class="form-check-label inline-block text-gray-800 dark:text-gray-100"
+          class="form-check-label inline-block text-token-text-primary"
           for="feedback-not-helpful">This isn't helpful</label></div>
       </form>
       <div class="mt-5 flex flex-col gap-3 sm:mt-4 sm:flex-row-reverse"><button id="feedback-submit"

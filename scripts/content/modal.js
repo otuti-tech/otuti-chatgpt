@@ -4,7 +4,7 @@ function createModal(title, subtitle, modalBodyContent, modalActionBarContent, a
   const modal = document.createElement('div');
   modal.id = `modal-${title.toLowerCase().replaceAll(' ', '-')}`;
   modal.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;display:flex;justify-content:center;align-items:center;z-index:10000;';
-  modal.classList = 'bg-black/50 dark:bg-gray-600/70';
+  modal.classList = 'dark bg-black/50 dark:bg-gray-600/70';
   const modalWrapper = document.createElement('div');
   modalWrapper.id = `modal-wrapper-${title.toLowerCase().replaceAll(' ', '-')}`;
   modalWrapper.style = `width: ${window.innerWidth > 780 ? '60vw' : '100vw'}; height: ${window.innerWidth > 780 ? '80vh' : '80vh'}; background-color: #0b0d0e; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; justify-content: space-between;box-shadow: rgb(0 0 0 / 72%) 0px 0px 20px 0px`;

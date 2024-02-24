@@ -3,12 +3,17 @@ function injectScript(scriptUrl) {
   newScriptElement.setAttribute('src', scriptUrl);
   newScriptElement.setAttribute('type', 'text/javascript');
 
+  // eslint-disable-next-line func-names
   newScriptElement.onload = function () {
     this.remove();
   };
 
   document.documentElement.prepend(newScriptElement);
 }
-
-const interceptorScriptUrl = chrome.runtime.getURL('scripts/interceptor/interceptor.js');
-injectScript(interceptorScriptUrl);
+// eslint-disable-next-line no-unused-vars
+const isOpera = window.navigator.userAgent.indexOf('OPR') > -1 || window.navigator.userAgent.indexOf('Opera') > -1;
+const isFirefox = window.navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+if (isFirefox) {
+  const interceptorScriptUrl = chrome.runtime.getURL('scripts/interceptor/interceptorFirefox.js');
+  injectScript(interceptorScriptUrl);
+}
