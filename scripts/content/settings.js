@@ -952,7 +952,7 @@ function textToSpeechTabContent(hasSubscription = false) {
   audioTestButton.addEventListener('click', () => {
     chrome.storage.local.get(['settings'], (res) => {
       const { settings } = res;
-      const utterance = new SpeechSynthesisUtterance('Superpower ChatGPT, is the best ChatGPT extension.');
+      const utterance = new SpeechSynthesisUtterance('Power chatGPTuti, is the best ChatGPT extension.');
       utterance.rate = settings.textToSpeechRate || 1;
       utterance.pitch = settings.textToSpeechPitch || 1;
       utterance.volume = 1;
@@ -1872,7 +1872,7 @@ function settingsModalActions() {
   const superpowerChatGPT = document.createElement('a');
   superpowerChatGPT.href = 'https://chrome.google.com/webstore/detail/superpower-chatgpt/amhmeenmapldpjdedekalnfifgnpfnkc';
   superpowerChatGPT.target = '_blank';
-  superpowerChatGPT.textContent = 'Superpower ChatGPT';
+  superpowerChatGPT.textContent = 'Power chatGPTuti';
   superpowerChatGPT.style = 'color: #999; font-size: 12px; margin-left: 4px; text-decoration: underline;';
   superpowerChatGPT.addEventListener('mouseover', () => {
     superpowerChatGPT.style = 'color: gold; font-size: 12px; margin-left: 4px;text-decoration: underline;';

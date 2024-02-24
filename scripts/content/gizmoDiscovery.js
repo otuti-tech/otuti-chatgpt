@@ -52,7 +52,7 @@ function renderGizmoDiscoveryPage(defaultCategory = 'all') {
       gizmoHeaderWrapper.classList = 'bg-token-main-surface-primary pb-1';
       const gizmoDiscoveryTitle = document.createElement('div');
       gizmoDiscoveryTitle.classList = 'flex justify-between text-3xl font-bold text-left mb-4';
-      gizmoDiscoveryTitle.innerHTML = '<div>GPT Store <span role="button" style="background-color: rgb(25, 195, 125); color: white; padding: 2px 4px; border-radius: 8px; font-size: 12px; margin-right: 8px; position:relative; bottom:5px;">⚡️ Powered by Superpower ChatGPT</span></div><div><button id="gizmo-discovery-my-gpts" color="neutral" class="rounded-lg px-3 py-2.5 text-sm font-medium mr-2 hover:bg-token-main-surface-secondary">My GPTs</button><a href="/gpts/editor" target="_self"><button id="gizmo-discovery-create-gpt" class="btn relative btn-primary mr-2">+ Create a GPT</button></a></div>';
+      gizmoDiscoveryTitle.innerHTML = '<div>GPT Store <span role="button" style="background-color: rgb(25, 195, 125); color: white; padding: 2px 4px; border-radius: 8px; font-size: 12px; margin-right: 8px; position:relative; bottom:5px;">⚡️ Powered by Power chatGPTuti</span></div><div><button id="gizmo-discovery-my-gpts" color="neutral" class="rounded-lg px-3 py-2.5 text-sm font-medium mr-2 hover:bg-token-main-surface-secondary">My GPTs</button><a href="/gpts/editor" target="_self"><button id="gizmo-discovery-create-gpt" class="btn relative btn-primary mr-2">+ Create a GPT</button></a></div>';
       gizmoHeaderWrapper.appendChild(gizmoDiscoveryTitle);
       const gizmoFilterWrapper = document.createElement('div');
       gizmoFilterWrapper.classList = 'flex justify-between items-start';
