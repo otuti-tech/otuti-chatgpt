@@ -1,9 +1,13 @@
 /* global createModal, highlightBracket */
 // eslint-disable-next-line no-unused-vars
 function createTemplateWordsModal(templateWords) {
+  const existingModal = document.querySelector('#modal-template-words');
+  if (existingModal) {
+    existingModal.remove();
+  }
   const uniqueTemplateWords = [...new Set(templateWords)];
   const bodyContent = templateWordsModalContent(uniqueTemplateWords);
-  const actionsBarContent = templateWordsModalActions(uniqueTemplateWords);
+  const actionsBarContent = templateWordsModalActions(templateWords);
   createModal('Template words', 'Please replace the template words', bodyContent, actionsBarContent, true);
 }
 

@@ -183,7 +183,7 @@ function createSearchBox() {
       resetSelection();
       if (searchValue.length) {
         filteredConversations = allConversations?.filter((c) => (
-          [c.title, ...Object.values(c.mapping).map((m) => m?.message?.content?.parts?.filter((p) => typeof p === 'string')?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))]
+          [c.title, ...Object.values(c.mapping).map((m) => (m?.message?.content?.parts || [])?.filter((p) => typeof p === 'string')?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))]
             .join(' ')?.toLowerCase()
             .includes(searchValue.toLowerCase())));
         filteredConversationIds = filteredConversations.map((c) => c?.id);
@@ -320,6 +320,7 @@ function generateTitleForConversation(conversationId, messageId, profile) {
   setTimeout(() => {
     generateTitle(conversationId, messageId).then((data) => {
       const { title } = data;
+      if (!title) return;
       chrome.storage.local.get('conversations', (result) => {
         const { conversations } = result;
         conversations[conversationId].title = title;
@@ -379,6 +380,8 @@ function addToTheTopOfConversationList(conversation) {
 }
 // eslint-disable-next-line no-unused-vars
 function prependConversation(conversation, settings) {
+  const historySyncMessage = document.querySelector('#history-sync-message');
+  if (historySyncMessage) historySyncMessage.remove();
   addConversationSettingsMenuEventListener(conversation.id);
   const existingConversationElement = document.querySelector(`#conversation-button-${conversation.id}`);
   if (existingConversationElement) existingConversationElement.remove();
@@ -501,7 +504,9 @@ function loadStorageConversations(conversations, conversationsOrder = [], filter
   const existingNoResult = document.querySelector('#search-no-result');
   if (existingNoResult) existingNoResult.remove();
   const historySyncMessage = document.querySelector('#history-sync-message');
-  if (conversations && Object.values(conversations).length > 0) {
+  const syncBanner = document.querySelector('#sync-nav-wrapper');
+
+  if (conversations && !syncBanner) {
     if (historySyncMessage) historySyncMessage.remove();
   }
   // add folders
@@ -626,16 +631,19 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
   const isPaid = account?.accounts?.[chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
   // check window. localstorage every 200ms until arkoseToken is set
   // const isGPT4 = selectedModel.tags.includes('gpt4');
-  let arkoseToken = window.localStorage.getItem('arkoseToken');
+  let arkoseToken = window.localStorage.getItem('sp/arkoseToken');
+  const foundArkoseSetups = JSON.parse(window.localStorage.getItem('sp/arkoseSetups') || '[]');
+
   // if (isGPT4 && !arkoseToken) {
-  if (!arkoseToken) {
+  if (!arkoseToken && foundArkoseSetups.length > 0) {
     arkoseTrigger();
   }
   const userMessageId = messageId;
   let assistantData = [];
+  let generatedTitleAlready = false;
   const startTime = Date.now();
   const interval = setInterval(() => {
-    arkoseToken = window.localStorage.getItem('arkoseToken');
+    arkoseToken = window.localStorage.getItem('sp/arkoseToken');
 
     if (Date.now() - startTime > 5000 && !arkoseDXIsPending) {
       clearInterval(interval);
@@ -662,7 +670,7 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
     }
     // if (arkoseToken || (isPaid && !selectedModel.tags.includes('gpt4'))) {
     // if (!isGPT4 || arkoseToken) {
-    if (arkoseToken) {
+    if (arkoseToken || foundArkoseSetups.length === 0) {
       // if (arkoseToken) {
       clearInterval(interval);
       scrolUpDetected = false;
@@ -770,7 +778,7 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
                     clearInterval(tempId);
                     // don't generate title if tmpChatStreamIsClosed
                     const assistantMessages = assistantData.map((m) => m.message);
-                    updateOrCreateConversation(finalConversationId, gizmoId, assistantMessages, userMessageId, settings, !tmpChatStreamIsClosed, tmpChatStreamIsClosed).then(() => {
+                    updateOrCreateConversation(finalConversationId, gizmoId, assistantMessages, userMessageId, settings, !tmpChatStreamIsClosed && !generatedTitleAlready, tmpChatStreamIsClosed).then(() => {
                       if (!tmpChatStreamIsClosed) { // if not clicked on stop generating button
                         if (runningPromptChainSteps && runningPromptChainSteps.length > 1 && runningPromptChainStepIndex < runningPromptChainSteps.length - 1) {
                           setTimeout(() => {
@@ -824,6 +832,7 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
 
                 const data = JSON.parse(e.data);
                 if (data.type === 'title_generation') {
+                  generatedTitleAlready = true;
                   updateConversationTitle(data.conversation_id, data.title);
                   return;
                 }
@@ -1083,16 +1092,18 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
   const isPaid = account?.accounts?.[chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
   // check window. localstorage every 200ms until arkoseToken is set
   // const isGPT4 = selectedModel.tags.includes('gpt4');
-  let arkoseToken = window.localStorage.getItem('arkoseToken');
+  let arkoseToken = window.localStorage.getItem('sp/arkoseToken');
+  const foundArkoseSetups = JSON.parse(window.localStorage.getItem('sp/arkoseSetups') || '[]');
   // if (isGPT4 && !arkoseToken) {
-  if (!arkoseToken) {
+  if (!arkoseToken && foundArkoseSetups.length > 0) {
     arkoseTrigger();
   }
   const userMessageId = messageId;
   let assistantData = [];
+  let generatedTitleAlready = false;
   const startTime = Date.now();
   const interval = setInterval(() => {
-    arkoseToken = window.localStorage.getItem('arkoseToken');
+    arkoseToken = window.localStorage.getItem('sp/arkoseToken');
 
     if (Date.now() - startTime > 5000 && !arkoseDXIsPending) {
       clearInterval(interval);
@@ -1118,7 +1129,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
     }
     // if (arkoseToken || (isPaid && !selectedModel.tags.includes('gpt4'))) {
     // if (!isGPT4 || arkoseToken) {
-    if (arkoseToken) {
+    if (arkoseToken || foundArkoseSetups.length === 0) {
       // if (arkoseToken) {
       clearInterval(interval);
       scrolUpDetected = false;
@@ -1227,7 +1238,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
                     clearInterval(tempId);
                     // don't generate title if tmpChatStreamIsClosed
                     const assistantMessages = assistantData.map((m) => m.message);
-                    updateOrCreateConversation(finalConversationId, gizmoId, assistantMessages, userMessageId, settings, !tmpChatStreamIsClosed, tmpChatStreamIsClosed).then(() => {
+                    updateOrCreateConversation(finalConversationId, gizmoId, assistantMessages, userMessageId, settings, !tmpChatStreamIsClosed && !generatedTitleAlready, tmpChatStreamIsClosed).then(() => {
                       if (!tmpChatStreamIsClosed) { // if not clicked on stop generating button
                         if (runningPromptChainSteps && runningPromptChainSteps.length > 1 && runningPromptChainStepIndex < runningPromptChainSteps.length - 1) {
                           setTimeout(() => {
@@ -1280,6 +1291,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
                 }
                 const data = decodedBody ? JSON.parse(decodedBody) : {};
                 if (data.type === 'title_generation') {
+                  generatedTitleAlready = true;
                   updateConversationTitle(data.conversation_id, data.title);
                   return;
                 }
@@ -1620,7 +1632,7 @@ Reply with OK: [Summary is received!]. Don't reply with anything else!`;
 }
 function insertNextChunk(settings, previousMessage) {
   if (settings.autoSummarize) {
-    finalSummary = `${finalSummary}\n${previousMessage?.content?.parts?.filter((p) => typeof p === 'string')?.join('\n')}`;
+    finalSummary = `${finalSummary}\n${(previousMessage?.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n')}`;
 
     if (shouldSubmitFinalSummary) {
       submitFinalSummary();
@@ -1695,6 +1707,7 @@ function overrideSubmitForm() {
         }
       } else if (settings.promptTemplate && templateWords?.length > 0) {
         // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
+
         createTemplateWordsModal(templateWords);
         setTimeout(() => {
           const firstTemplateWordInput = document.querySelector('[id^=template-input-]');
@@ -2006,7 +2019,8 @@ function loadConversationList(skipFullReload = false) {
           } else {
             unarchiveConversationById(conversationId, false).then((convExistsInRemoteButIsArchived) => {
               if (convExistsInRemoteButIsArchived) {
-                const isArchived = settings?.autoSyncCount > 0; // if autoSyncCount is 0, there is a good chance the convesation still exists in remote but we are just not seeing it. if autoSyncCount > 0, it less likely to go to a chat that is archived in remote but not locally, so we consider it as archived(but that's not the case always)
+                const historySyncMessage = document.querySelector('#history-sync-message');
+                const isArchived = settings?.autoSyncCount > 0 && !historySyncMessage; // if autoSyncCount is 0, there is a good chance the convesation still exists in remote but we are just not seeing it. if autoSyncCount > 0, it less likely to go to a chat that is archived in remote but not locally, so we consider it as archived(but that's not the case always). if historySyncMessage exists, it means we are currently doing the initial history syncing, so we don't want to show the conversation as archived
                 loadConversation(conversationId, isArchived);
               } else {
                 showNewChatPage();

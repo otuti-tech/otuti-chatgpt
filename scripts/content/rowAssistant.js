@@ -85,15 +85,16 @@ function rowAssistant(conversation, nodes, childIndex, childCount, models, setti
         ${renderedNodes}        
         <div id="message-action-wrapper-${id}" class="flex justify-between empty:hidden gizmo:mt-1 gizmo:justify-start gizmo:gap-3 lg:block gizmo:lg:flex">
         <div class="text-token-text-secondary flex self-end lg:self-center justify-center gizmo:lg:justify-start mt-2 gizmo:mt-0 visible gap-1">
+
+        <button id="text-to-speech-button-${id}" class="flex items-center gap-1 gap-1.5 rounded-md p-1 text-xs text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible" style=""><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path d="M6 9H4C2.89543 9 2 9.89543 2 11V13C2 14.1046 2.89543 15 4 15H6L10.3243 18.9639C10.9657 19.5519 12 19.0969 12 18.2268V5.77324C12 4.90313 10.9657 4.44813 10.3243 5.03608L6 9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16.3984 8.70001C17.0889 9.61924 17.498 10.7618 17.498 12C17.498 13.1119 17.1681 14.1468 16.6007 15.012M20.7922 7.23543C21.5612 8.65189 21.998 10.2749 21.998 12C21.998 13.684 21.5818 15.2708 20.8465 16.6631" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+
         
         <button id="message-pin-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="none" class="icon-sm"><path fill="${pinned ? 'gold' : 'currentColor'}" d="M336 0h-288C21.49 0 0 21.49 0 48v431.9c0 24.7 26.79 40.08 48.12 27.64L192 423.6l143.9 83.93C357.2 519.1 384 504.6 384 479.9V48C384 21.49 362.5 0 336 0zM336 452L192 368l-144 84V54C48 50.63 50.63 48 53.1 48h276C333.4 48 336 50.63 336 54V452z"/></svg></div></button>
 
         <button id="copy-message-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 4C10.8954 4 10 4.89543 10 6H14C14 4.89543 13.1046 4 12 4ZM8.53513 4C9.22675 2.8044 10.5194 2 12 2C13.4806 2 14.7733 2.8044 15.4649 4H17C18.6569 4 20 5.34315 20 7V19C20 20.6569 18.6569 22 17 22H7C5.34315 22 4 20.6569 4 19V7C4 5.34315 5.34315 4 7 4H8.53513ZM8 6H7C6.44772 6 6 6.44772 6 7V19C6 19.5523 6.44772 20 7 20H17C17.5523 20 18 19.5523 18 19V7C18 6.44772 17.5523 6 17 6H16C16 7.10457 15.1046 8 14 8H10C8.89543 8 8 7.10457 8 6Z" fill="currentColor"></path></svg></div></button>
         
         <button id="thumbs-down-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M11.8727 21.4961C11.6725 21.8466 11.2811 22.0423 10.8805 21.9922L10.4267 21.9355C7.95958 21.6271 6.36855 19.1665 7.09975 16.7901L7.65054 15H6.93226C4.29476 15 2.37923 12.4921 3.0732 9.94753L4.43684 4.94753C4.91145 3.20728 6.49209 2 8.29589 2H18.0045C19.6614 2 21.0045 3.34315 21.0045 5V12C21.0045 13.6569 19.6614 15 18.0045 15H16.0045C15.745 15 15.5054 15.1391 15.3766 15.3644L11.8727 21.4961ZM14.0045 4H8.29589C7.39399 4 6.60367 4.60364 6.36637 5.47376L5.00273 10.4738C4.65574 11.746 5.61351 13 6.93226 13H9.00451C9.32185 13 9.62036 13.1506 9.8089 13.4059C9.99743 13.6612 10.0536 13.9908 9.96028 14.2941L9.01131 17.3782C8.6661 18.5002 9.35608 19.6596 10.4726 19.9153L13.6401 14.3721C13.9523 13.8258 14.4376 13.4141 15.0045 13.1902V5C15.0045 4.44772 14.5568 4 14.0045 4ZM17.0045 13V5C17.0045 4.64937 16.9444 4.31278 16.8338 4H18.0045C18.5568 4 19.0045 4.44772 19.0045 5V12C19.0045 12.5523 18.5568 13 18.0045 13H17.0045Z" fill="currentColor"></path></svg></div></button>
-        
-        <button id="text-to-speech-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" fill="none" class="icon-md"><path fill="currentColor" d="M301.2 34.98c-4.201-1.893-8.727-2.902-13.16-2.902c-7.697 0-15.29 2.884-21.27 8.192L131.8 160.1H48c-26.51 0-48 21.48-48 47.96v95.92c0 26.48 21.49 47.96 48 47.96h83.84l134.9 119.8C272.7 477 280.3 479.8 288 479.8c4.438 0 8.959-.9311 13.16-2.835C312.7 471.8 320 460.4 320 447.9V64.12C320 51.54 312.7 40.13 301.2 34.98zM272 412.1L150.1 303.9L48 303.9v-95.83h102.1L272 99.84V412.1zM412.6 182c-4.469-3.623-9.855-5.394-15.2-5.394c-6.951 0-13.83 2.992-18.55 8.797c-8.406 10.24-6.906 25.35 3.375 33.74C393.5 228.4 400 241.8 400 255.1c0 14.17-6.5 27.59-17.81 36.83c-10.28 8.396-11.78 23.5-3.375 33.74c4.719 5.805 11.62 8.802 18.56 8.802c5.344 0 10.75-1.78 15.19-5.399C435.1 311.5 448 284.6 448 255.1S435.1 200.4 412.6 182zM473.1 108.2c-4.455-3.633-9.842-5.41-15.2-5.41c-6.934 0-13.82 2.975-18.58 8.75c-8.406 10.24-6.906 25.35 3.344 33.74C476.6 172.1 496 213.3 496 255.1c0 42.64-19.44 82.1-53.31 110.7c-10.25 8.396-11.75 23.5-3.344 33.74c4.75 5.773 11.62 8.771 18.56 8.771c5.375 0 10.75-1.78 15.22-5.431C518.2 366.9 544 313 544 255.1S518.2 145 473.1 108.2zM534.4 33.4C529.9 29.77 524.5 28 519.2 28c-6.941 0-13.84 2.977-18.6 8.739c-8.406 10.24-6.906 25.35 3.344 33.74C559.9 116.3 592 183.9 592 255.1s-32.09 139.7-88.06 185.5c-10.25 8.396-11.75 23.5-3.344 33.74C505.3 481 512.2 484 519.2 484c5.375 0 10.75-1.779 15.22-5.431C601.5 423.6 640 342.5 640 255.1C640 169.5 601.5 88.34 534.4 33.4z"/></svg></div></button>
-        
+                
         <button id="message-regenerate-button-${id}" title="Regenerate" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M4.5 2.5C5.05228 2.5 5.5 2.94772 5.5 3.5V5.07196C7.19872 3.47759 9.48483 2.5 12 2.5C17.2467 2.5 21.5 6.75329 21.5 12C21.5 17.2467 17.2467 21.5 12 21.5C7.1307 21.5 3.11828 17.8375 2.565 13.1164C2.50071 12.5679 2.89327 12.0711 3.4418 12.0068C3.99033 11.9425 4.48712 12.3351 4.5514 12.8836C4.98798 16.6089 8.15708 19.5 12 19.5C16.1421 19.5 19.5 16.1421 19.5 12C19.5 7.85786 16.1421 4.5 12 4.5C9.7796 4.5 7.7836 5.46469 6.40954 7H9C9.55228 7 10 7.44772 10 8C10 8.55228 9.55228 9 9 9H4.5C3.96064 9 3.52101 8.57299 3.50073 8.03859C3.49983 8.01771 3.49958 7.99677 3.5 7.9758V3.5C3.5 2.94772 3.94771 2.5 4.5 2.5Z" fill="currentColor"></path></svg></div></button>
         
         <button id="message-continue-button-${id}" title="Continue" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible ${shouldShowContinueButton ? 'md:group-[.final-completion]:visible' : ''}"><div class="flex items-center gap-1.5 text-xs"><svg stroke="currentColor" fill="none" stroke-width="2.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 -rotate-180" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polygon points="11 19 2 12 11 5 11 19"></polygon><polygon points="22 19 13 12 22 5 22 19"></polygon></svg></div></button>
@@ -148,24 +149,25 @@ function pythonImageRenderer(node, conversationId, isNew) {
       const renderedNode = `<img style="border-radius:8px; aspect-ratio: ${width}/${height};" id="python-image-displayed-${messageId}" data-file-id="${imageId}" src="${response.download_url}" class="my-1" alt="Output image">`;
       const lastMessageActionWrapper = [...document.querySelectorAll('[id^=message-action-wrapper-]')].pop();
       lastMessageActionWrapper.insertAdjacentHTML('beforebegin', renderedNode);
-      if (isNew) {
-        const galleryImage = {
-          image_id: imageId,
-          width,
-          height,
-          download_url: response.download_url,
-          prompt: node.message?.metadata?.aggregate_result?.code,
-          is_public: false,
-          category: 'chart',
-          conversation_id: conversationId,
-        };
-        chrome.runtime.sendMessage({
-          addGalleryImages: true,
-          detail: {
-            images: [galleryImage],
-          },
-        });
-      }
+      // if (isNew) {
+      const galleryImage = {
+        image_id: imageId,
+        width,
+        height,
+        download_url: response.download_url,
+        prompt: node.message?.metadata?.aggregate_result?.code,
+        is_public: false,
+        category: 'chart',
+        conversation_id: conversationId,
+        created_at: new Date(response.creation_time),
+      };
+      chrome.runtime.sendMessage({
+        addGalleryImages: true,
+        detail: {
+          images: [galleryImage],
+        },
+      });
+      // }
     });
   });
 }
@@ -299,7 +301,7 @@ function dalleImageRenderer(node, conversationId, isNew = false) {
     parentId = lastMessageDalleContent?.id.split('message-dalle-content-')[1];
   }
 
-  const images = content.parts;
+  const images = content?.parts;
 
   const hiddenPluginSubtitle = document.querySelector(`#hidden-plugin-subtitle-${parentId}`);
   if (hiddenPluginSubtitle) {
@@ -342,26 +344,28 @@ function dalleImageRenderer(node, conversationId, isNew = false) {
         }
         // add download event listener
         dalleImageEventListener(images, dalleElementImage, parentId, index);
-        if (isNew) {
-          const galleryImage = {
-            image_id: imageId,
-            width,
-            height,
-            download_url: response.download_url,
-            prompt: image?.metadata?.dalle?.prompt,
-            gen_id: image?.metadata?.dalle?.gen_id,
-            seed: image?.metadata?.dalle?.seed,
-            is_public: false,
-            category: 'dalle',
-            conversation_id: conversationId,
-          };
-          chrome.runtime.sendMessage({
-            addGalleryImages: true,
-            detail: {
-              images: [galleryImage],
-            },
-          });
-        }
+        // if (isNew) {
+
+        const galleryImage = {
+          image_id: imageId,
+          width,
+          height,
+          download_url: response.download_url,
+          prompt: image?.metadata?.dalle?.prompt,
+          gen_id: image?.metadata?.dalle?.gen_id,
+          seed: image?.metadata?.dalle?.seed,
+          is_public: false,
+          category: 'dalle',
+          conversation_id: conversationId,
+          created_at: new Date(response.creation_time),
+        };
+        chrome.runtime.sendMessage({
+          addGalleryImages: true,
+          detail: {
+            images: [galleryImage],
+          },
+        });
+        // }
       }
     });
   });
@@ -410,7 +414,7 @@ function actionConfirmationRenderer(actionRequestNode, actionResponseNode) {
   const actionType = metadata?.jit_plugin_data?.from_server?.type;
 
   if (actionType === 'confirm_action') {
-    return `<div id="tool-action-request-wrapper-${messageId}" data-domain=${domain}>${actionDisclaimerRenderer(domain)}<div class="mb-2 flex gap-2"><button id="tool-action-request-allow-${messageId}" class="btn relative btn-dark h-8"><div class="flex w-full gap-2 items-center justify-center">Allow</div></button><button id="tool-action-request-deny-${messageId}" class="btn relative btn-neutral h-8"><div class="flex w-full gap-2 items-center justify-center">Decline</div></button></div></div>`;
+    return `<div id="tool-action-request-wrapper-${messageId}" data-domain=${domain}>${actionDisclaimerRenderer(domain)}<div class="mb-2 flex gap-2"><button id="tool-action-request-allow-${messageId}" class="btn relative btn-dark h-8"><div class="flex w-full gap-2 items-center justify-center">Allow</div></button><button id="tool-action-request-always-allow-${messageId}" class="btn relative btn-dark h-8"><div class="flex w-full gap-2 items-center justify-center">Always Allow</div></button><button id="tool-action-request-deny-${messageId}" class="btn relative btn-neutral h-8"><div class="flex w-full gap-2 items-center justify-center">Decline</div></button></div></div>`;
   }
   if (actionType === 'oauth_required') {
     return `<div id="tool-action-request-wrapper-${messageId}" data-domain=${domain}>${actionDisclaimerRenderer(domain)}<div class="mb-2 flex gap-2"><button id="tool-action-request-oauth-${messageId}" class="btn relative btn-dark h-8"><div class="flex w-full gap-2 items-center justify-center">Sign in with ${domain}</div></button></div></div>`;
@@ -426,7 +430,7 @@ function actionResponseRenderer(actionNode, domain) {
   if (recipient !== 'all') return actionStoppedRenderer(domain);
 
   const actionType = metadata?.jit_plugin_data?.from_client?.user_action?.data?.type;
-  if (actionType === 'allow') {
+  if (actionType === 'allow' || actionType === 'always_allow') {
     return actionAllowedRenderer(domain);
   }
   if (actionType === 'deny') {
@@ -527,7 +531,7 @@ function pluginContentRenderer(pluginNode) {
     : author?.name?.split('.')[0]?.replace(/([A-Z])/g, ' $1')?.replace(/^./, (str) => str.toUpperCase());
 
   const pluginMessage = contentType === 'text'
-    ? content?.parts?.filter((p) => typeof p === 'string')?.join('\n')
+    ? (content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n')
     : content?.text;
   if (!pluginMessage) return '';
   const { language, value } = hljs.highlightAuto(pluginMessage);
@@ -651,7 +655,7 @@ function assistantContentGenerator(assistantNode, returnCounters = false) {
     const lastContinueButton = [...document.querySelectorAll('[id^="message-continue-button-"]')].pop();
     if (lastContinueButton) lastContinueButton.classList.add('md:group-[.final-completion]:visible');
   }
-  let messageContentParts = assistantMessage?.content?.parts?.filter((p) => typeof p === 'string')?.join('\n');
+  let messageContentParts = (assistantMessage?.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n');
   // if citations array is not mpty, replace text from start_ix to end_ix position with citation
   if (citations?.length > 0) {
     const reversedCitations = [...citations].reverse();

@@ -1,4 +1,5 @@
-/* global isFirefox, isOpera, isGenerating, toast, volumeIconInterval, speakingMessageId:true */
+// eslint-disable-next-line no-unused-vars
+/* global isFirefox, isOpera, isGenerating, toast, playingAudios:true, speakingMessageId:true */
 /* eslint-disable func-names */
 let isAltKeyDown = false;
 // eslint-disable-next-line no-unused-vars
@@ -85,16 +86,9 @@ function startSpeechToText() {
           }, (hasSubscription) => {
             if (hasSubscription) {
               // if speaking, stop it
-              if (speakingMessageId) {
-                speechSynthesis.cancel();
-                clearInterval(volumeIconInterval);
-                speakingMessageId = '';
-                const allTextToSpeechButtons = document.querySelectorAll('[id^="text-to-speech-button-"]');
-                allTextToSpeechButtons.forEach((b) => {
-                  const volumeIcon = b.querySelector('svg > path');
-                  volumeIcon.style.fill = 'currentColor';
-                });
-              }
+              speakingMessageId = '';
+              stopAllAudios();
+
               const submitButton = document.querySelector('[data-testid="send-button"]');
               if (submitButton && !isGenerating) {
                 // update send button icon to listening
@@ -153,5 +147,18 @@ function startSpeechToText() {
       isListening = false;
       toast('Stopped listening. ⏸️');
     }
+  });
+}
+function stopAllAudios() {
+  Object.values(playingAudios).forEach((audio) => {
+    audio.pause();
+  });
+  playingAudios = {};
+  const allTextToSpeechButtons = document.querySelectorAll('[id^="text-to-speech-button-"]');
+  allTextToSpeechButtons.forEach((b) => {
+    // set style to empty string to remove inline style
+    b.style = '';
+    b.disabled = false;
+    b.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path d="M6 9H4C2.89543 9 2 9.89543 2 11V13C2 14.1046 2.89543 15 4 15H6L10.3243 18.9639C10.9657 19.5519 12 19.0969 12 18.2268V5.77324C12 4.90313 10.9657 4.44813 10.3243 5.03608L6 9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16.3984 8.70001C17.0889 9.61924 17.498 10.7618 17.498 12C17.498 13.1119 17.1681 14.1468 16.6007 15.012M20.7922 7.23543C21.5612 8.65189 21.998 10.2749 21.998 12C21.998 13.684 21.5818 15.2708 20.8465 16.6631" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
   });
 }

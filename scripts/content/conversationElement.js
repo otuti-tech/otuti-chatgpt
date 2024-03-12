@@ -35,8 +35,10 @@ function createConversation(conversation) {
       return;
     }
     chrome.storage.local.get(['account', 'chatgptAccountId'], (r) => {
-      const isPaid = r?.account?.accounts?.[r.chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
-      if (!isPaid || arkoseWasInitialized()) {
+      const isPaid = r?.account?.accounts?.[r?.chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
+      const arkoseEnabled = r?.account?.accounts?.[r?.chatgptAccountId || 'default']?.features?.find((f) => f.includes('arkose')) || false;
+
+      if (!isPaid || !arkoseEnabled || arkoseWasInitialized()) {
         const conversationId = pathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
         if (searchValue || conversationId !== conversation.id) {
           window.history.pushState({}, '', `https://chat.openai.com/${gizmoPath}c/${conversation.id}`);

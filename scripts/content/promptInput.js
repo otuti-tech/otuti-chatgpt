@@ -59,8 +59,8 @@ function replaceTextAreaElement(settings) {
 
           const lastUserMessageParentId = lastUserMessage.parent;
 
-          const newMessage = lastUserMessage.message.content.parts.filter((p) => typeof p === 'string').join('\n');
-          const imageAssets = lastUserMessage.message?.content?.parts?.filter((p) => p && typeof p !== 'string') || [];
+          const newMessage = (lastUserMessage.message?.content?.parts || [])?.filter((p) => typeof p === 'string').join('\n');
+          const imageAssets = (lastUserMessage.message?.content?.parts || [])?.filter((p) => p && typeof p !== 'string') || [];
           const fileAttachments = lastUserMessage.message?.metadata?.attachments || [];
           submitChat(newMessage, conversation, lastUserChatMessageId, lastUserMessageParentId, result.settings, result.account, result.chatgptAccountId, result.models, result.selectedModel, imageAssets, fileAttachments, false, true);
         });
@@ -143,6 +143,8 @@ function replaceTextAreaElement(settings) {
     // also async
     newTextAreaElement.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' && event.which === 13 && !event.shiftKey && !isGenerating) {
+        const quickAccessMenu = document.querySelector('#quick-access-menu');
+        if (quickAccessMenu && quickAccessMenu.style.display !== 'none') return;
         textAreaElementOldValue = '';
         if (newTextAreaElement.value.trim().length === 0 && curFileAttachments?.length === 0) {
           event.preventDefault();

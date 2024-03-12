@@ -5,7 +5,7 @@ function rowUser(conversation, node, childIndex, childCount, name, avatar, setti
   const { pinned, message } = node;
   const { id, content, metadata } = message;
 
-  const messageText = content.parts.filter((p) => typeof p === 'string').join('\n');
+  const messageText = (content?.parts || []).filter((p) => typeof p === 'string').join('\n');
   const assets = metadata?.attachments || [];
   const replyToText = metadata?.targeted_reply;
   const imageAssets = assets.filter((asset) => getFileType(asset.name) === 'Image');
@@ -86,7 +86,7 @@ function assetElement(nonImageAssets, imageAssets, asset) {
   const isImage = getFileType(asset.name) === 'Image';
   return isImage
     ? `<div class="relative mt-1 flex h-auto w-full max-w-lg items-center justify-center overflow-hidden bg-token-main-surface-tertiary text-token-text-primary ${imageAssets.length === 1 ? '' : 'aspect-square'}"><button type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:r7p:" data-state="closed"><img id="asset-${asset.id}" alt="Uploaded image" loading="lazy" width="${asset.width}" height="${asset.height}" decoding="async" data-nimg="1" class="max-w-full transition-opacity duration-300 opacity-100" src="" style="color: transparent;"></button></div>`
-    : `<div class="group relative inline-block text-sm text-token-text-primary"><div class="relative overflow-hidden bg-token-main-surface-tertiary rounded-xl"><div class="p-2 w-80"><div class="flex flex-row items-center gap-2"><div class="relative h-10 w-10 overflow-hidden rounded-md">${getThumbnail(getFileType(asset.name), asset.id)}</div><div class="overflow-hidden"><div class="truncate font-medium">${asset.name}</div><div class="truncate text-token-text-tertiary">${getFileType(asset.name)}</div></div></div></div></div></div>`;
+    : `<div class="group relative inline-block text-sm text-token-text-primary"><div class="relative overflow-hidden bg-token-main-surface-tertiary rounded-xl"><div class="p-2 w-80"><div class="flex flex-row items-center gap-2"><div class="relative h-10 w-10 shrink-0 overflow-hidden rounded-md">${getThumbnail(getFileType(asset.name), asset.id)}</div><div class="overflow-hidden"><div class="truncate font-medium">${asset.name}</div><div class="truncate text-token-text-tertiary">${getFileType(asset.name)}</div></div></div></div></div></div>`;
 }
 function getThumbnail(fileType, assetId = '') {
   switch (fileType) {

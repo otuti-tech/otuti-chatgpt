@@ -337,12 +337,17 @@ function reloadOrAddRefreshButtonToSyncBanner(localConversations, settings, skip
   const modalWrapper = document.querySelector('[id^=modal-wrapper-]');
   const newPromptChainModal = document.querySelector('#new-prompt-chain-modal');
   const customInstructionNameInput = document.querySelector('#custom-instructions-name-input');
+  const historySyncMessage = document.querySelector('#history-sync-message');
+
   const canSubmit = canSubmitPrompt();
   getConversations(0, 1).then((conversations) => {
     let shouldReload = false;
     const lastRemoteConversation = conversations.items[0];
     const lastLocalConversation = Object.values(localConversations).sort((a, b) => b.update_time - a.update_time)[0];
     if (lastRemoteConversation && lastLocalConversation && lastRemoteConversation.id !== lastLocalConversation.id) {
+      shouldReload = true;
+    }
+    if (historySyncMessage) {
       shouldReload = true;
     }
     if ((settings.autoRefreshAfterSync || typeof settings.autoRefreshAfterSync === 'undefined') && textAreaElement && textAreaElement.value === '' && !modalWrapper && !customInstructionNameInput && !newPromptChainModal && canSubmit) {

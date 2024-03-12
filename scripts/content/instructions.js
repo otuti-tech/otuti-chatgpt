@@ -1,13 +1,14 @@
 // eslint-disable-next-line no-unused-vars
 function generateInstructions(conversation, settings, text, forceAddInstructions = false) {
   if (!text.trim()) return text;
+  if (!conversation || !settings) return text;
   const { selectedLanguage, selectedTone, selectedWritingStyle } = settings;
 
   // if (selectedLanguage.code === 'default'
   //   && selectedTone.code === 'default'
   //   && selectedWritingStyle.code === 'default') return text;
 
-  if (!forceAddInstructions
+  if (!forceAddInstructions && conversation
     && conversation.languageCode === selectedLanguage.code
     && conversation.toneCode === selectedTone.code
     && conversation.writingStyleCode === selectedWritingStyle.code) return text;

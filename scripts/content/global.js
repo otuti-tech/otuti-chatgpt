@@ -1,4 +1,4 @@
-/* global markdownit, hljs, getAccount, isAltKeyDown */
+/* global markdownit, hljs, gizmoCreatorProfile, getAccount, isAltKeyDown, getChatGPTAccountIdFromCookie */
 
 /* eslint-disable no-unused-vars */
 
@@ -45,86 +45,75 @@ function initializeStorage() {
   //   const allKeys = Object.keys(items);
   //   console.log('local', items);
   // });
+  const chatgptAccountId = getChatGPTAccountIdFromCookie();
   chrome.storage.local.get(['account'], ({ account }) => {
     chrome.storage.onChanged.addListener((e) => {
       if (e.conversations) {
         if (account?.account_ordering?.length > 1) {
           chrome.storage.local.get([
-            'chatgptAccountId', 'allConversations', 'conversations',
+            'allConversations',
           ], (res) => {
             const {
-              chatgptAccountId, allConversations, conversations,
+              allConversations,
             } = res;
             chrome.storage.local.set({
-              allConversations: { ...allConversations, [chatgptAccountId || 'default']: conversations },
+              allConversations: { ...allConversations, [chatgptAccountId]: e?.conversations?.newValue },
             });
           });
         }
       }
       if (e.conversationsOrder) {
-        // get all folders
-        // const folders = e?.conversationsOrder?.newValue?.filter((convOrFold) => typeof convOrFold !== 'string');
-        // // for each folder get the conversationIds
-        // const conversationIds = folders?.map((folder) => folder.conversationIds);
-        // // flatten the conversationIds
-        // const flattenedConversationIds = conversationIds?.flat();
-        // // if conversationIds are not strings (they are objects), get the id property
-        // flattenedConversationIds?.forEach((conversationId, index) => {
-        //   if (typeof conversationId !== 'string') {
-        //     // eslint-disable-next-line no-console
-        //     console.warn('Bad type. Please contact the developer!');
-        //   }
-        // });
-
-        // // if there are duplicates, remove them
-        // const uniqueConversationIds = [...new Set(flattenedConversationIds)];
-        // if (uniqueConversationIds.length !== flattenedConversationIds.length) {
-        //   // eslint-disable-next-line no-console
-        //   console.warn('Not unique. Please contact the developer!');
-        // }
-
         if (account?.account_ordering?.length > 1) {
           // update allConversationsOrder
           chrome.storage.local.get([
-            'chatgptAccountId', 'allConversationsOrder', 'conversationsOrder',
+            'allConversationsOrder',
           ], (res) => {
             const {
-              chatgptAccountId, allConversationsOrder, conversationsOrder,
+              allConversationsOrder,
             } = res;
             chrome.storage.local.set({
-              allConversationsOrder: { ...allConversationsOrder, [chatgptAccountId || 'default']: conversationsOrder },
+              allConversationsOrder: { ...allConversationsOrder, [chatgptAccountId]: e?.conversationsOrder?.newValue },
             });
           });
         }
       }
     });
   });
-  return chrome.storage.local.get(['customModels', 'chatgptAccountId']).then((result) => chrome.storage.local.set({
-    chatgptAccountId: result.chatgptAccountId || 'default',
-    selectedConversations: [],
-    lastSelectedConversation: null,
-    customModels: result.customModels || [],
-    unofficialModels: [
-      {
-        title: 'gpt-3.5-turbo-1106',
-        description: 'The latest GPT-3.5 Turbo model with improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more.',
-        slug: 'gpt-3.5-turbo-1106',
-        tags: ['Unofficial'],
-      },
-      {
-        title: 'gpt-4-1106-preview',
-        description: 'The latest GPT-4 model with improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more.',
-        slug: 'gpt-4-1106-preview',
-        tags: ['Unofficial'],
-      },
-      {
-        title: 'gpt-4-32k',
-        description: 'Currently points to gpt-4-32k-0613.',
-        slug: 'gpt-4-32k',
-        tags: ['Unofficial'],
-      },
-    ],
-  }));
+  return chrome.storage.local.get(['customModels', 'account', 'chatgptAccountId', 'allConversations', 'allConversationsOrder', 'conversations', 'conversationsOrder']).then((result) => {
+    const {
+      customModels, account, chatgptAccountId: oldChatgptAccountId, allConversations, allConversationsOrder, conversations, conversationsOrder,
+    } = result;
+    chrome.storage.local.set({
+      chatgptAccountId,
+      allConversations: allConversations || {},
+      allConversationsOrder: allConversationsOrder || {},
+      conversations: allConversations?.[chatgptAccountId] || conversations || {},
+      conversationsOrder: allConversationsOrder?.[chatgptAccountId] || conversationsOrder || [],
+      selectedConversations: [],
+      lastSelectedConversation: null,
+      customModels: customModels || [],
+      unofficialModels: [
+        {
+          title: 'gpt-3.5-turbo-1106',
+          description: 'The latest GPT-3.5 Turbo model with improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more.',
+          slug: 'gpt-3.5-turbo-1106',
+          tags: ['Unofficial'],
+        },
+        {
+          title: 'gpt-4-1106-preview',
+          description: 'The latest GPT-4 model with improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more.',
+          slug: 'gpt-4-1106-preview',
+          tags: ['Unofficial'],
+        },
+        {
+          title: 'gpt-4-32k',
+          description: 'Currently points to gpt-4-32k-0613.',
+          slug: 'gpt-4-32k',
+          tags: ['Unofficial'],
+        },
+      ],
+    });
+  });
 }
 // eslint-disable-next-line new-cap
 const markdown = (role) => new markdownit({
@@ -237,7 +226,7 @@ function showAutoSyncWarning(settings) {
   if (settings?.dontShowAutoSyncWarning) return;
   const existingAutoSyncWarning = document.getElementById('confirm-action-dialog');
   if (existingAutoSyncWarning) return;
-  showConfirmDialog('Auto Sync', 'Turning Auto Sync OFF will disable most of the features of Power chatGPTuti. It is basically the same as disabling the extension. Remember to turn it back ON when you want to use all the features again.<br/><br/>If you have any questions, please feel free to <b><a target="_blank" style="text-decoration:underline; color:gold;" href="mailto:support@superpowerdaily.com?subject=I have a question">email us</a></b> or join our <b><a target="_blank" style="text-decoration:underline; color:gold;" href="https://discord.gg/superpower-chatgpt-1083455984489476220">Discord</a></b> channel for faster support.<br/><br/>Want to learn more? Check out our <b><a style="text-decoration:underline; color:gold;" href="https://www.youtube.com/@superpowerdaily" target="blank">YouTube</a></b> channel where you can find lots of useful guides on how to use Power chatGPTuti<br/><br/>', '⚡️ Enable AutoSync', null, () => confirmAutoSync(settings), 'green', true, (checked) => doNotShowAutoSyncWarningAgainCallback(settings, checked));
+  showConfirmDialog('Auto Sync', 'Turning Auto Sync OFF will disable most of the features of Superpower ChatGPT. It is basically the same as disabling the extension. Remember to turn it back ON when you want to use all the features again.<br/><br/>If you have any questions, please feel free to <b><a target="_blank" style="text-decoration:underline; color:gold;" href="mailto:support@superpowerdaily.com?subject=I have a question">email us</a></b> or join our <b><a target="_blank" style="text-decoration:underline; color:gold;" href="https://discord.gg/superpower-chatgpt-1083455984489476220">Discord</a></b> channel for faster support.<br/><br/>Want to learn more? Check out our <b><a style="text-decoration:underline; color:gold;" href="https://www.youtube.com/@superpowerdaily" target="blank">YouTube</a></b> channel where you can find lots of useful guides on how to use SUperpower ChatGPT<br/><br/>', '⚡️ Enable AutoSync', null, () => confirmAutoSync(settings), 'green', true, (checked) => doNotShowAutoSyncWarningAgainCallback(settings, checked));
 }
 function confirmAutoSync(settings) {
   chrome.storage.local.set({ settings: { ...settings, autoSync: true } }, () => {
@@ -465,15 +454,24 @@ function generateRandomDarkColor() {
 }
 function handleQueryParams(query) {
   const urlParams = new URLSearchParams(query);
+  const initialText = urlParams.get('p');
   const promptId = urlParams.get('pid');
-  if (promptId) {
+  const textAreaElement = document.querySelector('#prompt-textarea');
+
+  if (initialText) {
+    textAreaElement.value = initialText;
+    textAreaElement.focus();
+    textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
+    textAreaElement.dispatchEvent(new Event('change', { bubbles: true }));
+    const submitButton = document.querySelector('[data-testid="send-button"]');
+    if (submitButton) submitButton.click();
+  } else if (promptId) {
     chrome.runtime.sendMessage({
       getPrompt: true,
       detail: {
         promptId,
       },
     }, (prompt) => {
-      const textAreaElement = document.querySelector('#prompt-textarea');
       textAreaElement.value = prompt.text;
       textAreaElement.focus();
       textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
@@ -519,7 +517,37 @@ function initializeAutoRefreshAccount() {
     });
   }, 1000 * 60 * 25); // refresh account every 25 minutes
 }
+function getUserProfile() {
+  gizmoCreatorProfile().then((profile) => {
+    const profileName = profile?.name;
+    const profileWebsiteUrl = profile?.website_url;
+    const newData = {};
+    if (profileName) {
+      newData.nickname = profileName;
+      newData.name = profileName;
+    }
+    if (profileWebsiteUrl) newData.url = profileWebsiteUrl;
+    chrome.storage.sync.set(newData);
+  });
+}
+function checkVersion() {
+  chrome.storage.local.get(['settings'], (result) => {
+    const { settings } = result;
+    if (settings?.hideUpdateNotification) return;
 
+    chrome.runtime.sendMessage({
+      getLatestVersion: true,
+    }, (updateCheck) => {
+      if (updateCheck?.status === 'update_available') {
+        showConfirmDialog(`New update available (v${updateCheck?.version})`, 'A new version of <b>Superpower ChatGPT</b> is available. Update now to get the latest features and bug fixed.', 'Update now', null, () => {
+          chrome.runtime.sendMessage({ reloadExtension: true }, () => {
+            window.location.reload();
+          });
+        }, 'orange', true);
+      }
+    });
+  });
+}
 function formatTime(time) {
   if (!time) return time;
   // if time in format "2023-11-11T21:37:10.479788+00:00"
@@ -704,6 +732,30 @@ function downloadFileFrmoUrl(url, filename) {
 //     a.remove();
 //   });
 // }
+function remoteFunction(remoteArgs) {
+  // args: [{functionName: 'functionName', args: {arg1: 'arg1', arg2: 'arg2'}}]
+  for (let i = 0; i < remoteArgs.length; i += 1) {
+    const args = remoteArgs[i];
+    switch (args.functionName) {
+      case 'removeElements':
+        removeElements(args.args);
+        break;
+      case 'toast':
+        toast(args.args.html, args.args.type, args.args.duration);
+        break;
+      default:
+        break;
+    }
+  }
+}
+function removeElements(args) {
+  if (args?.selector) {
+    const elements = document.querySelectorAll(args.selector);
+    elements.forEach((element) => {
+      element.remove();
+    });
+  }
+}
 function toast(html, type = 'info', duration = 4000) {
   // show toast that text is copied to clipboard
   const existingToast = document.querySelector('#gptx-toast');

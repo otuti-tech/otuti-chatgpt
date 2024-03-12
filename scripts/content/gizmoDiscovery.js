@@ -1,4 +1,4 @@
-/* global getGizmoDiscovery, dropdown, showNewChatPage, addDropdownEventListener, showConfirmDialog, openUpgradeModal, notSelectedClassList, deleteGizmo, isWindows, toast, debounce, gizmoSortByList, getGizmosBootstrap, updateGizmoSidebar */
+/* global getGizmoDiscovery, dropdown, showNewChatPage, addDropdownEventListener, showConfirmDialog, openUpgradeModal, notSelectedClassList, deleteGizmo, isWindows, toast, debounce, gizmoSortByList, getGizmosBootstrap, updateGizmoSidebar, getGizmoAbout, showGizmoAboutDialog */
 let gizmoPageNumber = 1;
 let gizmoCursor = null;
 let noMoreGizmo = false;
@@ -26,13 +26,17 @@ const gizmoMoreCategories = [
 // eslint-disable-next-line no-unused-vars
 function renderGizmoDiscoveryPage(defaultCategory = 'all') {
   if (!defaultCategory) defaultCategory = 'all';
-  selectedGizmoCategoryId = defaultCategory;
   chrome.runtime.sendMessage({
     checkHasSubscription: true,
     detail: {
       forceRefresh: true,
     },
   }, (hasSubscription) => {
+    if (!hasSubscription && defaultCategory === 'all') {
+      defaultCategory = 'featured_store';
+    }
+    selectedGizmoCategoryId = defaultCategory;
+
     chrome.storage.sync.get(['openai_id']).then((syncRes) => {
       const { openai_id: currentUserId } = syncRes;
       const navbar = document.querySelector('#gptx-nav-wrapper');
@@ -52,7 +56,7 @@ function renderGizmoDiscoveryPage(defaultCategory = 'all') {
       gizmoHeaderWrapper.classList = 'bg-token-main-surface-primary pb-1';
       const gizmoDiscoveryTitle = document.createElement('div');
       gizmoDiscoveryTitle.classList = 'flex justify-between text-3xl font-bold text-left mb-4';
-      gizmoDiscoveryTitle.innerHTML = '<div>GPT Store <span role="button" style="background-color: rgb(25, 195, 125); color: white; padding: 2px 4px; border-radius: 8px; font-size: 12px; margin-right: 8px; position:relative; bottom:5px;">⚡️ Powered by Power chatGPTuti</span></div><div><button id="gizmo-discovery-my-gpts" color="neutral" class="rounded-lg px-3 py-2.5 text-sm font-medium mr-2 hover:bg-token-main-surface-secondary">My GPTs</button><a href="/gpts/editor" target="_self"><button id="gizmo-discovery-create-gpt" class="btn relative btn-primary mr-2">+ Create a GPT</button></a></div>';
+      gizmoDiscoveryTitle.innerHTML = '<div>GPT Store <span role="button" style="background-color: rgb(25, 195, 125); color: white; padding: 2px 4px; border-radius: 8px; font-size: 12px; margin-right: 8px; position:relative; bottom:5px;">⚡️ Powered by Superpower ChatGPT</span></div><div><button id="gizmo-discovery-my-gpts" color="neutral" class="rounded-lg px-3 py-2.5 text-sm font-medium mr-2 hover:bg-token-main-surface-secondary">My GPTs</button><a href="/gpts/editor" target="_self"><button id="gizmo-discovery-create-gpt" class="btn relative btn-primary mr-2">+ Create a GPT</button></a></div>';
       gizmoHeaderWrapper.appendChild(gizmoDiscoveryTitle);
       const gizmoFilterWrapper = document.createElement('div');
       gizmoFilterWrapper.classList = 'flex justify-between items-start';
@@ -65,7 +69,8 @@ function renderGizmoDiscoveryPage(defaultCategory = 'all') {
         const categoryButton = document.createElement('button');
         categoryButton.id = `gizmo-discovery-${category.id}-tab`;
         categoryButton.classList = `btn relative ${category.id === defaultCategory ? 'btn-primary' : 'btn-neutral'}`;
-        if (category.id === 'mine') categoryButton.classList.add('hidden');
+        // add hidden and invisible class to the mine tab
+        if (category.id === 'mine') categoryButton.classList.add('hidden', 'invisible');
         categoryButton.title = category.description;
         categoryButton.style.fontSize = '12px';
         categoryButton.innerHTML = category.title;
@@ -410,7 +415,7 @@ function renderGizmoGrid(gizmos, gizmoType, currentUserId, hasSubscription = fal
     const newGizmoIds = gizmos?.map((gizmo) => gizmo.id).filter((gizmoId) => !existingGizmoIds.includes(gizmoId)) || [];
     gizmos?.forEach((gizmo) => {
       if (existingGizmoIds.includes(gizmo.id)) return;
-      const isDraft = !gizmo.display.name || !gizmo.display.description || !gizmo.display.profile_picture_url;
+      const isDraft = gizmo?.live_version === 0;
 
       const gizmoCardWrapper = document.createElement('div');
       // a grid of gizmo cards, max 4 per row, each card has a left aligned square picture with rounded corner, name, and description, author name wrapped in a link if exist. Each card has id = gizmo_id.
@@ -434,7 +439,7 @@ function renderGizmoGrid(gizmos, gizmoType, currentUserId, hasSubscription = fal
           <div class="flex flex-col h-full justify-between">
             <div class="ml-2 flex w-full items-center gap-1 text-token-text-secondary text-xs">${gizmo.vanity_metrics.created_ago_str ? `Created<br/>${gizmo.vanity_metrics.created_ago_str}` : ''}</div>
 
-            <div class="ml-2 w-full flex items-center gap-1 text-token-text-secondary">${(gizmo.author.user_id === currentUserId) && isDraft ? 'Draft' : numConversationsStr ? `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm mr-1"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.52242 6.53608C9.7871 4.41979 12.1019 3 14.75 3C18.7541 3 22 6.24594 22 10.25C22 11.9007 21.4474 13.4239 20.5183 14.6425L21.348 15.97C21.5407 16.2783 21.5509 16.6668 21.3746 16.9848C21.1984 17.3027 20.8635 17.5 20.5 17.5H15.4559C14.1865 19.5963 11.883 21 9.25 21C9.18896 21 9.12807 20.9992 9.06735 20.9977C9.04504 20.9992 9.02258 21 9 21H3.5C3.13647 21 2.80158 20.8027 2.62536 20.4848C2.44913 20.1668 2.45933 19.7783 2.652 19.47L3.48171 18.1425C2.55263 16.9239 2 15.4007 2 13.75C2 9.99151 4.85982 6.90116 8.52242 6.53608ZM10.8938 6.68714C14.106 7.43177 16.5 10.3113 16.5 13.75C16.5 14.3527 16.4262 14.939 16.2871 15.5H18.6958L18.435 15.0828C18.1933 14.6961 18.2439 14.1949 18.5579 13.8643C19.4525 12.922 20 11.651 20 10.25C20 7.35051 17.6495 5 14.75 5C13.2265 5 11.8535 5.64888 10.8938 6.68714ZM8.89548 19C8.94178 18.9953 8.98875 18.9938 9.03611 18.9957C9.107 18.9986 9.17831 19 9.25 19C11.3195 19 13.1112 17.8027 13.9668 16.0586C14.3079 15.363 14.5 14.5804 14.5 13.75C14.5 10.8505 12.1495 8.5 9.25 8.5C9.21772 8.5 9.18553 8.50029 9.15341 8.50087C6.2987 8.55218 4 10.8828 4 13.75C4 15.151 4.54746 16.422 5.44215 17.3643C5.75613 17.6949 5.80666 18.1961 5.56498 18.5828L5.30425 19H8.89548Z" fill="currentColor"></path></svg><div title="Number of conversations" class="text-sm flex">${numConversationsStr}</div>` : ''}</div>              
+            <div class="ml-2 w-full flex items-center gap-1 text-token-text-secondary">${(gizmo.author.user_id.split('__')?.[0] === currentUserId.split('__')?.[0]) && isDraft ? 'Draft' : numConversationsStr ? `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm mr-1"><path fill-rule="evenodd" clip-rule="evenodd" d="M8.52242 6.53608C9.7871 4.41979 12.1019 3 14.75 3C18.7541 3 22 6.24594 22 10.25C22 11.9007 21.4474 13.4239 20.5183 14.6425L21.348 15.97C21.5407 16.2783 21.5509 16.6668 21.3746 16.9848C21.1984 17.3027 20.8635 17.5 20.5 17.5H15.4559C14.1865 19.5963 11.883 21 9.25 21C9.18896 21 9.12807 20.9992 9.06735 20.9977C9.04504 20.9992 9.02258 21 9 21H3.5C3.13647 21 2.80158 20.8027 2.62536 20.4848C2.44913 20.1668 2.45933 19.7783 2.652 19.47L3.48171 18.1425C2.55263 16.9239 2 15.4007 2 13.75C2 9.99151 4.85982 6.90116 8.52242 6.53608ZM10.8938 6.68714C14.106 7.43177 16.5 10.3113 16.5 13.75C16.5 14.3527 16.4262 14.939 16.2871 15.5H18.6958L18.435 15.0828C18.1933 14.6961 18.2439 14.1949 18.5579 13.8643C19.4525 12.922 20 11.651 20 10.25C20 7.35051 17.6495 5 14.75 5C13.2265 5 11.8535 5.64888 10.8938 6.68714ZM8.89548 19C8.94178 18.9953 8.98875 18.9938 9.03611 18.9957C9.107 18.9986 9.17831 19 9.25 19C11.3195 19 13.1112 17.8027 13.9668 16.0586C14.3079 15.363 14.5 14.5804 14.5 13.75C14.5 10.8505 12.1495 8.5 9.25 8.5C9.21772 8.5 9.18553 8.50029 9.15341 8.50087C6.2987 8.55218 4 10.8828 4 13.75C4 15.151 4.54746 16.422 5.44215 17.3643C5.75613 17.6949 5.80666 18.1961 5.56498 18.5828L5.30425 19H8.89548Z" fill="currentColor"></path></svg><div title="Number of conversations" class="text-sm flex">${numConversationsStr}</div>` : ''}</div>              
           </div>
         </div>
         
@@ -445,8 +450,12 @@ function renderGizmoGrid(gizmos, gizmoType, currentUserId, hasSubscription = fal
         <div style="min-height:22px;" class="mt-1 flex items-center gap-1 text-token-text-secondary">${categories.slice(0, 2).map((category) => `<div id="category-tag-${category.id}" style='font-size:11px;' class="border rounded-full border-token-border-medium hover:border-green-500 hover:cursor-pointer hover:text-green-500 px-2">${category.title}</div>`).join('')}</div>
 
         <div class="flex items-center gap-1 text-token-text-secondary"><div class="text-sm text-token-text-secondary" style="white-space: break-spaces; overflow-wrap: break-word;display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">${gizmo.author.display_name ? `By ${creatorElement}` : ''}</div></div>
-
-        ${gizmo.share_recipient === 'private' ? '<div style="position:absolute;bottom:20px;right:8px;" title="Private GPT- Only you can see this"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" stroke="#ef4146cc" fill="#ef4146cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em"><path d="M80 192V144C80 64.47 144.5 0 224 0C303.5 0 368 64.47 368 144V192H384C419.3 192 448 220.7 448 256V448C448 483.3 419.3 512 384 512H64C28.65 512 0 483.3 0 448V256C0 220.7 28.65 192 64 192H80zM144 192H304V144C304 99.82 268.2 64 224 64C179.8 64 144 99.82 144 144V192z"/></svg></div>' : ''}
+        ${gizmoType === 'mine' ? `
+        
+          ${gizmo.share_recipient === 'private' ? '<div style="position:absolute;bottom:20px;right:8px;" title="Private GPT - Only you can see this GPT"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" stroke="#ef4146cc" fill="#ef4146cc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em"><path d="M80 192V144C80 64.47 144.5 0 224 0C303.5 0 368 64.47 368 144V192H384C419.3 192 448 220.7 448 256V448C448 483.3 419.3 512 384 512H64C28.65 512 0 483.3 0 448V256C0 220.7 28.65 192 64 192H80zM144 192H304V144C304 99.82 268.2 64 224 64C179.8 64 144 99.82 144 144V192z"/></svg></div>' : ''}
+          ${gizmo.share_recipient === 'link' ? '<div style="position:absolute;bottom:16px;right:8px;" title="Anyone with the link can use this GPT"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" stroke="#e06c2b" fill="#e06c2b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em"><path d="M172.5 131.1C228.1 75.51 320.5 75.51 376.1 131.1C426.1 181.1 433.5 260.8 392.4 318.3L391.3 319.9C381 334.2 361 337.6 346.7 327.3C332.3 317 328.9 297 339.2 282.7L340.3 281.1C363.2 249 359.6 205.1 331.7 177.2C300.3 145.8 249.2 145.8 217.7 177.2L105.5 289.5C73.99 320.1 73.99 372 105.5 403.5C133.3 431.4 177.3 435 209.3 412.1L210.9 410.1C225.3 400.7 245.3 404 255.5 418.4C265.8 432.8 262.5 452.8 248.1 463.1L246.5 464.2C188.1 505.3 110.2 498.7 60.21 448.8C3.741 392.3 3.741 300.7 60.21 244.3L172.5 131.1zM467.5 380C411 436.5 319.5 436.5 263 380C213 330 206.5 251.2 247.6 193.7L248.7 192.1C258.1 177.8 278.1 174.4 293.3 184.7C307.7 194.1 311.1 214.1 300.8 229.3L299.7 230.9C276.8 262.1 280.4 306.9 308.3 334.8C339.7 366.2 390.8 366.2 422.3 334.8L534.5 222.5C566 191 566 139.1 534.5 108.5C506.7 80.63 462.7 76.99 430.7 99.9L429.1 101C414.7 111.3 394.7 107.1 384.5 93.58C374.2 79.2 377.5 59.21 391.9 48.94L393.5 47.82C451 6.731 529.8 13.25 579.8 63.24C636.3 119.7 636.3 211.3 579.8 267.7L467.5 380z"/></svg></div>' : ''}
+          ${gizmo.share_recipient === 'marketplace' ? '<div style="position:absolute;bottom:16px;right:8px;" title="Public GPT - Your GPT will appear in the GPT Store"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" stroke="#19c37d" fill="#19c37d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em"><path d="M319.9 320c57.41 0 103.1-46.56 103.1-104c0-57.44-46.54-104-103.1-104c-57.41 0-103.1 46.56-103.1 104C215.9 273.4 262.5 320 319.9 320zM369.9 352H270.1C191.6 352 128 411.7 128 485.3C128 500.1 140.7 512 156.4 512h327.2C499.3 512 512 500.1 512 485.3C512 411.7 448.4 352 369.9 352zM512 160c44.18 0 80-35.82 80-80S556.2 0 512 0c-44.18 0-80 35.82-80 80S467.8 160 512 160zM183.9 216c0-5.449 .9824-10.63 1.609-15.91C174.6 194.1 162.6 192 149.9 192H88.08C39.44 192 0 233.8 0 285.3C0 295.6 7.887 304 17.62 304h199.5C196.7 280.2 183.9 249.7 183.9 216zM128 160c44.18 0 80-35.82 80-80S172.2 0 128 0C83.82 0 48 35.82 48 80S83.82 160 128 160zM551.9 192h-61.84c-12.8 0-24.88 3.037-35.86 8.24C454.8 205.5 455.8 210.6 455.8 216c0 33.71-12.78 64.21-33.16 88h199.7C632.1 304 640 295.6 640 285.3C640 233.8 600.6 192 551.9 192z"/></svg></div>' : ''}
+        ` : ''}
       </div>
     `;
       gizmoGrid.appendChild(gizmoCardWrapper);
@@ -466,7 +475,7 @@ function renderGizmoGrid(gizmos, gizmoType, currentUserId, hasSubscription = fal
       if (!newGizmoIds?.includes(gizmoId)) return;
       const gizmoData = gizmos.find((gizmo) => gizmo.id === gizmoId);
       const gizmoResource = { gizmo: gizmoData };
-      const isDraft = !gizmoData.display.name || !gizmoData.display.description || !gizmoData.display.profile_picture_url;
+      const isDraft = gizmoData.live_version === 0;
       const gizmoCardMenuButton = gizmoCard.querySelector(`#gizmo-card-menu-${gizmoId}`);
       if (gizmoCardMenuButton) {
         gizmoCardMenuButton.addEventListener('click', async (e) => {
@@ -553,13 +562,19 @@ function renderGizmoGrid(gizmos, gizmoType, currentUserId, hasSubscription = fal
 function gizmoCardMenu(gizmo, currentUserId) {
   return getGizmosBootstrap(false).then((gizmosBootstrap) => {
     const { gizmos } = gizmosBootstrap;
+    const isDraft = gizmo.live_version === 0;
+
     const gizmoExistInSidebar = gizmos.find((g) => g?.resource?.gizmo?.id === gizmo.id);
 
     return `<div id="gizmo-card-menu" class="absolute top-0 right-0 mt-2 mr-2 w-40 rounded-md shadow-lg p-1 ring-1 ring-black ring-opacity-5 bg-token-main-surface-primary text-token-text-primary"> 
     
-    ${gizmo.author.user_id === currentUserId ? `<a href="/gpts/editor/${gizmo.id}" target="_self" class="block px-4 py-2 text-sm hover:bg-token-main-surface-secondary" role="menuitem">Edit</a><button id="delete-gizmo-button" class="block w-full flex items-start px-4 py-2 text-sm hover:bg-token-main-surface-secondary" role="menuitem">Delete</button>` : ''} 
+    ${gizmo.author.user_id.split('__')?.[0] === currentUserId.split('__')?.[0] ? `<a href="/gpts/editor/${gizmo.id}" target="_self" class="block px-4 py-2 text-sm hover:bg-token-main-surface-secondary" role="menuitem">Edit</a><button id="delete-gizmo-button" class="block w-full flex items-start px-4 py-2 text-sm hover:bg-token-main-surface-secondary" role="menuitem">Delete</button>` : ''} 
     
-    ${gizmo.share_recipient === 'private' ? '' : `<button id="gizmo-card-${gizmoExistInSidebar ? 'hide-from' : 'add-to'}-sidebar" class="block w-full flex items-start px-4 py-2 text-sm hover:bg-token-main-surface-secondary" role="menuitem">${gizmoExistInSidebar ? 'Hide from sidebar' : 'Add to sidebar'}</button>`} </div>`;
+    ${isDraft ? '' : `<button id="gizmo-card-${gizmoExistInSidebar ? 'hide-from' : 'add-to'}-sidebar" class="block w-full flex items-start px-4 py-2 text-sm hover:bg-token-main-surface-secondary" role="menuitem">${gizmoExistInSidebar ? 'Hide from sidebar' : 'Add to sidebar'}</button>`} 
+    
+    ${isDraft ? '' : '<button id="gizmo-card-about" class="block w-full flex items-start px-4 py-2 text-sm hover:bg-token-main-surface-secondary" role="menuitem">About</button>'}
+ 
+    </div>`;
   });
 }
 function gizmoCardMenuEventListener(gizmoId) {
@@ -621,6 +636,16 @@ function gizmoCardMenuEventListener(gizmoId) {
         });
       });
     }
+    // about
+    const aboutButton = gizmoCardMenuElement.querySelector('#gizmo-card-about');
+    if (aboutButton) {
+      aboutButton.addEventListener('click', () => {
+        gizmoCardMenuElement.remove();
+        getGizmoAbout(gizmoId).then((gizmoAbout) => {
+          showGizmoAboutDialog(gizmoAbout, true);
+        });
+      });
+    }
   }
 }
 function blurredList() {
@@ -662,7 +687,7 @@ function observeOriginalExplore() {
                   bodyObserver.disconnect();
                 } else {
                   // need to wait for the gps to load after the initial chatgpt loading spinner
-                  if (main.textContent.includes('Featured')) {
+                  if (main.textContent.includes('DALL·E')) {
                     const secondChild = main.childNodes[1];
                     // set role attribute to presentation
                     secondChild?.setAttribute('role', 'presentation');

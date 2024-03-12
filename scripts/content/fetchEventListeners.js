@@ -1,4 +1,4 @@
-/* global getAllPlugins, getGizmoIdFromUrl, getInstalledPlugins, initialize, unarchiveConversationById */
+/* global getAllPlugins, getGizmoIdFromUrl, getInstalledPlugins, initialize, unarchiveConversationById, getChatGPTAccountIdFromCookie */
 
 window.addEventListener('historyLoadedReceived', () => {
   chrome.storage.local.get(['isBanned'], (res) => {
@@ -25,8 +25,9 @@ window.addEventListener('accountReceived', (event) => {
   if (event.detail.accessToken) {
     chrome.storage.sync.set({ accessToken: event.detail.accessToken });
   }
-  const chatgptAccountId = document?.cookie?.split('; ')?.find((row) => row?.startsWith('_account'))?.split('=')?.[1] || 'default';
-  sharedWebsocket = chatgptAccountId ? account?.accounts?.[chatgptAccountId]?.features?.includes('shared_websocket') : false;
+  const chatgptAccountId = getChatGPTAccountIdFromCookie();
+
+  sharedWebsocket = account?.accounts?.[chatgptAccountId]?.features?.includes('shared_websocket');
   if (event.detail.responseData?.account_ordering?.length > 1) {
     chrome.storage.local.get([
       'allConversations', 'conversations', 'allConversationsOrder', 'conversationsOrder',
@@ -34,11 +35,11 @@ window.addEventListener('accountReceived', (event) => {
       const {
         allConversations, conversations, allConversationsOrder, conversationsOrder,
       } = res;
-
-      if (event.detail.responseData?.account_ordering?.length !== Object.keys(allConversations || {}).length) {
+      //  if event.detail.responseData?.account_ordering has a key that doesn't exist in Object.keys(allConversations || {})
+      if (event.detail.responseData?.account_ordering?.some((id) => !Object.keys(allConversations || {}).includes(id))) {
         chrome.storage.local.set({
-          allConversations: { ...allConversations, [chatgptAccountId]: conversations },
-          allConversationsOrder: { ...allConversationsOrder, [chatgptAccountId]: conversationsOrder },
+          allConversations: { ...(allConversations || {}), [chatgptAccountId]: conversations },
+          allConversationsOrder: { ...(allConversationsOrder || {}), [chatgptAccountId]: conversationsOrder },
         });
       }
     });
@@ -65,7 +66,7 @@ window.addEventListener('conversationUnarchivedReceived', (event) => {
   unarchiveConversationById(event.detail.conversationId);
 });
 window.addEventListener('userSettingsReceived', (event) => {
-  chrome.storage.local.set({ openAiUserSettings: event.detail });
+  chrome.storage.local.set({ openAIUserSettings: event.detail });
 });
 
 // window.addEventListener('gizmoDiscoveryReceived', (event) => {

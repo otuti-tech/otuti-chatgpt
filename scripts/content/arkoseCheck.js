@@ -1,10 +1,10 @@
 /* global arkoseDX, isFirefox, registerWebsocket */
 /* eslint-disable no-unused-vars */
 function arkoseWasInitialized() {
-  const enforcementContainer = document.querySelector('[id^=enforcement-container]');
-  if (!enforcementContainer) {
-    return false;
-  }
+  // const enforcementContainer = document.querySelector('[id^=enforcement-container]');
+  // if (!enforcementContainer) {
+  //   return false;
+  // }
   return true;
 }
 function confirmArkoseExists() {
@@ -45,33 +45,36 @@ function addArkoseScript() {
 let arkoseDXIsPending = false;
 function arkoseTrigger() {
   confirmArkoseExists(); // only does it if it's firefox
-  chrome.storage.local.get(['account', 'selectedModel', 'websocket', 'chatgptAccountId'], ({
-    account, selectedModel, websocket,
-  }) => {
-    // if older than 1 minute, register again
-    if (!websocket || !websocket?.wss_url || !websocket?.registeredAt || (new Date() - new Date(websocket.registeredAt)) > 60000) {
-      registerWebsocket();
-    }
-    // const isPaid = account?.accounts?.[chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
-    // const isGPT4 = selectedModel?.tags?.includes('gpt4');
-    window.localStorage.removeItem('arkoseToken');
-    const inputForm = document.querySelector('#prompt-input-form');
-    if (!inputForm) return;
-    // if (isGPT4) {
-    arkoseDXIsPending = true;
-    arkoseDX().then((e) => {
-      arkoseDXIsPending = false;
-      if (!inputForm.querySelector('#enforcement-trigger')) {
-        inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
+  const foundArkoseSetups = JSON.parse(window.localStorage.getItem('sp/arkoseSetups') || '[]');
+  if (foundArkoseSetups.length > 0) {
+    chrome.storage.local.get(['account', 'selectedModel', 'websocket'], ({
+      account, selectedModel, websocket,
+    }) => {
+      // if older than 1 minute, register again
+      if (!websocket || !websocket?.wss_url || !websocket?.registeredAt || (new Date() - new Date(websocket.registeredAt)) > 60000) {
+        registerWebsocket();
       }
-      inputForm.querySelector('#enforcement-trigger').click();
+      // const isPaid = account?.accounts?.[chatgptAccountId || 'default']?.entitlement?.has_active_subscription || false;
+      // const isGPT4 = selectedModel?.tags?.includes('gpt4');
+      window.localStorage.removeItem('sp/arkoseToken');
+      const inputForm = document.querySelector('#prompt-input-form');
+      if (!inputForm) return;
+      // if (isGPT4) {
+      arkoseDXIsPending = true;
+      arkoseDX().then((e) => {
+        arkoseDXIsPending = false;
+        if (!inputForm.querySelector('#enforcement-trigger')) {
+          inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger"></button>');
+        }
+        inputForm.querySelector('#enforcement-trigger').click();
+      });
+      // }
+      // else {
+      //   if (!inputForm.querySelector('#enforcement-trigger35')) {
+      //     inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger35"></button>');
+      //   }
+      //   inputForm.querySelector('#enforcement-trigger35').click();
+      // }
     });
-    // }
-    // else {
-    //   if (!inputForm.querySelector('#enforcement-trigger35')) {
-    //     inputForm.firstChild.insertAdjacentHTML('beforeend', '<button type="button" class="hidden" id="enforcement-trigger35"></button>');
-    //   }
-    //   inputForm.querySelector('#enforcement-trigger35').click();
-    // }
-  });
+  }
 }

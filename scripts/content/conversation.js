@@ -1,8 +1,7 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global TurndownService, closeMenus, conversationSettingsMenu, addConversationSettingsMenuEventListener, submitChat, openSubmitPromptModal, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, languageList, writingStyleList, toneList, arkoseTrigger, createFullSizeFileWrapper, addFullSizeFileWrapperEventListener, addUploadFileButton, getMousePosition, renderAllDalleImages, getGizmoById, initializeNavbar, replacePageContent, replaceTextAreaElement, addFinalCompletionClassToLastMessageWrapper, highlightSearch, getGizmoUserActionSettings, actionAllowedRenderer, actionDeniedRenderer, updateLastMessagePluginDropdown, initializeAutoSave, renderAllPythonImages, getDownloadUrlFromFileId, getDownloadUrlFromSandBoxPath, toast, unarchiveConversation, downloadFileFrmoUrl, unarchiveConversationById, openUpgradeModal, textToSpeechLanguageList, registerWebsocket */
+/* global TurndownService, closeMenus, conversationSettingsMenu, addConversationSettingsMenuEventListener, submitChat, openSubmitPromptModal, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, languageList, writingStyleList, toneList, arkoseTrigger, createFullSizeFileWrapper, addFullSizeFileWrapperEventListener, addUploadFileButton, getMousePosition, renderAllDalleImages, getGizmoById, initializeNavbar, replacePageContent, replaceTextAreaElement, addFinalCompletionClassToLastMessageWrapper, highlightSearch, getGizmoUserActionSettings, actionAllowedRenderer, actionDeniedRenderer, updateLastMessagePluginDropdown, initializeAutoSave, renderAllPythonImages, getDownloadUrlFromFileId, getDownloadUrlFromSandBoxPath, toast, unarchiveConversation, downloadFileFrmoUrl, unarchiveConversationById, openUpgradeModal, registerWebsocket, synthesize, playingAudios: true, stopAllAudios */
 
-let volumeIconInterval;
 let speakingMessageId;
 function showCustomInstructionTooltip(event, aboutUser, aboutModel) {
   const { x, y } = getMousePosition(event);
@@ -51,11 +50,11 @@ function addPinNav(sortedNodes) {
 function loadConversationFromNode(conversationId, newMessageId, oldMessageId) {
   const searchInput = document.querySelector('#conversation-search');
   const searchValue = searchInput?.value || '';
-  speechSynthesis.cancel();
   chrome.storage.sync.get(['name', 'avatar'], (result) => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {
       const fullConversation = res.conversations?.[conversationId];
-      getGizmoById(fullConversation.gizmo_id).then((gizmoData) => {
+      if (!fullConversation) return;
+      getGizmoById(fullConversation?.gizmo_id).then((gizmoData) => {
         const { settings } = res;
 
         let currentNode = fullConversation.mapping[newMessageId];
@@ -132,7 +131,6 @@ function loadConversation(conversationId, isArchived = false) {
   const searchInput = document.querySelector('#conversation-search');
   const searchValue = searchInput?.value || '';
   registerWebsocket();
-  speechSynthesis.cancel();
   removeTextInputExtras();
   const suggestionsWrapper = document.querySelector('#suggestions-wrapper');
   if (suggestionsWrapper) suggestionsWrapper.remove();
@@ -146,7 +144,8 @@ function loadConversation(conversationId, isArchived = false) {
     chrome.storage.sync.get(['name', 'avatar'], (result) => {
       chrome.storage.local.get(['conversationsOrder', 'conversations', 'settings', 'models'], (res) => {
         const fullConversation = res.conversations?.[conversationId];
-        getGizmoById(fullConversation.gizmo_id).then((gizmoData) => {
+        if (!fullConversation) return;
+        getGizmoById(fullConversation?.gizmo_id).then((gizmoData) => {
           const { settings, conversationsOrder } = res;
           // remove fileWrapperElement
           const fileWrapperElement = document.querySelector('#prompt-input-form #file-wrapper-element');
@@ -205,7 +204,7 @@ function loadConversation(conversationId, isArchived = false) {
           let messageDiv = `<div id="conversation-top" class="w-full flex relative items-center justify-center border-b border-token-border-light text-token-text-primary group ${settings.alternateMainColors ? 'bg-token-main-surface-tertiary' : 'bg-token-main-surface-primary'}" style="min-height:56px;"><span id="conversation-top-title" class="flex">${folderName ? `<strong>${folderName}  &nbsp;&nbsp;&nbsp;› &nbsp;&nbsp;&nbsp;</strong>` : ''}${fullConversation.title}${customInstrucionProfile ? '<span id="custom-instruction-info-icon" style="display:flex;align-items:center;">&nbsp;&nbsp;<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 18" fill="none" class="ml-0.5 mt-0.5 h-4 w-4 flex-shrink-0 text-token-text-primary sm:mb-0.5 sm:mt-0 sm:h-5 sm:w-5"><path d="M8.4375 8.4375L8.46825 8.4225C8.56442 8.37445 8.67235 8.35497 8.77925 8.36637C8.88615 8.37776 8.98755 8.41955 9.07143 8.48678C9.15532 8.55402 9.21818 8.64388 9.25257 8.74574C9.28697 8.8476 9.29145 8.95717 9.2655 9.0615L8.7345 11.1885C8.70836 11.2929 8.7127 11.4026 8.74702 11.5045C8.78133 11.6065 8.84418 11.6965 8.9281 11.7639C9.01202 11.8312 9.1135 11.8731 9.2205 11.8845C9.32749 11.8959 9.43551 11.8764 9.53175 11.8282L9.5625 11.8125M15.75 9C15.75 9.88642 15.5754 10.7642 15.2362 11.5831C14.897 12.4021 14.3998 13.1462 13.773 13.773C13.1462 14.3998 12.4021 14.897 11.5831 15.2362C10.7642 15.5754 9.88642 15.75 9 15.75C8.11358 15.75 7.23583 15.5754 6.41689 15.2362C5.59794 14.897 4.85382 14.3998 4.22703 13.773C3.60023 13.1462 3.10303 12.4021 2.76381 11.5831C2.42459 10.7642 2.25 9.88642 2.25 9C2.25 7.20979 2.96116 5.4929 4.22703 4.22703C5.4929 2.96116 7.20979 2.25 9 2.25C10.7902 2.25 12.5071 2.96116 13.773 4.22703C15.0388 5.4929 15.75 7.20979 15.75 9ZM9 6.1875H9.006V6.1935H9V6.1875Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>' : ''}</span>${conversationSettingsMenu(hasSubscription)}</div>`;
 
           if (isArchived) {
-            messageDiv = '<div id="conversation-top"></div><div id="top-nav-archive-message" style="display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; color:white; background-color: #444554; position: sticky; top: 0; z-index: 999;">With Power chatGPTuti, you can continue archived conversations without unarchiving them. <button id="top-nav-unarchive-button" class="ml-2 btn relative btn-primary"><div class="flex w-full gap-2 items-center justify-center"><div class="flex items-center gap-1"><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="18" width="18" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0V0z"></path><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.83 1H5.42l.82-1zM5 19V8h14v11H5zm3-5h2.55v3h2.9v-3H16l-4-4z"></path></svg>Unarchive</div></div></button> </div>';
+            messageDiv = '<div id="conversation-top"></div><div id="top-nav-archive-message" style="display: flex; align-items: center; justify-content: center; min-height: 56px; width: 100%; color:white; background-color: #444554; position: sticky; top: 0; z-index: 999;">With Superpower ChatGPT, you can continue archived conversations without unarchiving them. <button id="top-nav-unarchive-button" class="ml-2 btn relative btn-primary"><div class="flex w-full gap-2 items-center justify-center"><div class="flex items-center gap-1"><svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 24 24" height="18" width="18" xmlns="http://www.w3.org/2000/svg"><path fill="none" d="M0 0h24v24H0V0z"></path><path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.83 1H5.42l.82-1zM5 19V8h14v11H5zm3-5h2.55v3h2.9v-3H16l-4-4z"></path></svg>Unarchive</div></div></button> </div>';
           }
           messageDiv.id = 'conversation-wrapper';
           for (let i = 0; i < sortedNodes.length; i += 1) {
@@ -467,6 +466,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
   // get all a tags inside role=presentation
   let citations = document.querySelector('main').querySelectorAll('div[role="presentation"] a');
   const toolActionRequestAllowButtons = document.querySelectorAll('[id^="tool-action-request-allow-"]');
+  const toolActionRequestAlwaysAllowButtons = document.querySelectorAll('[id^="tool-action-request-always-allow-"]');
   const toolActionRequestDenyButtons = document.querySelectorAll('[id^="tool-action-request-deny-"]');
   const toolActionRequestOauthButtons = document.querySelectorAll('[id^="tool-action-request-oauth-"]');
   const customInstructionInfoIcon = document.querySelector('#custom-instruction-info-icon');
@@ -585,7 +585,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
           });
           // new row
           // check if original prompt has instructions, if it does, add the instruction to the prompt, otherwise, don't add it.
-          const theOriginalPrompt = conversation.mapping[messageId].message.content.parts.filter((p) => typeof p === 'string').join('\n');
+          const theOriginalPrompt = (conversation.mapping[messageId].message.content.parts || []).filter((p) => typeof p === 'string').join('\n');
           // if theOriginalPrompt include (languageCode: ${selectedLanguage.code}). extract the language code
           const languageCode = theOriginalPrompt.match(/\(languageCode: (.*)\)/)?.[1];
           const toneCode = theOriginalPrompt.match(/\(toneCode: (.*)\)/)?.[1];
@@ -738,124 +738,38 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
     const button = btn.cloneNode(true);
     btn.parentNode.replaceChild(button, btn);
     button.addEventListener('click', () => {
-      chrome.runtime.sendMessage({
-        checkHasSubscription: true,
-        detail: {
-          forceRefresh: false,
-        },
-      }, (hasSubscription) => {
-        if (hasSubscription) {
-          clearInterval(volumeIconInterval);
-          // stop all other speech
-          speechSynthesis.cancel();
-          // set all other buttons to default color
-          const allButtons = document.querySelectorAll('[id^="text-to-speech-button-"]');
-          allButtons.forEach((b) => {
-            const volumeIcon = b.querySelector('svg > path');
-            volumeIcon.style.fill = 'currentColor';
-          });
-          // when speech ends, set button icon back to default
+      const messageId = button.id.split('text-to-speech-button-').pop();
+      // stop all other audios
+      stopAllAudios();
+      if (speakingMessageId !== messageId) {
+        speakingMessageId = messageId;
+        // animate button icon to indicate that it's playing
+        button.style.visibility = 'visible';
+        // loading spinner
+        button.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="animate-spin text-center icon-md" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>';
+        button.disabled = true;
 
-          const messageId = button.id.split('text-to-speech-button-').pop();
-
-          if (speakingMessageId !== messageId) {
-            speakingMessageId = messageId;
-            // go up from button to get element with id starting with message-wrapper
-            const messageWrapper = button.closest('[id^="message-wrapper-"]');
-            const allMessageTextElements = messageWrapper.querySelectorAll('[id^="message-text-"]');
-
-            // animate button icon to indicate that it's playing
-            const volumeIcon = button.querySelector('svg > path');
-            volumeIconInterval = setInterval(
-              () => {
-                if (volumeIcon.style.fill === 'gold') {
-                  volumeIcon.style.fill = 'currentColor';
-                } else {
-                  volumeIcon.style.fill = 'gold';
-                }
-              },
-              500,
-            );
-            setTimeout(() => {
-              const utterances = [];
-              chrome.storage.local.get(['settings'], (result) => {
-                let messageText = '';
-                allMessageTextElements.forEach((element) => {
-                  // clone element and replace all pre elements with "Skipped Code"
-                  const elementClone = element.cloneNode(true);
-                  if (result.settings.skipCodeReading) {
-                    const allPreElements = elementClone.querySelectorAll('pre');
-                    allPreElements.forEach((pre) => {
-                      pre.innerText = 'Skipped Code!';
-                    });
-                  } else {
-                    // remove any id=code-header
-                    const allCodeHeaders = elementClone.querySelectorAll('#code-header');
-                    allCodeHeaders.forEach((codeHeader) => {
-                      codeHeader.remove();
-                    });
-                  }
-                  messageText += `${elementClone.innerText}\n`;
-                });
-                const utterance = new SpeechSynthesisUtterance(messageText);
-                utterance.addEventListener('error', (e) => {
-                  if (e.error === 'not-allowed') {
-                    toast('To enable AutoSpeak, please click anywhere on the page');
-                  }
-                });
-                utterances.push(utterance);
-                utterance.rate = result.settings.textToSpeechRate || 1;
-                utterance.pitch = result.settings.textToSpeechPitch || 1;
-                utterance.volume = 1;
-                utterance.addEventListener('end', () => {
-                  clearInterval(volumeIconInterval);
-                  volumeIcon.style.fill = 'currentColor';
-                  speakingMessageId = '';
-                });
-                if (result.settings.textToSpeechAutoDetectLanguage) {
-                  chrome.i18n.detectLanguage(messageText, (res) => {
-                    const detectedLanguage = res.languages[0].language;
-                    utterance.lang = textToSpeechLanguageList.find((l) => l.code.startsWith(detectedLanguage))?.code || result.settings.textToSpeechLanguage;
-                    utterance.voice = speechSynthesis.getVoices().find((v) => v.lang === utterance.lang);
-                    speechSynthesis.cancel();
-                    setTimeout(() => {
-                      speechSynthesis.speak(utterance);
-                      const r = setInterval(() => {
-                        if (!speechSynthesis.speaking) {
-                          clearInterval(r);
-                        } else {
-                          speechSynthesis.pause();
-                          speechSynthesis.resume();
-                        }
-                      }, 10000);
-                    }, 500);
-                  });
-                } else {
-                  utterance.lang = result.settings.textToSpeechLanguage;
-                  utterance.voice = speechSynthesis.getVoices().find((v) => v.name === result.settings.textToSpeechVoice.name);
-                  speechSynthesis.cancel();
-                  setTimeout(() => {
-                    speechSynthesis.speak(utterance);
-                    const r = setInterval(() => {
-                      if (!speechSynthesis.speaking) {
-                        clearInterval(r);
-                      } else {
-                        speechSynthesis.pause();
-                        speechSynthesis.resume();
-                      }
-                    }, 10000);
-                  }, 500);
-                }
-              });
-            }, 100);
-          } else {
+        synthesize(conversationId, messageId).then(async (audio) => {
+          if (!audio || !audio.src) {
+            button.style = '';
+            button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path d="M6 9H4C2.89543 9 2 9.89543 2 11V13C2 14.1046 2.89543 15 4 15H6L10.3243 18.9639C10.9657 19.5519 12 19.0969 12 18.2268V5.77324C12 4.90313 10.9657 4.44813 10.3243 5.03608L6 9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16.3984 8.70001C17.0889 9.61924 17.498 10.7618 17.498 12C17.498 13.1119 17.1681 14.1468 16.6007 15.012M20.7922 7.23543C21.5612 8.65189 21.998 10.2749 21.998 12C21.998 13.684 21.5818 15.2708 20.8465 16.6631" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
             speakingMessageId = '';
+            delete playingAudios[messageId];
+            return;
           }
-        } else {
-          toast('⚡️ Text to speech requires the Pro Subscription.', 'success', 6000);
-          openUpgradeModal();
-        }
-      });
+          button.disabled = false;
+          button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM9.5 8.5C8.94772 8.5 8.5 8.94772 8.5 9.5V14.5C8.5 15.0523 8.94772 15.5 9.5 15.5H14.5C15.0523 15.5 15.5 15.0523 15.5 14.5V9.5C15.5 8.94772 15.0523 8.5 14.5 8.5H9.5Z" fill="currentColor"></path></svg>';
+          // check if audio finished playing
+          audio.addEventListener('ended', () => {
+            button.style = '';
+            button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path d="M6 9H4C2.89543 9 2 9.89543 2 11V13C2 14.1046 2.89543 15 4 15H6L10.3243 18.9639C10.9657 19.5519 12 19.0969 12 18.2268V5.77324C12 4.90313 10.9657 4.44813 10.3243 5.03608L6 9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16.3984 8.70001C17.0889 9.61924 17.498 10.7618 17.498 12C17.498 13.1119 17.1681 14.1468 16.6007 15.012M20.7922 7.23543C21.5612 8.65189 21.998 10.2749 21.998 12C21.998 13.684 21.5818 15.2708 20.8465 16.6631" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+            speakingMessageId = '';
+            delete playingAudios[messageId];
+          });
+        });
+      } else {
+        speakingMessageId = '';
+      }
     });
   });
   regenerateResponseButtons.forEach((btn) => {
@@ -876,9 +790,10 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
         const lastUserMessage = conversation.mapping[lastUserChatMessageId];
 
         const lastUserMessageParentId = lastUserMessage.parent;
+        // skip model_editable_context
 
-        const newMessage = lastUserMessage.message.content.parts.filter((p) => typeof p === 'string').join('\n');
-        const imageAssets = lastUserMessage.message?.content?.parts?.filter((p) => p && typeof p !== 'string') || [];
+        const newMessage = (lastUserMessage.message?.content?.parts || [])?.filter((p) => typeof p === 'string').join('\n');
+        const imageAssets = (lastUserMessage.message?.content?.parts || [])?.filter((p) => p && typeof p !== 'string') || [];
         const fileAttachments = lastUserMessage.message?.metadata?.attachments || [];
         messageWrapper.remove();
         isGenerating = true;
@@ -1047,6 +962,16 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
       submitActionResponse(conversationId, parentMessageId, domain, 'allow');
     });
   });
+  toolActionRequestAlwaysAllowButtons.forEach((btn) => {
+    const button = btn.cloneNode(true);
+    btn.parentNode.replaceChild(button, btn);
+    button.addEventListener('click', () => {
+      const parentMessageId = button.id.split('tool-action-request-always-allow-').pop();
+      const toolActionRequestWrapper = document.querySelector(`#tool-action-request-wrapper-${parentMessageId}`);
+      const domain = toolActionRequestWrapper.getAttribute('data-domain');
+      submitActionResponse(conversationId, parentMessageId, domain, 'always_allow');
+    });
+  });
   toolActionRequestDenyButtons.forEach((btn) => {
     const button = btn.cloneNode(true);
     btn.parentNode.replaceChild(button, btn);
@@ -1062,7 +987,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
 function submitActionResponse(conversationId, parentMessageId, domain, actionType) {
   chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account', 'chatgptAccountId'], (result) => {
     const toolActionRequestWrapper = document.querySelector(`#tool-action-request-wrapper-${parentMessageId}`);
-    const responseNode = actionType === 'allow' ? actionAllowedRenderer(domain) : actionDeniedRenderer(domain);
+    const responseNode = actionType === 'allow' || actionType === 'always_allow' ? actionAllowedRenderer(domain) : actionDeniedRenderer(domain);
     if (toolActionRequestWrapper) {
       // replace the toolActionRequestWrapper with actionDeniedRenderer(domain)
       toolActionRequestWrapper.outerHTML = responseNode;
@@ -1078,6 +1003,7 @@ function submitActionResponse(conversationId, parentMessageId, domain, actionTyp
     const actions = actionRequestNode?.message?.metadata?.jit_plugin_data?.from_server.body?.actions;
     const { name: authorName, role: authorRole } = actionRequestNode.message.author;
     const userAction = actions?.find((a) => a.type === actionType);
+
     const metadata = {
       jit_plugin_data: {
         from_client: {
@@ -1091,6 +1017,9 @@ function submitActionResponse(conversationId, parentMessageId, domain, actionTyp
       },
       timestamp_: 'absolute',
     };
+    if (actionType === 'always_allow') {
+      metadata.jit_plugin_data.from_client.user_action.data.operation_hash = userAction?.[actionType]?.operation_hash;
+    }
     updateLastMessagePluginDropdown();
     submitChat('', conversation, messageId, parentMessageId, result.settings, result.account, result.chatgptAccountId, result.models, result.selectedModel, [], [], false, false, authorRole, authorName, metadata);
   });

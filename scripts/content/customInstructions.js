@@ -95,8 +95,9 @@ function profileDropdown(customInstructionProfiles, customInstructionProfileIsEn
         }, 600);
         return;
       }
+      const textAreaFields = customInstructionsDialog?.querySelectorAll('textarea');
 
-      if (customInstructionsDialog) {
+      if (customInstructionsDialog && customInstructionsDialog?.innerText?.includes('ChatGPT') && textAreaFields.length === 2) {
         const toggleButton = customInstructionsDialog.querySelector('[role="switch"]');
         if (profileName === '+ Add new profile') {
           if (toggleButton.getAttribute('aria-checked') === 'false') {
@@ -105,9 +106,8 @@ function profileDropdown(customInstructionProfiles, customInstructionProfileIsEn
         } else if ((toggleButton.getAttribute('aria-checked') === 'true') !== customInstructionProfileIsEnabled) {
           toggleButton.click();
         }
-        const nameInput = document.querySelector('#custom-instructions-name-input');
+        const nameInput = customInstructionsDialog.querySelector('#custom-instructions-name-input');
         nameInput.value = profileName !== '+ Add new profile' ? profileName : '';
-        const textAreaFields = document.querySelectorAll('[role="dialog"][data-state="open"][tabindex="-1"] textarea');
         const aboutUserInput = textAreaFields[0];
         const aboutModelInput = textAreaFields[1];
         aboutUserInput.value = profileAboutUser;
@@ -220,11 +220,14 @@ function upgradeCustomInstructions() {
       if (mutation.type === 'childList') {
         setTimeout(() => {
           const customInstructionsDialog = document.querySelector('[role="dialog"][data-state="open"][tabindex="-1"]');
+
           if (!customInstructionsDialog) return;
+          if (!customInstructionsDialog?.innerText?.includes('ChatGPT')) return;
+          const textAreaFields = customInstructionsDialog?.querySelectorAll('textarea');
+          if (textAreaFields.length !== 2) return;
           removeGrammerly();
           chrome.storage.local.get(['customInstructionProfiles', 'customInstructionProfileIsEnabled'], (result) => {
             const existingProfileButtonWrapper = customInstructionsDialog.querySelector('#custom-instructions-profile-button-wrapper-settings');
-            const textAreaFields = customInstructionsDialog.querySelectorAll('textarea');
             if (textAreaFields.length > 0 && !existingProfileButtonWrapper && customInstructionsDialog) {
               const { customInstructionProfiles, customInstructionProfileIsEnabled } = result;
               const newCustomInstructionProfiles = customInstructionProfiles;

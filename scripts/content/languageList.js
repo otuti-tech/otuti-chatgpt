@@ -356,8 +356,10 @@ const speechToTextLanguageList = [
   { name: 'Zulu (South Africa)', code: 'zu-ZA' },
 ];
 
-const ttsLanguageCodeList = [...new Set(speechSynthesis.getVoices().map((voice) => voice.lang))];
-const textToSpeechLanguageList = ttsLanguageCodeList.map((lang) => {
-  const langName = speechToTextLanguageList.find((l) => l.code === lang)?.name;
-  return { code: lang, name: langName || lang };
-}).sort((a, b) => a.name.localeCompare(b.name));
+const textToSpeechVoiceList = [
+  { name: 'Juniper', code: 'juniper' },
+  { name: 'Breeze', code: 'breeze' },
+  { name: 'Cove', code: 'cove' },
+  { name: 'Sky', code: 'sky' },
+  { name: 'Ember', code: 'ember' },
+];

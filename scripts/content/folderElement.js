@@ -251,7 +251,7 @@ function addToFolderAction(folderId) {
   actionsWrapper.id = `folder-actions-wrapper-${folderId}`;
   actionsWrapper.classList = 'absolute flex right-1 z-10 text-gray-300';
   const moveToFolderButton = document.createElement('button');
-  moveToFolderButton.id = `move-to-folder-${folderId}`;
+  moveToFolderButton.id = `move-to-folder-button-${folderId}`;
   moveToFolderButton.classList = 'p-1 hover:text-white';
   moveToFolderButton.title = 'Move to folder';
   moveToFolderButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="currentColor" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" stroke-width="2" viewBox="0 0 512 512"><path d="M464 96h-192l-64-64h-160C21.5 32 0 53.5 0 80v352C0 458.5 21.5 480 48 480h416c26.5 0 48-21.5 48-48v-288C512 117.5 490.5 96 464 96zM336 311.1h-56v56C279.1 381.3 269.3 392 256 392c-13.27 0-23.1-10.74-23.1-23.1V311.1H175.1C162.7 311.1 152 301.3 152 288c0-13.26 10.74-23.1 23.1-23.1h56V207.1C232 194.7 242.7 184 256 184s23.1 10.74 23.1 23.1V264h56C349.3 264 360 274.7 360 288S349.3 311.1 336 311.1z"/></svg>';

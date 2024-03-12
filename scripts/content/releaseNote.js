@@ -28,7 +28,7 @@ function releaseNoteModalContent(version) {
     },
   }, (data) => {
     const releaseNote = data;
-    releaseNoteText.innerHTML = `<div style="font-size:1em;color:white;">Release date: ${new Date(data.created_at).toDateString()} (<span id="previous-version" data-version="${data.previous_version}" style="color:gold;cursor:pointer;">Previous release note</span>)</div><div style="display: flex; flex-direction: column; justify-content: start; align-items: start;height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;position: relative;z-index:10;color:white;">${releaseNote.text}</div>`;
+    releaseNoteText.innerHTML = `<div style="font-size:1em;color:white;">Release date: ${new Date(releaseNote?.created_at || new Date()).toDateString()} (<span id="previous-version" data-version="${releaseNote.previous_version}" style="color:gold;cursor:pointer;">Previous release note</span>)</div><div style="display: flex; flex-direction: column; justify-content: start; align-items: start;height: 100%; width: 100%; white-space: break-spaces; overflow-wrap: break-word;position: relative;z-index:10;color:white;">${releaseNote.text}</div>`;
     setTimeout(() => {
       const previousVersion = document.getElementById('previous-version');
       if (previousVersion) {

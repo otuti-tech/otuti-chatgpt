@@ -10,7 +10,7 @@ function addQuickAccessMenuEventListener() {
     const cursorPosition = textAreaElement.selectionStart;
     const textAreaValue = textAreaElement.value;
     const previousAtPosition = textAreaValue.lastIndexOf('@', cursorPosition - 1);
-    const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition - 1) || textAreaValue.lastIndexOf('£', cursorPosition - 1) || textAreaValue.lastIndexOf('€', cursorPosition - 1);
+    const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition - 1);
     const previousHashtagPosition = textAreaValue.lastIndexOf('#', cursorPosition - 1);
     if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
       if (quickAccessMenuElement) quickAccessMenuElement.remove();
@@ -39,7 +39,7 @@ function addQuickAccessMenuEventListener() {
       const textAreaValue = textAreaElement.value;
 
       const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
-      const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition) || textAreaElement.value.lastIndexOf('£', cursorPosition) || textAreaElement.value.lastIndexOf('€', cursorPosition);
+      const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
       const previousHashtagPosition = textAreaElement.value.lastIndexOf('#', cursorPosition);
       if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
         if (quickAccessMenuElement) quickAccessMenuElement.remove();
@@ -142,7 +142,7 @@ function updateQuickAccessMenuItems() {
   const cursorPosition = textAreaElement.selectionStart;
   const textAreaValue = textAreaElement.value;
   const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
-  const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition) || textAreaElement.value.lastIndexOf('£', cursorPosition) || textAreaElement.value.lastIndexOf('€', cursorPosition);
+  const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
   const previousHashtagPosition = textAreaValue.lastIndexOf('#', cursorPosition - 1);
   if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
     return;
@@ -208,8 +208,8 @@ function quickAccessMenu(trigger) {
         });
         menu.appendChild(loadCustomGPTs());
       }
-      if (trigger === '$' || trigger === '£' || trigger === '€') {
-        menuTitle.textContent = `Custom Prompts (${trigger}`;
+      if (trigger === '$') {
+        menuTitle.textContent = `Custom Prompts (${trigger})`;
         menuHeaderButton.id = 'see-all-custom-prompts';
         menuHeaderButton.textContent = '+ Add More';
         menuHeaderButton.addEventListener('click', () => {
@@ -308,7 +308,7 @@ function loadCustomPrompts() {
       promptElement.type = 'button';
       promptElement.id = `quick-access-menu-item-${i}`;
       promptElement.classList = 'btn w-full text-left focus:outline focus:ring-2 focus:ring-gray-200 hover:bg-token-main-surface-tertiary flex justify-between items-center';
-      promptElement.innerHTML = `<span><span style="font-weight:bold; font-size:14px; margin-right:16px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;">${prompt.title}</span><span style="font-size:12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;color:#888;">${prompt.text}</span></span><span id="item-arrow" class="flex items-center justify-between text-xl mr-2 rounded-md px-2 bg-token-main-surface-secondary ${i === 0 ? '' : 'invisible'}"><span class="text-sm mr-2">Enter</span> ➜</span>`;
+      promptElement.innerHTML = `<span style="width:80%;"><span style="font-weight:bold; font-size:14px; margin-right:16px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;">${prompt.title}</span><span style="font-size:12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;color:#888;">${prompt.text}</span></span><span id="item-arrow" class="flex items-center justify-between text-xl mr-2 rounded-md px-2 bg-token-main-surface-secondary ${i === 0 ? '' : 'invisible'}"><span class="text-sm mr-2">Enter</span> ➜</span>`;
       promptElement.addEventListener('click', () => {
         const textAreaElement = document.querySelector('#prompt-textarea');
         if (!textAreaElement) return;
@@ -316,7 +316,7 @@ function loadCustomPrompts() {
         // find the neeares previous $ position
         const textAreaValue = textAreaElement.value;
         const cursorPosition = textAreaElement.selectionStart;
-        const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition) || textAreaValue.lastIndexOf('£', cursorPosition) || textAreaValue.lastIndexOf('€', cursorPosition);
+        const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition);
         const newText = textAreaValue.substring(0, previousDollarPosition) + prompt.text + textAreaValue.substring(cursorPosition);
         textAreaElement.value = newText;
         textAreaElement.focus();
@@ -349,7 +349,7 @@ function loadPromptChains() {
       promptElement.type = 'button';
       promptElement.id = `quick-access-menu-item-${i}`;
       promptElement.classList = 'btn w-full text-left focus:outline focus:ring-2 focus:ring-gray-200 hover:bg-token-main-surface-tertiary flex justify-between items-center';
-      promptElement.innerHTML = `<span><span style="font-weight:bold; font-size:14px; margin-right:16px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;">${prompt.title} (${prompt.steps.length} prompts)</span><span style="font-size:12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;color:#888;">Prompt 1: ${prompt.steps[0]}</span></span><span id="item-arrow" class="flex items-center justify-between text-xl mr-2 rounded-md px-2 bg-token-main-surface-secondary ${i === 0 ? '' : 'invisible'}"><span class="text-sm mr-2">Enter</span> ➜</span>`;
+      promptElement.innerHTML = `<span  style="width:80%;"><span style="font-weight:bold; font-size:14px; margin-right:16px;white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;">${prompt.title} (${prompt.steps.length} prompts)</span><span style="font-size:12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;display:block;width:100%;color:#888;">Prompt 1: ${prompt.steps[0]}</span></span><span id="item-arrow" class="flex items-center justify-between text-xl mr-2 rounded-md px-2 bg-token-main-surface-secondary ${i === 0 ? '' : 'invisible'}"><span class="text-sm mr-2">Enter</span> ➜</span>`;
       // also trigger on enter
       promptElement.addEventListener('click', () => {
         runPromptChain(prompt.steps, 0, false);

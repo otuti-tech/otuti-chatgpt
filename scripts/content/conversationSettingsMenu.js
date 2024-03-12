@@ -311,7 +311,7 @@ function getSingleConversation(conversationId, exportType) {
           const role = m?.author?.role || m?.role;
           const recipient = m?.recipient;
           return role === 'user' || (recipient === 'all' && role === 'assistant');
-        }).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${m.content?.parts?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
+        }).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${(m.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
         const element = document.createElement('a');
         element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(conversationText)}`);
         element.setAttribute('download', `${filePrefix}-${conversationTitle}.${fileFormatConverter(exportType.toLowerCase())}`);
@@ -328,7 +328,7 @@ function getSingleConversation(conversationId, exportType) {
           const role = m?.author?.role || m?.role;
           const recipient = m?.recipient;
           return role === 'user' || (recipient === 'all' && role === 'assistant');
-        }).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${m.content?.parts?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
+        }).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${(m.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
         const element = document.createElement('a');
         element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(conversationMarkdown)}`);
         // add timestamp to conversation title to make file name

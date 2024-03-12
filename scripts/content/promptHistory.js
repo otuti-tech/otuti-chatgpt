@@ -487,7 +487,16 @@ function addUserPromptToHistory(inputValue) {
       inputValue: inputValue.trim(),
       modelSlug: result.selectedModel.slug,
     });
-    chrome.storage.local.set({ userInputValueHistory }, () => {
+    let newHistory = userInputValueHistory;
+    // if nonfavorite history length is more than 200, remove anythign older than 200
+    const nonFavoriteHistory = userInputValueHistory.filter((item) => !item.isFavorite);
+    if (nonFavoriteHistory.length > 200) {
+      const sortedNonFavoriteHistory = nonFavoriteHistory.sort((a, b) => a.timestamp - b.timestamp);
+      const itemsToDelete = sortedNonFavoriteHistory.length - 200;
+      sortedNonFavoriteHistory.splice(0, itemsToDelete);
+      newHistory = userInputValueHistory.filter((item) => item.isFavorite || sortedNonFavoriteHistory.includes(item));
+    }
+    chrome.storage.local.set({ userInputValueHistory: newHistory }, () => {
       chrome.storage.local.set({ userInputValueHistoryIndex: userInputValueHistory.length });
     });
   });
@@ -604,7 +613,7 @@ function textAreaElementKeydownEventListenerAsync(event) {
       const words = textAreaValue.split(/[\s\n]+/);
       const lastWord = words[words.length - 2];
       // dollar or euro or pound sign
-      if (lastWord?.startsWith('$') || lastWord?.startsWith('€') || lastWord?.startsWith('£')) {
+      if (lastWord?.startsWith('$')) {
         const prompt = customPrompts.find((p) => p.title.toLowerCase() === lastWord.substring(1).toLowerCase());
         if (prompt) {
           textAreaElement.value = textAreaValue.substring(0, textAreaValue.length - (lastWord.length + 1)) + prompt.text;
@@ -629,6 +638,7 @@ function textAreaElementKeydownEventListenerSync(event) {
       if (firstItem) {
         firstItem.click();
       }
+      return;
     }
     updateInputCounter('');
     chrome.storage.local.get(['textInputValue'], (result) => {
@@ -714,7 +724,7 @@ function textAreaElementKeydownEventListenerSync(event) {
       const textAreaValue = textAreaElement.value;
       const words = textAreaValue.split(/[\s\n]+/);
       const lastWord = words[words.length - 2];
-      if (lastWord?.startsWith('$') || lastWord?.startsWith('€') || lastWord?.startsWith('£')) {
+      if (lastWord?.startsWith('$')) {
         const prompt = customPrompts.find((p) => p.title.toLowerCase() === lastWord.substring(1).toLowerCase());
         if (prompt) {
           textAreaElement.value = textAreaValue.substring(0, textAreaValue.length - (lastWord.length + 1)) + prompt.text;
@@ -748,7 +758,7 @@ function textAreaElementKeydownEventListenerSync(event) {
     const cursorPosition = textAreaElement.selectionStart;
     // $
     const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
-    const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition) || textAreaElement.value.lastIndexOf('€', cursorPosition) || textAreaElement.value.lastIndexOf('£', cursorPosition);
+    const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
     const previousHashtagPosition = textAreaElement.value.lastIndexOf('#', cursorPosition);
     const previousTriggerPosition = Math.max(previousAtPosition, previousDollarPosition, previousHashtagPosition);
     const previousTrigger = textAreaElement.value.substring(previousTriggerPosition, previousTriggerPosition + 1);
@@ -772,7 +782,7 @@ function textAreaElementKeydownEventListenerSync(event) {
 function initializePromptHistory() {
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
-    if (settings && (settings?.showMyPromptHistory || settings?.showMyPromptHistory === undefined)) {
+    if (typeof settings === 'undefined' || settings?.showMyPromptHistory === undefined || settings?.showMyPromptHistory) {
       addButtonToNavFooter('My Prompt History', () => createPromptHistoryModal());
     }
   });

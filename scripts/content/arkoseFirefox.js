@@ -6,7 +6,7 @@ window.useArkoseSetupEnforcementpaid = function (e) {
   e.setConfig({
     selector: '#enforcement-trigger',
     onCompleted(x) {
-      window.localStorage.setItem('arkoseToken', x.token);
+      window.localStorage.setItem('sp/arkoseToken', x.token);
     },
     onError(x) {
       console.warn('onError', x);

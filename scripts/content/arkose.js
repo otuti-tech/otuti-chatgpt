@@ -1,13 +1,12 @@
 /* eslint-disable no-console */
 /* eslint-disable no-unused-vars */
-speechSynthesis.cancel();
 
 function newUseArkoseSetupEnforcement(e) {
   e.setConfig({
     selector: '#enforcement-trigger',
     onCompleted(x) {
       // console.warn('onCompleted4', x);
-      window.localStorage.setItem('arkoseToken', x.token);
+      window.localStorage.setItem('sp/arkoseToken', x.token);
     },
     onError(x) {
       console.warn('onError', x);
@@ -20,8 +19,12 @@ function newUseArkoseSetupEnforcement(e) {
     },
   });
 }
-Object.defineProperties(window, {
-  useArkoseSetupEnforcementpaid: {
+const defaultArkoseSetups = ['useArkoseSetupEnforcementchatgpt-paid', 'useArkoseSetupEnforcementchatgpt-freeaccount', 'useArkoseSetupEnforcementchatgpt-noauth', 'useArkoseSetupEnforcementpaid', 'useArkoseSetupEnforcementfreeaccount', 'useArkoseSetupEnforcementnoauth'];
+const foundArkoseSetups = JSON.parse(window.localStorage.getItem('sp/arkoseSetups') || '[]');
+const newArkoseSetups = foundArkoseSetups.length > 0 ? foundArkoseSetups : defaultArkoseSetups;
+
+const overrideArkoseSetups = newArkoseSetups.reduce((acc, trigger) => {
+  acc[trigger] = {
     configurable: true,
     get() {
       const isFirefox = window.navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
@@ -35,50 +38,8 @@ Object.defineProperties(window, {
     set(val) {
       this.value = val;
     },
-  },
-  useArkoseSetupEnforcementfreeaccount: {
-    configurable: true,
-    get() {
-      const isFirefox = window.navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-      const isOnGizmoEditor = window.location.href.includes('gpts/editor');
+  };
+  return acc;
+}, {});
 
-      if (isFirefox || isOnGizmoEditor || (window.localStorage.getItem('sp/autoSync') || 'true') !== 'true') {
-        return this.value;
-      }
-      return newUseArkoseSetupEnforcement;
-    },
-    set(val) {
-      this.value = val;
-    },
-  },
-  useArkoseSetupEnforcementnoauth: {
-    configurable: true,
-    get() {
-      const isFirefox = window.navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-      const isOnGizmoEditor = window.location.href.includes('gpts/editor');
-
-      if (isFirefox || isOnGizmoEditor || (window.localStorage.getItem('sp/autoSync') || 'true') !== 'true') {
-        return this.value;
-      }
-      return newUseArkoseSetupEnforcement;
-    },
-    set(val) {
-      this.value = val;
-    },
-  },
-  // useArkoseSetupEnforcementsubscription: {
-  //   configurable: true,
-  //   get() {
-  //     const isFirefox = window.navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-  //     const isOnGizmoEditor = window.location.href.includes('gpts/editor');
-
-  //     if (isFirefox || isOnGizmoEditor || (window.localStorage.getItem('sp/autoSync') || 'true') !== 'true') {
-  //       return this.value;
-  //     }
-  //     return newUseArkoseSetupEnforcement;
-  //   },
-  //   set(val) {
-  //     this.value = val;
-  //   },
-  // },
-});
+Object.defineProperties(window, overrideArkoseSetups);

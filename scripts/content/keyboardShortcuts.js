@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global isWindows, createModal, settingsModalActions, initializePluginStoreModal, addPluginStoreEventListener, volumeIconInterval, speakingMessageId:true, showNewChatPage, createPromptChainListModal, toast */
+/* global isWindows, createModal, settingsModalActions, initializePluginStoreModal, addPluginStoreEventListener, speakingMessageId:true, stopAllAudios, showNewChatPage, createPromptChainListModal, toast */
 
 // eslint-disable-next-line no-unused-vars
 function createKeyboardShortcutsModal(version) {
@@ -155,30 +155,30 @@ function showPluginStore() {
 function registerShortkeys() {
   document.addEventListener('keydown', (e) => {
     if (e.metaKey || (isWindows() && e.ctrlKey)) {
-      const onDiscoveryPage = window.location.pathname.includes('/gpts');
       if (e.key === 'f' || e.key === 'F') {
-        let searchbox = document.querySelector('#gizmo-search-bar');
-        if (!onDiscoveryPage) {
-          searchbox = document.querySelector('#conversation-search');
-          searchbox?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
-        if (searchbox && searchbox !== document.activeElement) {
-          searchbox.focus();
-          e.preventDefault();
+        const gizmoSearchbox = document.querySelector('#gizmo-search-bar');
+        const gallerySearchbox = document.querySelector('#gallery-search');
+        const historySearchbox = document.querySelector('#conversation-search');
+        if (gizmoSearchbox !== document.activeElement && gallerySearchbox !== document.activeElement && historySearchbox !== document.activeElement) {
+          if (gizmoSearchbox) {
+            gizmoSearchbox.focus();
+            e.preventDefault();
+          } else if (gallerySearchbox) {
+            gallerySearchbox.focus();
+            e.preventDefault();
+          } else if (historySearchbox) {
+            historySearchbox?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            historySearchbox.focus();
+            e.preventDefault();
+          }
         }
       }
     }
     // esc
     if (e.keyCode === 27) {
       // stop speaking
-      speechSynthesis.cancel();
-      clearInterval(volumeIconInterval);
       speakingMessageId = '';
-      const allTextToSpeechButtons = document.querySelectorAll('[id^="text-to-speech-button-"]');
-      allTextToSpeechButtons.forEach((b) => {
-        const volumeIcon = b.querySelector('svg > path');
-        volumeIcon.style.fill = 'currentColor';
-      });
+      stopAllAudios();
       // close modals
       if (document.querySelector('[id*=close-button]')) {
         document.querySelector('[id*=close-button]').click();
@@ -197,7 +197,7 @@ function registerShortkeys() {
     }
     // shift key
     if (e.keyCode === 16) {
-      const allMoveToFolderButtons = document.querySelectorAll('[id^=move-to-folder-]');
+      const allMoveToFolderButtons = document.querySelectorAll('[id^=wrapper-folder-] [id^=move-to-folder-button-]');
       if (allMoveToFolderButtons.length > 0) {
         allMoveToFolderButtons.forEach((button) => {
           // replace innerHTML with new innerHTML
@@ -381,7 +381,7 @@ function registerShortkeys() {
   document.addEventListener('keyup', (e) => {
     // released shift key
     if (e.keyCode === 16) {
-      const allMoveToFolderButtons = document.querySelectorAll('[id^=move-to-folder-]');
+      const allMoveToFolderButtons = document.querySelectorAll('[id^=wrapper-folder-] [id^=move-to-folder-button-]');
       if (allMoveToFolderButtons.length > 0) {
         allMoveToFolderButtons.forEach((button) => {
           // replace innerHTML with new innerHTML

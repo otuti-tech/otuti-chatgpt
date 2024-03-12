@@ -424,7 +424,7 @@ async function generateContent(conversation, nodes) {
 }
 
 function userRow(message) {
-  const messageContent = message.content.parts.filter((p) => typeof p === 'string').join('\n');
+  const messageContent = (message.content?.parts || []).filter((p) => typeof p === 'string').join('\n');
   const messageContentPartsHTML = markdown('user')
     .render(messageContent);
   return `<div
@@ -478,7 +478,7 @@ function userRow(message) {
 </div>`;
 }
 function assistantRow(message, gizmoData) {
-  let messageContentParts = message.content.parts.filter((p) => typeof p === 'string').join('\n');
+  let messageContentParts = (message.content?.parts || []).filter((p) => typeof p === 'string').join('\n');
 
   // if citations array is not mpty, replace text from start_ix to end_ix position with citation
   if (message.metadata.citations?.length > 0) {

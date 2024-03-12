@@ -1,4 +1,4 @@
-/* global fetchPrompts, gizmoCreatorProfile, promptLibraryPageNumber, toast, categoryList, languageList, addDropdownEventListener, dropdown */
+/* global fetchPrompts, promptLibraryPageNumber, toast, categoryList, languageList, addDropdownEventListener, dropdown */
 //
 let selectedCategories = [];
 function createCategorySelector(categories = []) {
@@ -193,24 +193,15 @@ function openSubmitPromptModal(text = '', modelSlug = '', promptId = null, title
   });
   submitPromptModalContent.appendChild(urlInput);
   submitPromptModal.appendChild(submitPromptModalContent);
-  gizmoCreatorProfile().then((profile) => {
-    const profileName = profile?.name;
-    const profileWebsiteUrl = profile?.website_url;
-    chrome.storage.sync.get(['nickname', 'url'], (result) => {
-      if (result.nickname && !result.nickname.includes('@')) {
-        nicknameInput.value = result.nickname;
-      }
-      if (profileName) {
-        nicknameInput.value = profileName;
-      }
-      if (result.url) {
-        urlInput.value = result.url;
-      }
-      if (profileWebsiteUrl) {
-        urlInput.value = profileWebsiteUrl;
-      }
-      urlInput.style.border = '1px solid #565869';
-    });
+
+  chrome.storage.sync.get(['nickname', 'url'], (result) => {
+    if (result.nickname && !result.nickname?.includes('@')) {
+      nicknameInput.value = result.nickname;
+    }
+    if (result.url) {
+      urlInput.value = result.url;
+    }
+    urlInput.style.border = '1px solid #565869';
   });
   // const hideFullPromptSwitch = createSwitch('Hide full prompt', 'Only show the first 5 lines of the prompt to other users', null, hideFullPrompt);
   // submitPromptModalContent.appendChild(hideFullPromptSwitch);
@@ -240,39 +231,45 @@ function openSubmitPromptModal(text = '', modelSlug = '', promptId = null, title
       return;
     }
     chrome.storage.local.get(['settings'], (res) => {
-      chrome.storage.sync.get(['openai_id'], (result) => {
-        if (!res.settings.selectedPromptLanguage.code || res.settings.selectedPromptLanguage.code === 'select') {
-          const curLanguageSelectorLabel = document.getElementById('language-selector-label');
-          curLanguageSelectorLabel.style.color = '#ef4146';
-          submitButton.disabled = false;
-          return;
-        }
-        const curHideFullPromptSwitch = document.getElementById('switch-hide-full-prompt');
-        chrome.runtime.sendMessage({
-          submitPrompt: true,
-          detail: {
-            openAiId: result.openai_id, prompt: textToSubmit.value, promptTitle: promptTitleInput.value, categories: selectedCategories, promptLangage: res.settings.selectedPromptLanguage.code, modelSlug, nickname: nicknameInput.value, url: urlInput.value, hideFullPrompt: curHideFullPromptSwitch?.checked || false, promptId,
-          },
-        }, (data) => {
-          // show toast that prompt is submitted
-          if (Object.keys(data).join(',').includes('error')) {
-            if (Object.values(data).join(',').includes('unique_title')) {
-              toast('Error: You have already submitted a prompt with this title. Please try again with a different title.', 'error');
-              return;
-            }
-            if (Object.values(data).join(',').includes('gptx_prompt_text_hash_archived')) {
-              toast('Error: This prompt has been submitted previously. Please try a different prompt.', 'error');
-              return;
-            }
-            toast('Something went wrong. Please try again.', 'error');
+      if (!res.settings.selectedPromptLanguage.code || res.settings.selectedPromptLanguage.code === 'select') {
+        const curLanguageSelectorLabel = document.getElementById('language-selector-label');
+        curLanguageSelectorLabel.style.color = '#ef4146';
+        submitButton.disabled = false;
+        return;
+      }
+      const curHideFullPromptSwitch = document.getElementById('switch-hide-full-prompt');
+      chrome.runtime.sendMessage({
+        addPromptToLibrary: true,
+        detail: {
+          prompt: textToSubmit.value,
+          promptTitle: promptTitleInput.value,
+          categories: selectedCategories,
+          promptLangage: res.settings.selectedPromptLanguage.code,
+          modelSlug,
+          nickname: nicknameInput.value,
+          url: urlInput.value,
+          hideFullPrompt: curHideFullPromptSwitch?.checked || false,
+          promptId,
+        },
+      }, (data) => {
+        // show toast that prompt is submitted
+        if (Object.keys(data).join(',').includes('error')) {
+          if (Object.values(data).join(',').includes('unique_title')) {
+            toast('Error: You have already submitted a prompt with this title. Please try again with a different title.', 'error');
             return;
           }
-          toast('Prompt submitted!');
-          submitPromptModal.remove();
-          if (refreshPromptLibrary) {
-            fetchPrompts(promptLibraryPageNumber);
+          if (Object.values(data).join(',').includes('gptx_prompt_text_hash_archived')) {
+            toast('Error: This prompt has been submitted previously. Please try a different prompt.', 'error');
+            return;
           }
-        });
+          toast('Something went wrong. Please try again.', 'error');
+          return;
+        }
+        toast('Prompt submitted!');
+        submitPromptModal.remove();
+        if (refreshPromptLibrary) {
+          fetchPrompts(promptLibraryPageNumber);
+        }
       });
     });
   });

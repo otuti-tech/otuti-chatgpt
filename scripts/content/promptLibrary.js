@@ -676,7 +676,7 @@ function initializePromptLibrary() {
   // create library button
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
-    if (settings && (settings?.showCommunityPrompts || settings?.showCommunityPrompts === undefined)) {
+    if (typeof settings === 'undefined' || settings?.showCommunityPrompts === undefined || settings?.showCommunityPrompts) {
       addButtonToNavFooter('Community Prompts', () => createPromptLibraryModal());
     }
   });

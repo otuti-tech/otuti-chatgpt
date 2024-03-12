@@ -11,29 +11,38 @@ let lastPromptSuggestions = [];
 const defaultHeaders = {
   'content-type': 'application/json',
 };
-
-const newChatgptAccountId = document?.cookie?.split('; ')?.find((row) => row?.startsWith('_account'))?.split('=')?.[1];
-if (newChatgptAccountId) {
+function getChatGPTAccountIdFromCookie() {
+  const newChatgptAccountId = document?.cookie?.split('; ')?.find((row) => row?.startsWith('_account'))?.split('=')?.[1];
+  if (newChatgptAccountId === 'personal') {
+    return 'default';
+  }
+  return newChatgptAccountId || 'default';
+}
+const newChatgptAccountId = getChatGPTAccountIdFromCookie();
+if (newChatgptAccountId !== 'default') {
   defaultHeaders['Chatgpt-Account-Id'] = newChatgptAccountId;
-  chrome.storage.local.get([
-    'account', 'chatgptAccountId', 'allConversations', 'allConversationsOrder', 'conversations', 'conversationsOrder',
-  ], (res) => {
-    const {
-      account, chatgptAccountId: oldChatgptAccountId, allConversations, allConversationsOrder, conversations, conversationsOrder,
-    } = res;
-    if (account?.account_ordering?.length > 1) {
-      const defaulConversations = newChatgptAccountId === oldChatgptAccountId ? conversations : {};
-      const defaultConversationsOrder = newChatgptAccountId === oldChatgptAccountId ? conversationsOrder : [];
-      chrome.storage.local.set({
-        chatgptAccountId: newChatgptAccountId || 'default',
-        conversations: allConversations?.[newChatgptAccountId] || defaulConversations,
-        conversationsOrder: allConversationsOrder?.[newChatgptAccountId] || defaultConversationsOrder,
-      });
-    }
-  });
 } else {
   delete defaultHeaders['Chatgpt-Account-Id'];
 }
+
+// if (newChatgptAccountId) {
+//   chrome.storage.local.get([
+//     'account', 'chatgptAccountId', 'allConversations', 'allConversationsOrder', 'conversations', 'conversationsOrder',
+//   ], (res) => {
+//     const {
+//       account, chatgptAccountId: oldChatgptAccountId, allConversations, allConversationsOrder, conversations, conversationsOrder,
+//     } = res;
+//     if (account?.account_ordering?.length > 1) {
+//       const defaulConversations = newChatgptAccountId === oldChatgptAccountId ? conversations : {};
+//       const defaultConversationsOrder = newChatgptAccountId === oldChatgptAccountId ? conversationsOrder : [];
+//       chrome.storage.local.set({
+//         chatgptAccountId: newChatgptAccountId,
+//         conversations: allConversations?.[newChatgptAccountId] || defaulConversations,
+//         conversationsOrder: allConversationsOrder?.[newChatgptAccountId] || defaultConversationsOrder,
+//       });
+//     }
+//   });
+// }
 
 // https://chat.openai.com/backend-api/register-websocket
 function registerWebsocket() {
@@ -123,6 +132,38 @@ function generateSuggestions(conversationId, messageId, model, numSuggestions = 
       return data;
     });
 }
+// https://chat.openai.com/backend-api/synthesize?message_id=7319a945-3ce6-4597-ac86-3f5ff03348f3&conversation_id=71dab7a5-17eb-4e31-8bb4-720f8b35740f&voice=juniper
+// eslint-disable-next-line prefer-const
+let playingAudios = {};
+function synthesize(conversationId, messageId, voice = 'juniper') {
+  const url = new URL('https://chat.openai.com/backend-api/synthesize');
+  return chrome.storage.local.get(['openAIUserSettings']).then((res) => {
+    const voiceName = res.openAIUserSettings.settings?.voice_name || voice;
+
+    const params = { message_id: messageId, conversation_id: conversationId, voice: voiceName };
+    url.search = new URLSearchParams(params).toString();
+    return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
+      method: 'GET',
+      headers: {
+        ...defaultHeaders,
+        Authorization: result.accessToken,
+      },
+    }).then((response) => {
+      // check if response content-type is audio/aac
+      if (response.headers.get('content-type') !== 'audio/aac') {
+        toast('Failed to synthesize audio', 'error');
+        return Promise.reject(response);
+      }
+      // otherwise play audio
+      return response.blob().then((blob) => {
+        const audio = new Audio(URL.createObjectURL(blob));
+        audio.play();
+        playingAudios[messageId] = audio;
+        return audio;
+      });
+    }));
+  });
+}
 function convertGizmoToPayload(gizmoResource) {
   return {
     id: gizmoResource.gizmo.id,
@@ -138,7 +179,7 @@ function convertGizmoToPayload(gizmoResource) {
       tags: gizmoResource.gizmo.tags,
     },
     description: gizmoResource.gizmo.display.description,
-    owner_id: gizmoResource.gizmo.author.user_id,
+    owner_id: gizmoResource.gizmo.author.user_id.split('__')?.[0],
     updated_at: gizmoResource.gizmo.updated_at,
     profile_pic_permalink: gizmoResource.gizmo.display.profile_picture_url,
     share_recipient: gizmoResource.gizmo.share_recipient,
@@ -167,6 +208,7 @@ function generateChat(userInputParts, conversationId, messageId, parentMessageId
       conversation_mode: {
         kind: (gizmoResource || metadata.gizmo_id) ? 'gizmo_interaction' : 'primary_assistant',
       },
+      websocket_request_id: self.crypto.randomUUID(),
     };
     if (metadata.gizmo_id) {
       payload.model = 'gpt-4-gizmo';
@@ -228,12 +270,13 @@ function generateChat(userInputParts, conversationId, messageId, parentMessageId
       chrome.storage.local.set({ enabledPluginIds: newEnabledPluginIds });
     }
     // clear arkose once used
-    window.localStorage.removeItem('arkoseToken');
-    // if (isGPT4) {
-    defaultHeaders['openai-sentinel-arkose-token'] = token;
-    // } else {
-    //   delete defaultHeaders['openai-sentinel-arkose-token'];
-    // }
+    window.localStorage.removeItem('sp/arkoseToken');
+    const foundArkoseSetups = JSON.parse(window.localStorage.getItem('sp/arkoseSetups') || '[]');
+    if (token && foundArkoseSetups.length > 0) {
+      defaultHeaders['openai-sentinel-arkose-token'] = token;
+    } else {
+      delete defaultHeaders['openai-sentinel-arkose-token'];
+    }
     const eventSource = new SSE(
       '/backend-api/conversation',
       {
@@ -267,6 +310,7 @@ function generateChatWS(userInputParts, conversationId, messageId, parentMessage
       conversation_mode: {
         kind: (gizmoResource || metadata.gizmo_id) ? 'gizmo_interaction' : 'primary_assistant',
       },
+      websocket_request_id: self.crypto.randomUUID(),
     };
     if (metadata.gizmo_id) {
       payload.model = 'gpt-4-gizmo';
@@ -328,12 +372,14 @@ function generateChatWS(userInputParts, conversationId, messageId, parentMessage
       chrome.storage.local.set({ enabledPluginIds: newEnabledPluginIds });
     }
     // clear arkose once used
-    window.localStorage.removeItem('arkoseToken');
-    // if (isGPT4) {
-    defaultHeaders['openai-sentinel-arkose-token'] = token;
-    // } else {
-    //   delete defaultHeaders['openai-sentinel-arkose-token'];
-    // }
+    window.localStorage.removeItem('sp/arkoseToken');
+    const foundArkoseSetups = JSON.parse(window.localStorage.getItem('sp/arkoseSetups') || '[]');
+
+    if (token && foundArkoseSetups.length > 0) {
+      defaultHeaders['openai-sentinel-arkose-token'] = token;
+    } else {
+      delete defaultHeaders['openai-sentinel-arkose-token'];
+    }
     return fetch('/backend-api/conversation', {
       method: 'POST',
       headers: {
@@ -377,7 +423,7 @@ function getConversation(conversationId, forceRefresh = false) {
       if (response.ok) {
         return response.json();
       }
-      if (response.status?.startsWith('5')) {
+      if (response?.status && response?.status?.startsWith('5')) {
         return Promise.resolve(response);
       }
       return Promise.reject(response);
@@ -496,7 +542,7 @@ function getGizmoById(gizmoId, forceRefresh = false) {
     if (gizmoData && !forceRefresh) {
       return gizmoData;
     }
-    return chrome.storage.sync.get(['accessToken', 'openai_id']).then((result) => fetch(`https://chat.openai.com/backend-api/gizmos/${gizmoId}`, {
+    return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/gizmos/${gizmoId}`, {
       method: 'GET',
       headers: {
         ...defaultHeaders,
@@ -506,7 +552,7 @@ function getGizmoById(gizmoId, forceRefresh = false) {
       if (response.ok) {
         return response.json();
       }
-      if (response.status === 404) {
+      if (response?.status === 404) {
         chrome.runtime.sendMessage({
           deleteSuperpowerGizmo: true,
           detail: {
@@ -525,7 +571,6 @@ function getGizmoById(gizmoId, forceRefresh = false) {
         chrome.runtime.sendMessage({
           submitSuperpowerGizmos: true,
           detail: {
-            openAiId: result.openai_id,
             gizmos: [data.gizmo],
           },
         });
@@ -537,6 +582,21 @@ function getGizmoById(gizmoId, forceRefresh = false) {
     }));
   });
 }
+function getGizmoAbout(gizmoId) {
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch(`https://chat.openai.com/backend-api/gizmos/${gizmoId}/about`, {
+    method: 'GET',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.accessToken,
+    },
+  }).then((response) => {
+    if (response.ok) {
+      return response.json();
+    }
+    return Promise.resolve({});
+  }).then((data) => data));
+}
+
 function getGizmoDiscovery(category, cursor, limit = 24, locale = 'global', forceRefresh = true) {
   return chrome.storage.local.get(['gizmoDiscovery']).then((res) => {
     const { gizmoDiscovery } = res;
@@ -549,7 +609,7 @@ function getGizmoDiscovery(category, cursor, limit = 24, locale = 'global', forc
     if (cursor) url.searchParams.append('cursor', cursor);
     if (limit) url.searchParams.append('limit', limit);
     if (locale) url.searchParams.append('locale', locale);
-    return chrome.storage.sync.get(['accessToken', 'openai_id']).then((result) => fetch(url, {
+    return chrome.storage.sync.get(['accessToken']).then((result) => fetch(url, {
       method: 'GET',
       headers: {
         ...defaultHeaders,
@@ -571,7 +631,6 @@ function getGizmoDiscovery(category, cursor, limit = 24, locale = 'global', forc
       chrome.runtime.sendMessage({
         submitSuperpowerGizmos: true,
         detail: {
-          openAiId: result.openai_id,
           gizmos,
           category,
         },
@@ -601,6 +660,30 @@ function updateActionSettings(gizmoId, domain, gizmoActionId, actionSettings) {
       return response.json();
     }
     return Promise.reject(response);
+  }));
+}
+function openOAuthDialog(gizmoId, domain, gizmoActionId, redirectTo) {
+  const payload = {
+    gizmo_id: gizmoId,
+    domain,
+    gizmo_action_id: gizmoActionId,
+    redirect_to: redirectTo,
+  };
+  return chrome.storage.sync.get(['accessToken']).then((result) => fetch('https://chat.openai.com/backend-api/gizmos/oauth_redirect', {
+    method: 'POST',
+    headers: {
+      ...defaultHeaders,
+      Authorization: result.accessToken,
+    },
+    body: JSON.stringify(payload),
+  }).then((response) => {
+    if (response.ok) {
+      return response.json();
+    }
+    return Promise.reject(response);
+  }).then((data) => {
+    // go to the response url
+    window.location.href = data.redirect_uri;
   }));
 }
 // https://chat.openai.com/backend-api/gizmos/user_action_settings?gizmo_id=g-TsiYOneyk
@@ -675,6 +758,9 @@ function getUserSettings() {
       return response.json();
     }
     return Promise.reject(response);
+  }).then((data) => {
+    chrome.storage.local.set({ openAIUserSettings: data });
+    return data;
   }));
 }
 
@@ -690,6 +776,19 @@ function updateAccountUserSetting(feature, value) {
       return response.json();
     }
     return Promise.reject(response);
+  }).then((data) => {
+    chrome.storage.local.get(['openAIUserSettings'], (res) => {
+      chrome.storage.local.set({
+        openAIUserSettings: {
+          ...res.openAIUserSettings,
+          settings: {
+            ...res.openAIUserSettings.settings,
+            [feature]: value,
+          },
+        },
+      });
+    });
+    return data;
   }));
 }
 function createFileInServer(file, useCase) {

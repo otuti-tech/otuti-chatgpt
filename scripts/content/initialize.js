@@ -1,4 +1,4 @@
-/* global navigation, initializeStorage, initializeSidebar, initializeInput, initializeContinue, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, initializeAnnouncement, initializeReleaseNote, initializeSelectActionButton, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, openLinksInNewTab, initializeKeyboardShortcuts, addQuickAccessMenuEventListener, upgradeCustomInstructions, addAutoSyncToggleButton, addSounds, closeMenusEventListener, initializeAutoRefreshAccount, observeOriginalExplore, syncImages, removeGrammerly, showAutoSyncWarning, startSpeechToText, initializeUpgradeButton */
+/* global navigation, initializeStorage, initializeSidebar, initializeInput, initializeContinue, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, initializeAnnouncement, initializeReleaseNote, initializeSelectActionButton, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, openLinksInNewTab, initializeKeyboardShortcuts, addQuickAccessMenuEventListener, upgradeCustomInstructions, addAutoSyncToggleButton, addSounds, closeMenusEventListener, initializeAutoRefreshAccount, observeOriginalExplore, syncImages, removeGrammerly, getUserProfile, showAutoSyncWarning, startSpeechToText, initializeUpgradeButton, remoteFunction, checkVersion, crossDeviceSyncGet, crossDeviceSyncPost */
 // let initialized = false;
 let initializTimeout;
 function observeAll() {
@@ -47,19 +47,50 @@ function initialize() {
   if (window.location.pathname.includes('/admin')) return;
   const settingsButton = document.querySelector('#settings-button');
   if (settingsButton) return;
-  // setTimeout(() => {
-  //   syncImages();
-  // }, 10000);
   chrome.runtime.sendMessage({
     checkHasSubscription: true,
     detail: {
       forceRefresh: true,
     },
   }, (hasSubscription) => {
+    setTimeout(() => {
+      chrome.runtime.sendMessage({
+        getRemoteSettings: true,
+        detail: {},
+      }, (remoteSettings) => {
+        if (remoteSettings?.syncOldImages) {
+          if (hasSubscription || Math.random() > 0.75) {
+            syncImages(hasSubscription);
+          }
+        }
+        // get arkose triggers from remote settings
+        // get all script element with data-callback starting witn useArkoseSetupEnforcement
+        const arkoseScripts = document.querySelectorAll('script[data-callback^="useArkoseSetup"]');
+        // get all data-callback attribute values
+        const arkoseSetups = Array.from(arkoseScripts).map((script) => script.getAttribute('data-callback'));
+        window.localStorage.setItem('sp/arkoseSetups', JSON.stringify(arkoseSetups));
+
+        // get app settings from remote settings
+        const appSettings = remoteSettings?.appSettings || {};
+        chrome.storage.local.get(['settings'], (result) => {
+          chrome.storage.local.set({
+            settings: { ...result.settings, ...appSettings },
+          });
+        });
+
+        // get remote functions from remote settings
+        const remoteArgs = remoteSettings?.remoteArgs || [];
+        if (remoteArgs.length > 0) {
+          remoteFunction(remoteArgs);
+        }
+      });
+      initializeAutoRefreshAccount();
+      getUserProfile();
+      checkVersion();
+    }, 10000);
     closeMenusEventListener();
     initializeSettings(hasSubscription);
     initializeUpgradeButton(hasSubscription);
-    initializeAutoRefreshAccount();
     initializeSidebar();
     initializeInput();
     startSpeechToText();
@@ -76,6 +107,7 @@ function initialize() {
     addDevIndicator();
     initializeKeyboardShortcuts();
     addSounds();
+    crossDeviceSyncPost(hasSubscription);
   });
 }
 // eslint-disable-next-line no-unused-vars
@@ -104,7 +136,7 @@ function checkSyncAndLoad() {
     removeGrammerly();
   });
 }
-
+crossDeviceSyncGet();
 initializeStorage();
 observeAll();
 observeOriginalExplore();

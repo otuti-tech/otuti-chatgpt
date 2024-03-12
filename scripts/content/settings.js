@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global isFirefox, isOpera, createModal, Sortable, getGizmoById, generateRandomDarkColor, createReleaseNoteModal, languageList, writingStyleList, toneList, toast, loadConversationList, modelSwitcher, openUpgradeModal, addModelSwitcherEventListener, dropdown, addDropdownEventListener, API_URL:true, showConfirmDialog, createContinueButton, speechToTextLanguageList, textToSpeechLanguageList, initializePromptChain, addPromptChainCreateButton, addKeyboardShortcutsModalButton, initializePromptLibrary, initializePromptHistory, updateAccountUserSetting, checkSyncAndLoad */
+/* global isFirefox, isOpera, createModal, Sortable, getGizmoById, generateRandomDarkColor, createReleaseNoteModal, languageList, writingStyleList, toneList, toast, loadConversationList, modelSwitcher, openUpgradeModal, addModelSwitcherEventListener, dropdown, addDropdownEventListener, API_URL:true, showConfirmDialog, createContinueButton, speechToTextLanguageList, initializePromptChain, addPromptChainCreateButton, addKeyboardShortcutsModalButton, initializePromptLibrary, initializePromptHistory, updateAccountUserSetting, checkSyncAndLoad, textToSpeechVoiceList, synthesize, getUserSettings */
 const defaultPrompts = [
   { title: 'Continue', text: 'Please continue', isDefault: true },
   { title: 'Rewrite', text: 'Please rewrite your last response', isDefault: false },
@@ -10,6 +10,7 @@ const defaultPrompts = [
   { title: 'Summarize', text: 'Please summarize your last response', isDefault: false },
 ];
 const autoArchiveModes = [{ code: 'days', name: 'Archive chats after' }, { code: 'number', name: 'Only keep the last' }];
+let settingTestAudio;
 
 function createSettingsModal(initialTab = 0) {
   const bodyContent = settingsModalContent(initialTab);
@@ -134,12 +135,20 @@ function generalTabContent(hasSubscription = false) {
   darkModeSwitchWrapper.appendChild(darkModeSwitch);
   leftContent.appendChild(darkModeSwitchWrapper);
 
-  // daily newsletter
+  // release note
   const hideReleaseNoteSwitch = createSwitch('Hide Release Note', 'Don’t show release note when extension is updated', 'hideReleaseNote', true);
   leftContent.appendChild(hideReleaseNoteSwitch);
 
+  const hideUpdateNotificationSwitch = createSwitch('Hide Update Notification', 'Don’t show update notification when new version is available', 'hideUpdateNotification', false);
+  leftContent.appendChild(hideUpdateNotificationSwitch);
+
+  const crossDeviceSyncSwitch = createSwitch('Cross Device Sync', 'Sync settings, folders, custom prompts, prompt chains and history across all your devices', 'crossDeviceSync', hasSubscription, refreshPage, ['⚡️ Requires Pro Account'], !hasSubscription);
+  leftContent.appendChild(crossDeviceSyncSwitch);
+
   const enhanceGPTStoreSwitch = createSwitch('Enhanced GPT Store', 'Get access to the full list of thousands of Custom GPTs with the ability to search and sort right from inside ChatGPT', 'enhanceGPTStore', true, refreshPage, ['Requires Refresh']);
   leftContent.appendChild(enhanceGPTStoreSwitch);
+
+  const importExportKeys = ['settings', 'customModels', 'customPrompts', 'customInstructionProfiles', 'promptChains', 'conversationsOrder', 'syncImagesCompletedAgainAgain', 'syncedConvIdsNew', 'allConversationsOrder'];
 
   const importExportWrapper = document.createElement('div');
   importExportWrapper.style = 'display: flex; flex-direction: row; flex-wrap: wrap; justify-content: start; align-items: center; width: 100%; margin: 8px 0; color:white;';
@@ -166,13 +175,15 @@ function generalTabContent(hasSubscription = false) {
         if (document.querySelector('#modal-close-button-settings')) {
           document.querySelector('#modal-close-button-settings').click();
         }
-        const importedData = JSON.parse(e.target.result);
-        const {
-          settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles, promptChains,
-        } = importedData;
-        chrome.storage.local.set({
-          settings, customModels, customPrompts, customInstructionProfiles, promptChains, conversationsOrder,
-        }, () => {
+        const dataFromFile = JSON.parse(e.target.result);
+        // get importExportKeys from importedData
+        const importedData = {};
+        importExportKeys.forEach((key) => {
+          if (dataFromFile[key]) {
+            importedData[key] = dataFromFile[key];
+          }
+        });
+        chrome.storage.local.set(importedData, () => {
           window.location.reload();
           toast('Imported Settings Successfully');
         });
@@ -188,12 +199,10 @@ function generalTabContent(hasSubscription = false) {
   exportButton.textContent = 'Export';
   exportButton.addEventListener('click', () => {
     chrome.storage.sync.get(['version'], ({ version }) => {
-      chrome.storage.local.get(['conversationsOrder', 'settings', 'customModels', 'customPrompts', 'customInstructionProfiles', 'promptChains'], (result) => {
-        const {
-          settings, customModels, customPrompts, customInstructionProfiles, promptChains, conversationsOrder,
-        } = result;
+      chrome.storage.local.get(importExportKeys, (result) => {
         const data = {
-          version, settings, customModels, customPrompts, conversationsOrder, customInstructionProfiles, promptChains,
+          version,
+          ...result,
         };
         const element = document.createElement('a');
         element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(JSON.stringify(data))}`);
@@ -875,93 +884,62 @@ function textToSpeechTabContent(hasSubscription = false) {
   textToSpeechLabel.innerHTML = 'Text To Speech<span class="text-xs"> — ChatGPT talks to you. <a class="underline text-gold" href="https://www.youtube.com/watch?v=ckHAyrVqj-w&ab_channel=Superpower">Learn more</a></span></span>';
   textToSpeechHeader.appendChild(textToSpeechLabel);
 
-  const ttsLanguageSelectorWrapper = document.createElement('div');
-  ttsLanguageSelectorWrapper.id = 'tts-language-selector-wrapper';
-  ttsLanguageSelectorWrapper.style = 'position:relative;width:150px;margin-left:8px;';
-  chrome.storage.local.get(['settings'], (res) => {
-    const { textToSpeechLanguage, textToSpeechAutoDetectLanguage } = res.settings;
-    ttsLanguageSelectorWrapper.innerHTML = dropdown('TTS-Language', textToSpeechLanguageList, textToSpeechLanguage, 'right', true);
-    if (textToSpeechAutoDetectLanguage) {
-      ttsLanguageSelectorWrapper.style.opacity = 0.5;
-      ttsLanguageSelectorWrapper.style.pointerEvents = 'none';
-    }
-    addDropdownEventListener('TTS-Language', textToSpeechLanguageList, (lang) => {
-      chrome.storage.local.get('settings', ({ settings }) => {
-        const textToSpeechVoiceList = speechSynthesis.getVoices().filter((v) => v.lang === lang.code).map((v) => ({ name: v.name, code: v.name }));
-
-        const ttsVoiceSelectorWrapper = document.querySelector('#tts-voice-selector-wrapper');
-        ttsVoiceSelectorWrapper.innerHTML = dropdown('TTS-Voice', textToSpeechVoiceList, textToSpeechVoiceList[0], 'right', true);
-
-        chrome.storage.local.set({ settings: { ...settings, textToSpeechLanguage: lang, textToSpeechVoice: textToSpeechVoiceList[0] } });
-
-        addDropdownEventListener('TTS-Voice', textToSpeechVoiceList, (voice) => {
-          chrome.storage.local.get('settings', ({ settings: curSettings }) => {
-            chrome.storage.local.set({ settings: { ...curSettings, textToSpeechVoice: voice } });
-          });
-        });
-      });
-    });
-  });
-
-  textToSpeechHeader.appendChild(ttsLanguageSelectorWrapper);
-
   content.appendChild(textToSpeechHeader);
 
   const textToSpeechWrapper = document.createElement('div');
   textToSpeechWrapper.style = 'position:relative;display: flex; flex-flow: wrap; justify-content: start; align-items: center; width: 100%; margin: 12px 0 24px 0; padding: 8px; border-radius: 8px; background-color: rgb(30, 30, 47);';
 
-  const textToSpeechAutoDetectLanguageSwitch = createSwitch('Auto Detect Language', 'Automatically detect the language of the response', 'textToSpeechAutoDetectLanguage', false, textToSpeechAutoDetectLanguageCallback, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription);
-  textToSpeechWrapper.appendChild(textToSpeechAutoDetectLanguageSwitch);
-
-  const autoSpeakSwitch = createSwitch('Auto Speak', 'Automatically speak the response once it\'s finished', 'autoSpeak', false, autoSpeakSwitchCallback, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription);
+  const autoSpeakSwitch = createSwitch('Auto Speak', 'Automatically speak the response once it\'s finished', 'autoSpeak', false, null, ['Requires Auto-Sync', '⚡️ Requires Pro Account']);
   textToSpeechWrapper.appendChild(autoSpeakSwitch);
-
-  const skipCodeReadingSwitch = createSwitch('Skip Reading Code', 'Skip code blocks when speaking the response', 'skipCodeReading', false, null, ['Requires Auto-Sync', '⚡️ Requires Pro Account'], !hasSubscription);
-  textToSpeechWrapper.appendChild(skipCodeReadingSwitch);
 
   const ttsVoiceSelectorWrapper = document.createElement('div');
   ttsVoiceSelectorWrapper.id = 'tts-voice-selector-wrapper';
   ttsVoiceSelectorWrapper.style = 'position:absolute;top:10px;right:10px;width:150px;margin-left:8px;';
-  chrome.storage.local.get(['settings'], (res) => {
-    const { textToSpeechVoice, textToSpeechLanguage, textToSpeechAutoDetectLanguage } = res.settings;
-    const textToSpeechVoiceList = window.speechSynthesis.getVoices().filter((v) => v.lang === textToSpeechLanguage.code).map((v) => ({ name: v.name, code: v.name }));
+
+  getUserSettings().then((openAIUserSettings) => {
+    const voiceName = openAIUserSettings.settings?.voice_name || 'juniper';
+    const textToSpeechVoice = textToSpeechVoiceList.find((v) => v.code === voiceName) || textToSpeechVoiceList[0];
     ttsVoiceSelectorWrapper.innerHTML = dropdown('TTS-Voice', textToSpeechVoiceList, textToSpeechVoice, 'right', true);
-    if (textToSpeechAutoDetectLanguage) {
-      ttsVoiceSelectorWrapper.style.opacity = 0.5;
-      ttsVoiceSelectorWrapper.style.pointerEvents = 'none';
-    }
+
     addDropdownEventListener('TTS-Voice', textToSpeechVoiceList, (voice) => {
-      chrome.storage.local.get('settings', ({ settings }) => {
-        chrome.storage.local.set({ settings: { ...settings, textToSpeechVoice: voice } });
-      });
+      updateAccountUserSetting('voice_name', voice.code);
     });
   });
   textToSpeechWrapper.appendChild(ttsVoiceSelectorWrapper);
 
-  const textToSpeechRateSlider = createSlider('Rate', 'Speed at which the text is spoken', 'textToSpeechRate', 1, 0.5, 2, 0.1, null, 'Requires Auto-Sync', !hasSubscription);
-  textToSpeechWrapper.appendChild(textToSpeechRateSlider);
-
-  const textToSpeechPitchSlider = createSlider('Pitch', 'The pitch of the speech', 'textToSpeechPitch', 1, 0, 2, 0.1, null, 'Requires Auto-Sync', !hasSubscription);
-  textToSpeechWrapper.appendChild(textToSpeechPitchSlider);
-
   const audioTestButton = document.createElement('button');
   audioTestButton.classList = 'btn flex justify-center gap-2 btn-primary border-0 md:border';
-  audioTestButton.style = 'min-width:72px;height:34px;margin-left:auto;';
+  audioTestButton.style = 'min-width:120px;height:34px;margin-left:auto;';
   audioTestButton.textContent = 'Test Audio 🎧';
-  audioTestButton.disabled = !hasSubscription;
   audioTestButton.addEventListener('click', () => {
-    chrome.storage.local.get(['settings'], (res) => {
-      const { settings } = res;
-      const utterance = new SpeechSynthesisUtterance('Power chatGPTuti, is the best ChatGPT extension.');
-      utterance.rate = settings.textToSpeechRate || 1;
-      utterance.pitch = settings.textToSpeechPitch || 1;
-      utterance.volume = 1;
-      utterance.lang = settings.textToSpeechLanguage;
-      utterance.voice = speechSynthesis.getVoices().find((v) => v.name === settings.textToSpeechVoice.name);
-      speechSynthesis.cancel();
-      setTimeout(() => {
-        speechSynthesis.speak(utterance);
-      }, 500);
+    if (settingTestAudio) settingTestAudio.pause();
+    if (audioTestButton.innerText === 'Stop Audio 🎧') {
+      audioTestButton.innerText = 'Test Audio 🎧';
+      return;
+    }
+    chrome.storage.local.get(['conversations'], (res) => {
+      const { conversations } = res;
+      const randomIndex = Math.floor(Math.random() * Object.keys(conversations).length);
+      const testConversation = conversations[Object.keys(conversations)[randomIndex]];
+      if (!testConversation) return;
+      const testMessage = Object.values(testConversation?.mapping)?.find((m) => m?.message?.author?.role === 'assistant');
+      if (!testMessage) return;
+      audioTestButton.innerText = 'Loading...';
+      audioTestButton.disabled = true;
+      synthesize(testConversation.conversation_id, testMessage.id).then(async (audio) => {
+        if (!audio || !audio.src) return;
+        audioTestButton.innerText = 'Stop Audio 🎧';
+        audioTestButton.disabled = false;
+        settingTestAudio.pause();
+        settingTestAudio = audio;
+        audio.addEventListener('ended', () => {
+          audioTestButton.innerText = 'Test Audio 🎧';
+        });
+        const settingsModal = document.querySelector('#modal-settings');
+        if (!settingsModal) {
+          settingTestAudio.pause();
+        }
+      });
     });
   });
   textToSpeechWrapper.appendChild(audioTestButton);
@@ -1012,33 +990,7 @@ function textToSpeechTabContent(hasSubscription = false) {
 
   return content;
 }
-function textToSpeechAutoDetectLanguageCallback(isChecked) {
-  const ttsLanguageSelectorWrapper = document.querySelector('#tts-language-selector-wrapper');
-  const ttsVoiceSelectorWrapper = document.querySelector('#tts-voice-selector-wrapper');
-  if (isChecked) {
-    ttsLanguageSelectorWrapper.style.opacity = 0.5;
-    ttsLanguageSelectorWrapper.style.pointerEvents = 'none';
-    ttsVoiceSelectorWrapper.style.opacity = 0.5;
-    ttsVoiceSelectorWrapper.style.pointerEvents = 'none';
-  } else {
-    ttsLanguageSelectorWrapper.style.opacity = 1;
-    ttsLanguageSelectorWrapper.style.pointerEvents = 'auto';
-    ttsVoiceSelectorWrapper.style.opacity = 1;
-    ttsVoiceSelectorWrapper.style.pointerEvents = 'auto';
-  }
-}
-function autoSpeakSwitchCallback(isChecked) {
-  if (isChecked) {
-    const utterance = new SpeechSynthesisUtterance('Auto Speak is enabled.');
-    chrome.storage.local.get(['settings'], (result) => {
-      utterance.lang = result.settings.textToSpeechLanguage;
-      utterance.voice = speechSynthesis.getVoices().find((v) => v.name === result.settings.textToSpeechVoice.name);
-      utterance.rate = 1;
-      utterance.pitch = 1;
-      speechSynthesis.speak(utterance);
-    });
-  }
-}
+
 function promptInputTabContent(hasSubscription = false) {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
@@ -1872,7 +1824,7 @@ function settingsModalActions() {
   const superpowerChatGPT = document.createElement('a');
   superpowerChatGPT.href = 'https://chrome.google.com/webstore/detail/superpower-chatgpt/amhmeenmapldpjdedekalnfifgnpfnkc';
   superpowerChatGPT.target = '_blank';
-  superpowerChatGPT.textContent = 'Power chatGPTuti';
+  superpowerChatGPT.textContent = 'Superpower ChatGPT';
   superpowerChatGPT.style = 'color: #999; font-size: 12px; margin-left: 4px; text-decoration: underline;';
   superpowerChatGPT.addEventListener('mouseover', () => {
     superpowerChatGPT.style = 'color: gold; font-size: 12px; margin-left: 4px;text-decoration: underline;';
@@ -2006,7 +1958,7 @@ function initializeSettings(hasSubscription) {
     }
   });
 
-  chrome.storage.local.get(['settings', 'presetPrompts', 'selectedConversations', 'customPrompts', 'customInstructionProfiles', 'openAiUserSettings'], (result) => {
+  chrome.storage.local.get(['settings', 'presetPrompts', 'selectedConversations', 'customPrompts', 'customInstructionProfiles', 'openAIUserSettings'], (result) => {
     let newCustomPrompts = Array.isArray(result.customPrompts)
       ? result.customPrompts
       : [
@@ -2025,7 +1977,9 @@ function initializeSettings(hasSubscription) {
     chrome.storage.local.set({
       settings: {
         ...result.settings,
+        hideUpdateNotification: result.settings?.hideUpdateNotification !== undefined ? result.settings.hideUpdateNotification : false,
         animateFavicon: result.settings?.animateFavicon !== undefined ? result.settings.animateFavicon : false,
+        crossDeviceSync: result.settings?.crossDeviceSync !== undefined ? result.settings.crossDeviceSync && hasSubscription : hasSubscription,
         autoScroll: result.settings?.autoScroll !== undefined ? result.settings.autoScroll : true,
         autoSync: result.settings?.autoSync !== undefined ? result.settings.autoSync : true,
         autoSyncCount: result.settings?.autoSyncCount !== undefined ? result.settings.autoSyncCount : 100,
@@ -2039,7 +1993,7 @@ function initializeSettings(hasSubscription) {
         showExamplePrompts: result.settings?.showExamplePrompts !== undefined ? result.settings.showExamplePrompts : false,
         showMessageTimestamp: result.settings?.showMessageTimestamp !== undefined ? result.settings.showMessageTimestamp : false,
         showCustomPromptsButton: result.settings?.showCustomPromptsButton !== undefined ? result.settings.showCustomPromptsButton : true,
-        pluginDefaultOpen: result.openAiUserSettings?.settings?.show_expanded_code_view ? result.openAiUserSettings?.settings?.show_expanded_code_view : result.settings?.pluginDefaultOpen !== undefined ? result.settings.pluginDefaultOpen : false,
+        pluginDefaultOpen: result.openAIUserSettings?.settings?.show_expanded_code_view ? result.openAIUserSettings?.settings?.show_expanded_code_view : result.settings?.pluginDefaultOpen !== undefined ? result.settings.pluginDefaultOpen : false,
         showWordCount: result.settings?.showWordCount !== undefined ? result.settings.showWordCount : false,
         showTotalWordCount: result.settings?.showTotalWordCount !== undefined ? result.settings.showTotalWordCount : false,
         hideNewsletter: result.settings?.hideNewsletter !== undefined ? result.settings.hideNewsletter : false,
@@ -2097,19 +2051,11 @@ Don't reply with anything else!`,
         autoSpeak: result.settings?.autoSpeak !== undefined ? result.settings.autoSpeak && hasSubscription : false,
         skipCodeReading: result.settings?.skipCodeReading !== undefined ? result.settings.skipCodeReading : false,
         alternateMainColors: result.settings?.alternateMainColors !== undefined ? result.settings.alternateMainColors : false,
-        textToSpeechLanguage: result.settings?.textToSpeechLanguage !== undefined ? result.settings?.textToSpeechLanguage : { name: 'English (United Kingdom)', code: 'en-GB' },
-        textToSpeechAutoDetectLanguage: result.settings?.textToSpeechAutoDetectLanguage !== undefined ? result.settings?.textToSpeechAutoDetectLanguage : false,
-        textToSpeechVoice: result.settings?.textToSpeechVoice !== undefined ? result.settings?.textToSpeechVoice : {
-          name: 'Google UK English Male',
-          code: 'Google UK English Male',
-        },
         showNewChatSettings: result.settings?.showNewChatSettings !== undefined ? result.settings.showNewChatSettings : false,
         showMyPromptHistory: result.settings?.showMyPromptHistory !== undefined ? result.settings.showMyPromptHistory : true,
         showCommunityPrompts: result.settings?.showCommunityPrompts !== undefined ? result.settings.showCommunityPrompts : true,
         showKeyboardShortcutButton: result.settings?.showKeyboardShortcutButton !== undefined ? result.settings.showKeyboardShortcutButton : true,
         showPromptChainButton: result.settings?.showPromptChainButton !== undefined ? result.settings.showPromptChainButton : true,
-        textToSpeechRate: result.settings?.textToSpeechRate !== undefined ? result.settings?.textToSpeechRate : 1,
-        textToSpeechPitch: result.settings?.textToSpeechPitch !== undefined ? result.settings?.textToSpeechPitch : 1,
         // speech to text
         speechToTextLanguage: result.settings?.speechToTextLanguage !== undefined ? result.settings?.speechToTextLanguage : { name: 'English (United Kingdom)', code: 'en-GB' },
         speechToTextInterimResults: result.settings?.speechToTextInterimResults !== undefined ? result.settings?.speechToTextInterimResults : true,
