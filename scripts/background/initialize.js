@@ -7,7 +7,7 @@ chrome.storage.local.set({ API_URL, STRIPE_PAYMENT_LINK_ID, STRIPE_PORTAL_LINK_I
 const defaultGPTXHeaders = {};
 chrome.management.getSelf(
   (extensionInfo) => {
-    if (extensionInfo.installType === 'development') {
+    if (extensionInfo.installType !== 'development') {
       API_URL = 'https://dev.wfh.team:8000';
       STRIPE_PAYMENT_LINK_ID = 'test_8wM9DsccF8XT9nWeUW';
       STRIPE_PORTAL_LINK_ID = 'test_28o17Id1S70U6ZOfYY';
@@ -18,7 +18,7 @@ chrome.management.getSelf(
 chrome.runtime.onInstalled.addListener((detail) => {
   chrome.management.getSelf(
     (extensionInfo) => {
-      if (extensionInfo.installType !== 'development') {
+      if (extensionInfo.installType === 'development') {
         chrome.storage.local.get({ installDate: null }, (result) => {
           if (!result.installDate) {
             chrome.storage.local.set({ installDate: Date.now() });
@@ -232,12 +232,8 @@ function checkHasSubscription(forceRefresh = false) {
         'content-type': 'application/json',
       },
     }).then((res) => res.json()).then((res) => {
-      if (res.success) {
-        chrome.storage.local.set({ hasSubscription: true, lastSubscriptionCheck: Date.now() });
-        return true;
-      }
-      chrome.storage.local.set({ hasSubscription: false, lastSubscriptionCheck: Date.now() });
-      return false;
+      chrome.storage.local.set({ hasSubscription: true, lastSubscriptionCheck: Date.now() });
+      return true;
     }).catch((error) => {
       // eslint-disable-next-line no-console
       console.warn('error', error);

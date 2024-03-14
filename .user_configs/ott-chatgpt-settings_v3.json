@@ -1,0 +1,294 @@
+{
+    "version": "5.10.3",
+    "allConversationsOrder": {
+    },
+    "conversationsOrder": [
+        
+    ],
+    "customInstructionProfiles": [
+        {
+            "aboutModel": "\"WLM-MR-Digestor\"",
+            "aboutUser": "\"Eu sou WLM-MR-Digestor\"",
+            "id": "88acfe60-8bed-482b-8d09-048750002304",
+            "isSelected": false,
+            "name": "WLM-MR-Digestor"
+        },
+        {
+            "aboutModel": " ",
+            "aboutUser": " ",
+            "id": "90a9544a-7aee-48b2-97d1-8cb82323a88c",
+            "isSelected": false,
+            "name": "Void"
+        },
+        {
+            "aboutModel": "A",
+            "aboutUser": "A",
+            "id": "642da66a-2421-4e42-b4d9-a736d93d19e0",
+            "isSelected": false,
+            "name": "MBB Consult"
+        },
+        {
+            "aboutModel": "Ad",
+            "aboutUser": "A",
+            "id": "f816707f-aa14-4dc7-be0b-a871eaadd0b0",
+            "isSelected": false,
+            "name": "Project Leader/Owner"
+        },
+        {
+            "aboutModel": "A",
+            "aboutUser": "A",
+            "id": "2ae8bee4-1ea8-4913-acfe-286be393b029",
+            "isSelected": false,
+            "name": "CTO/CIO"
+        }
+    ],
+    "customModels": [],
+    "customPrompts": [
+        {
+            "isDefault": false,
+            "text": "Traduza o texto abaixo para pt-BR:",
+            "title": "Traduzir"
+        },
+        {
+            "isDefault": true,
+            "text": "Continue a geração do pronto que parou.",
+            "title": "Continue"
+        },
+        {
+            "isDefault": false,
+            "text": "Please rewrite your last response",
+            "title": "Rewrite"
+        },
+        {
+            "isDefault": false,
+            "text": "Please paraphrase your last response",
+            "title": "Paraphrase"
+        },
+        {
+            "isDefault": false,
+            "text": "Please explain your last response",
+            "title": "Explain"
+        },
+        {
+            "isDefault": false,
+            "text": "Please clarify your last response",
+            "title": "Clarify"
+        },
+        {
+            "isDefault": false,
+            "text": "Please expand your last response",
+            "title": "Expand"
+        },
+        {
+            "isDefault": false,
+            "text": "Please summarize your last response",
+            "title": "Summarize"
+        }
+    ],
+    "promptChains": [
+        {
+            "id": "4527269e-2756-4958-bd9b-a3f511d6efe8",
+            "steps": [
+                "Prompt 1",
+                "Prompt 2",
+                "Prompt 3"
+            ],
+            "title": "Cadeia 2"
+        },
+        {
+            "id": "fbff4fb8-ac24-4199-a9a5-c5131f181f79",
+            "steps": [
+                "Prompt 1 da Cadeia de Prompts",
+                "Prompt 2 da Cadeia de Prompts"
+            ],
+            "title": "Titulo da Cadeia de Prompts"
+        }
+    ],
+    "settings": {
+        "alternateMainColors": true,
+        "animateFavicon": true,
+        "autoArchiveMode": {
+            "code": "days",
+            "name": "Archive chats after"
+        },
+        "autoArchiveOldChats": false,
+        "autoArchiveThreshold": 7,
+        "autoClick": false,
+        "autoColorFolders": true,
+        "autoHideThreadCount": false,
+        "autoHideTopNav": false,
+        "autoRefreshAfterSync": true,
+        "autoResetTopNav": false,
+        "autoScroll": true,
+        "autoSortFolders": true,
+        "autoSpeak": false,
+        "autoSplit": true,
+        "autoSplitChunkPrompt": "Responda com OK: [PARTE x/TOTAL]\nResumo: Um breve resumo da última parte. Mantenha fatos e nomes importantes no resumo. Não responda com mais nada!",
+        "autoSplitInitialPrompt": "Você é momentaneamente um carregador de documentos/textos até que você carregue e memorize o conteúdo dos próximos textos ou documentos.\nPode haver múltiplos arquivos, cada arquivo é marcado por nome no formato ### NOME DO DOCUMENTO.\nEu os enviarei em partes. Cada parte começará a ser notada como [INÍCIO DA PARTE x/TOTAL], e o fim desta parte será notado como [FIM DA PARTE x/TOTAL], onde x é o número da parte atual, e TOTAL é o número de todas as partes que eu lhe enviarei.\nEu dividirei a mensagem em partes e as enviarei uma por uma. Para cada mensagem, siga as instruções no final da mensagem.\nVamos começar:\n\n",
+        "autoSplitLimit": 120000,
+        "autoSubmitWhenReleaseAlt": true,
+        "autoSummarize": true,
+        "autoSync": true,
+        "autoSyncCount": "200",
+        "chatEndedSound": true,
+        "conversationWidth": 90,
+        "copyMode": false,
+        "crossDeviceSync": false,
+        "customConversationWidth": true,
+        "customGPTAutoFolder": true,
+        "customInstruction": "Instrução personalizada principal/central",
+        "dontShowAutoSyncWarning": false,
+        "emailNewsletter": false,
+        "enhanceGPTStore": true,
+        "exportMode": "both",
+        "hideBottomSidebar": false,
+        "hideNewsletter": true,
+        "hideReleaseNote": true,
+        "hideUpdateNotification": true,
+        "historyFilter": "all",
+        "multiSelectIndicator": true,
+        "navOpen": true,
+        "pluginDefaultOpen": true,
+        "promptHistory": true,
+        "promptTemplate": true,
+        "safeMode": true,
+        "saveHistory": true,
+        "selectedLanguage": {
+            "code": "default",
+            "name": "Default"
+        },
+        "selectedLibraryCategory": {
+            "code": "all",
+            "name": "All"
+        },
+        "selectedLibraryLanguage": {
+            "code": "all",
+            "name": "All"
+        },
+        "selectedLibrarySortBy": {
+            "code": "recent",
+            "name": "New"
+        },
+        "selectedModel": {
+            "capabilities": {},
+            "description": "Browsing, Advanced Data Analysis, and DALL·E are now built into GPT-4",
+            "enabled_tools": [
+                "tools",
+                "tools2"
+            ],
+            "max_tokens": 32767,
+            "product_features": {
+                "attachments": {
+                    "accepted_mime_types": [
+                        "text/x-tex",
+                        "text/x-java",
+                        "application/json",
+                        "text/x-typescript",
+                        "application/msword",
+                        "text/x-php",
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                        "text/x-sh",
+                        "text/x-csharp",
+                        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+                        "text/html",
+                        "text/x-c",
+                        "text/markdown",
+                        "application/x-latext",
+                        "application/pdf",
+                        "text/x-script.python",
+                        "text/javascript",
+                        "text/x-ruby",
+                        "text/plain",
+                        "text/x-c++"
+                    ],
+                    "can_accept_all_mime_types": true,
+                    "image_mime_types": [
+                        "image/gif",
+                        "image/png",
+                        "image/jpeg",
+                        "image/webp"
+                    ],
+                    "type": "retrieval"
+                }
+            },
+            "slug": "gpt-4",
+            "tags": [
+                "gpt4"
+            ],
+            "title": "GPT-4 (All Tools)"
+        },
+        "selectedPromptLanguage": {
+            "code": "pt-BR",
+            "name": "Portuguese (Brazil)"
+        },
+        "selectedSTTLanguage": {
+            "code": "pt-BR",
+            "name": "Portuguese (Brazil)"
+        },
+        "selectedTTSLanguage": {
+            "code": "pt-BR",
+            "name": "Portuguese (Brazil)"
+        },
+        "selectedTone": {
+            "code": "formal",
+            "description": "This tone is used in professional or academic writing and is characterized by a serious and objective tone. Example: &quot;The purpose of this report is to present the findings of our research.&quot;",
+            "name": "Formal"
+        },
+        "selectedWritingStyle": {
+            "code": "technical",
+            "description": "This style is used in writing about technical or specialized subjects, such as science or engineering. It often involves using precise and technical language and adhering to established conventions and guidelines. Example: &quot;The results of our experiment were consistent with previous studies, indicating a strong correlation between temperature and pressure in the system.&quot;",
+            "name": "Technical"
+        },
+        "showCommunityPrompts": true,
+        "showCustomPromptsButton": true,
+        "showExamplePrompts": true,
+        "showFolderCounts": true,
+        "showGpt4Counter": true,
+        "showKeyboardShortcutButton": true,
+        "showLanguageSelector": true,
+        "showMessageTimestamp": true,
+        "showMyPromptHistory": true,
+        "showNewChatSettings": true,
+        "showNewsletterOnUpdate": false,
+        "showPinNav": true,
+        "showPromptChainButton": true,
+        "showToneSelector": true,
+        "showTotalWordCount": true,
+        "showWordCount": true,
+        "showWritingStyleSelector": true,
+        "skipAutoArchiveFolder": false,
+        "skipCodeReading": false,
+        "speachToTextInterimResults": true,
+        "speachToTextLanguage": {
+            "code": "pt-BR",
+            "name": "Portuguese (Brazil)"
+        },
+        "speechToTextInterimResults": true,
+        "speechToTextLanguage": {
+            "code": "pt-BR",
+            "name": "Portuguese (Brazil)"
+        },
+        "textToSpeachLanguage": {
+            "code": "pt-BR",
+            "name": "Portuguese (Brazil)"
+        },
+        "textToSpeachPitch": 1,
+        "textToSpeachRate": 1,
+        "textToSpeachVoice": {
+            "code": "Samantha",
+            "name": "Samantha"
+        },
+        "textToSpeechAutoDetectLanguage": false,
+        "textToSpeechLanguage": {
+            "code": "pt-BR",
+            "name": "Portuguese (Brazil)"
+        },
+        "textToSpeechPitch": 1,
+        "textToSpeechRate": 1,
+        "textToSpeechVoice": {
+            "code": "Microsoft Francisca Online (Natural) - Portuguese (Brazil)",
+            "name": "Microsoft Francisca Online (Natural) - Portuguese (Brazil)"
+        },
+        "useCustomInstruction": true
+    }
+}
