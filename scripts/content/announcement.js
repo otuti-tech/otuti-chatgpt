@@ -90,7 +90,7 @@ function initializeAnnouncement() {
   setTimeout(() => {
     chrome.storage.sync.get(['lastSeenAnnouncementId', 'email'], (result) => {
       chrome.storage.local.get(['readNewsletterIds', 'settings', 'installDate'], (res) => {
-        const { lastSeenAnnouncementId, email, installDate } = result;
+        const { lastSeenAnnouncementId, email } = result;
         const readNewsletterIds = res.readNewsletterIds || [];
 
         // try getting latest announcement first
@@ -108,7 +108,8 @@ function initializeAnnouncement() {
             });
           } else {
             // if installDate is less than 2 days ago, don't show newsletter
-            if (installDate && (new Date() - new Date(installDate)) < 172800000) return;
+            if (typeof res.installDate === 'undefined' || (res.installDate && (new Date() - new Date(res.installDate)) < 172800000)) return;
+
             // if no announcement was found, try getting the latest newsletter
             chrome.runtime.sendMessage({
               getLatestNewsletter: true,

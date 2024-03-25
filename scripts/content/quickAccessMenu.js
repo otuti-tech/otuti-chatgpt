@@ -10,14 +10,14 @@ function addQuickAccessMenuEventListener() {
     const cursorPosition = textAreaElement.selectionStart;
     const textAreaValue = textAreaElement.value;
     const previousAtPosition = textAreaValue.lastIndexOf('@', cursorPosition - 1);
-    const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition - 1);
+    const previousSlashPosition = textAreaValue.lastIndexOf('/', cursorPosition - 1);
     const previousHashtagPosition = textAreaValue.lastIndexOf('#', cursorPosition - 1);
-    if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
+    if (cursorPosition === 0 || (previousAtPosition === -1 && previousSlashPosition === -1 && previousHashtagPosition === -1)) {
       if (quickAccessMenuElement) quickAccessMenuElement.remove();
       return;
     }
     // whichever is closer to the cursor
-    const previousTriggerPosition = Math.max(previousAtPosition, previousDollarPosition, previousHashtagPosition);
+    const previousTriggerPosition = Math.max(previousAtPosition, previousSlashPosition, previousHashtagPosition);
     const previousTrigger = textAreaElement.value.substring(previousTriggerPosition, previousTriggerPosition + 1);
     // get the word between the previous trigger and the cursor
     if (!quickAccessMenuElement && previousTriggerPosition !== -1 && cursorPosition > previousTriggerPosition && textAreaValue.lastIndexOf(' ', cursorPosition - 1) < previousTriggerPosition) {
@@ -39,14 +39,14 @@ function addQuickAccessMenuEventListener() {
       const textAreaValue = textAreaElement.value;
 
       const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
-      const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
+      const previousSlashPosition = textAreaElement.value.lastIndexOf('/', cursorPosition);
       const previousHashtagPosition = textAreaElement.value.lastIndexOf('#', cursorPosition);
-      if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
+      if (cursorPosition === 0 || (previousAtPosition === -1 && previousSlashPosition === -1 && previousHashtagPosition === -1)) {
         if (quickAccessMenuElement) quickAccessMenuElement.remove();
         return;
       }
       // whichever is closer to the cursor
-      const previousTriggerPosition = Math.max(previousAtPosition, previousDollarPosition, previousHashtagPosition);
+      const previousTriggerPosition = Math.max(previousAtPosition, previousSlashPosition, previousHashtagPosition);
       const previousTrigger = textAreaElement.value.substring(previousTriggerPosition, previousTriggerPosition + 1);
 
       // if there is a space between previoustriggerpos and cur cursor position
@@ -142,14 +142,14 @@ function updateQuickAccessMenuItems() {
   const cursorPosition = textAreaElement.selectionStart;
   const textAreaValue = textAreaElement.value;
   const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
-  const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
+  const previousSlashPosition = textAreaElement.value.lastIndexOf('/', cursorPosition);
   const previousHashtagPosition = textAreaValue.lastIndexOf('#', cursorPosition - 1);
-  if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
+  if (cursorPosition === 0 || (previousAtPosition === -1 && previousSlashPosition === -1 && previousHashtagPosition === -1)) {
     return;
   }
   let nextSpacePos = textAreaValue.indexOf(' ', cursorPosition);
   if (nextSpacePos === -1) nextSpacePos = textAreaValue.length;
-  const previousTriggerPosition = Math.max(previousAtPosition, previousDollarPosition, previousHashtagPosition);
+  const previousTriggerPosition = Math.max(previousAtPosition, previousSlashPosition, previousHashtagPosition);
 
   const triggerWord = textAreaValue.substring(previousTriggerPosition + 1, nextSpacePos);
 
@@ -208,7 +208,7 @@ function quickAccessMenu(trigger) {
         });
         menu.appendChild(loadCustomGPTs());
       }
-      if (trigger === '$') {
+      if (trigger === '/') {
         menuTitle.textContent = `Custom Prompts (${trigger})`;
         menuHeaderButton.id = 'see-all-custom-prompts';
         menuHeaderButton.textContent = '+ Add More';
@@ -260,7 +260,7 @@ function loadCustomGPTs() {
           const textAreaElement = document.querySelector('#prompt-textarea');
           if (!textAreaElement) return;
           document.querySelector('#quick-access-menu').remove();
-          // find the neeares previous $ position
+          // find the neeares previous @ position
           const textAreaValue = textAreaElement.value;
           const cursorPosition = textAreaElement.selectionStart;
           const previousAtPosition = textAreaValue.lastIndexOf('@', cursorPosition);
@@ -313,11 +313,11 @@ function loadCustomPrompts() {
         const textAreaElement = document.querySelector('#prompt-textarea');
         if (!textAreaElement) return;
         document.querySelector('#quick-access-menu').remove();
-        // find the neeares previous $ position
+        // find the neeares previous / position
         const textAreaValue = textAreaElement.value;
         const cursorPosition = textAreaElement.selectionStart;
-        const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition);
-        const newText = textAreaValue.substring(0, previousDollarPosition) + prompt.text + textAreaValue.substring(cursorPosition);
+        const previousSlashPosition = textAreaValue.lastIndexOf('/', cursorPosition);
+        const newText = textAreaValue.substring(0, previousSlashPosition) + prompt.text + textAreaValue.substring(cursorPosition);
         textAreaElement.value = newText;
         textAreaElement.focus();
         textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));

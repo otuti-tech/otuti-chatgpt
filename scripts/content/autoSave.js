@@ -80,10 +80,11 @@ function unarchiveConversationById(conversationId, fullUnarchive = true) {
     if (fullUnarchive) { // add to the top of the list and conversationsOrder
       addToTheTopOfConversationList(newConversations[conversationId]); // this will take care of updating the conversationsOrder too
     }
+
     if (Object.keys(newConversations).includes(conversationId)) {
-      return true;
+      return { conv: newConversations[conversationId], convExistsInRemoteButIsArchived: true };
     }
-    return false;
+    return { conv: newConversations[conversationId], convExistsInRemoteButIsArchived: false };
   });
 }
 // eslint-disable-next-line no-unused-vars
@@ -460,7 +461,8 @@ function deleteFromConversationsOrder(conversationsOrder, convId) {
 function initializeAutoSave(skipFullReload = false, forceRefreshIds = []) {
   clearTimeout(autoSaveTimeoutId);
   addProgressBar();
-
+  const { pathname } = new URL(window.location.toString());
+  const urlConvId = pathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
   const forceRefresh = true;
   getAllConversations(forceRefresh).then((remoteConversations) => {
     chrome.storage.local.get(['conversationsOrder', 'conversations', 'settings'], (result) => {
@@ -487,7 +489,9 @@ function initializeAutoSave(skipFullReload = false, forceRefreshIds = []) {
           if (localConversations[localConvIds[i]]?.saveHistory === false) continue;
           const remoteConv = remoteConversations.find((conv) => conv?.id === localConvIds[i]);
           if (!remoteConv) {
-            delete localConversations[localConvIds[i]];
+            if (localConvIds[i] !== urlConvId) {
+              delete localConversations[localConvIds[i]];
+            }
           } else {
             localConversations[localConvIds[i]].title = remoteConv?.title || 'New chat';
             if (
@@ -550,7 +554,8 @@ function initializeAutoSave(skipFullReload = false, forceRefreshIds = []) {
           if (existingSyncBanner) {
             reloadOrAddRefreshButtonToSyncBanner(localConversations, settings, true);
           } else {
-            loadConversationList(true);
+            const skipLoadingConversation = !forceRefreshIds.includes(urlConvId);
+            loadConversationList(skipLoadingConversation);
           }
         });
       });
@@ -561,7 +566,8 @@ function initializeAutoSave(skipFullReload = false, forceRefreshIds = []) {
       conversationsAreSynced: true,
     }, () => {
       resetProgressBar();
-      loadConversationList(true);
+      const skipLoadingConversation = !forceRefreshIds.includes(urlConvId);
+      loadConversationList(skipLoadingConversation);
     });
   });
 }

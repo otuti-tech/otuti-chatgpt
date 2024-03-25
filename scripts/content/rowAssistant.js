@@ -3,9 +3,9 @@
 // const diffdom = new diffDOM.DiffDOM({ valueDiffing: false, diffcap: 1 });
 
 // eslint-disable-next-line no-unused-vars
-function rowAssistant(conversation, nodes, childIndex, childCount, models, settings, gizmoData, isLoading = false) {
+function rowAssistant(conversation, nodes, childIndex, childCount, models, settings, gizmoData, isLoading = false, streaming = false) {
   const {
-    customConversationWidth, conversationWidth, autoHideThreadCount, showMessageTimestamp, showWordCount, pluginDefaultOpen,
+    customConversationWidth, conversationWidth, showMessageTimestamp, showWordCount, pluginDefaultOpen,
   } = settings;
 
   // overall info
@@ -30,7 +30,7 @@ function rowAssistant(conversation, nodes, childIndex, childCount, models, setti
     const recipient = node.message?.recipient;
     if (role === 'assistant') {
       if (recipient === 'all') { // assistant to all (user)
-        const { renderedNode, wordCount, charCount } = assistantRenderer(node);
+        const { renderedNode, wordCount, charCount } = assistantRenderer(node, streaming);
         renderedNodes += renderedNode;
         nodeWordCounts += wordCount;
         nodeCharCounts += charCount;
@@ -77,16 +77,18 @@ function rowAssistant(conversation, nodes, childIndex, childCount, models, setti
             d="M37.5324 16.8707C37.9808 15.5241 38.1363 14.0974 37.9886 12.6859C37.8409 11.2744 37.3934 9.91076 36.676 8.68622C35.6126 6.83404 33.9882 5.3676 32.0373 4.4985C30.0864 3.62941 27.9098 3.40259 25.8215 3.85078C24.8796 2.7893 23.7219 1.94125 22.4257 1.36341C21.1295 0.785575 19.7249 0.491269 18.3058 0.500197C16.1708 0.495044 14.0893 1.16803 12.3614 2.42214C10.6335 3.67624 9.34853 5.44666 8.6917 7.47815C7.30085 7.76286 5.98686 8.3414 4.8377 9.17505C3.68854 10.0087 2.73073 11.0782 2.02839 12.312C0.956464 14.1591 0.498905 16.2988 0.721698 18.4228C0.944492 20.5467 1.83612 22.5449 3.268 24.1293C2.81966 25.4759 2.66413 26.9026 2.81182 28.3141C2.95951 29.7256 3.40701 31.0892 4.12437 32.3138C5.18791 34.1659 6.8123 35.6322 8.76321 36.5013C10.7141 37.3704 12.8907 37.5973 14.9789 37.1492C15.9208 38.2107 17.0786 39.0587 18.3747 39.6366C19.6709 40.2144 21.0755 40.5087 22.4946 40.4998C24.6307 40.5054 26.7133 39.8321 28.4418 38.5772C30.1704 37.3223 31.4556 35.5506 32.1119 33.5179C33.5027 33.2332 34.8167 32.6547 35.9659 31.821C37.115 30.9874 38.0728 29.9178 38.7752 28.684C39.8458 26.8371 40.3023 24.6979 40.0789 22.5748C39.8556 20.4517 38.9639 18.4544 37.5324 16.8707ZM22.4978 37.8849C20.7443 37.8874 19.0459 37.2733 17.6994 36.1501C17.7601 36.117 17.8666 36.0586 17.936 36.0161L25.9004 31.4156C26.1003 31.3019 26.2663 31.137 26.3813 30.9378C26.4964 30.7386 26.5563 30.5124 26.5549 30.2825V19.0542L29.9213 20.998C29.9389 21.0068 29.9541 21.0198 29.9656 21.0359C29.977 21.052 29.9842 21.0707 29.9867 21.0902V30.3889C29.9842 32.375 29.1946 34.2791 27.7909 35.6841C26.3872 37.0892 24.4838 37.8806 22.4978 37.8849ZM6.39227 31.0064C5.51397 29.4888 5.19742 27.7107 5.49804 25.9832C5.55718 26.0187 5.66048 26.0818 5.73461 26.1244L13.699 30.7248C13.8975 30.8408 14.1233 30.902 14.3532 30.902C14.583 30.902 14.8088 30.8408 15.0073 30.7248L24.731 25.1103V28.9979C24.7321 29.0177 24.7283 29.0376 24.7199 29.0556C24.7115 29.0736 24.6988 29.0893 24.6829 29.1012L16.6317 33.7497C14.9096 34.7416 12.8643 35.0097 10.9447 34.4954C9.02506 33.9811 7.38785 32.7263 6.39227 31.0064ZM4.29707 13.6194C5.17156 12.0998 6.55279 10.9364 8.19885 10.3327C8.19885 10.4013 8.19491 10.5228 8.19491 10.6071V19.808C8.19351 20.0378 8.25334 20.2638 8.36823 20.4629C8.48312 20.6619 8.64893 20.8267 8.84863 20.9404L18.5723 26.5542L15.206 28.4979C15.1894 28.5089 15.1703 28.5155 15.1505 28.5173C15.1307 28.5191 15.1107 28.516 15.0924 28.5082L7.04046 23.8557C5.32135 22.8601 4.06716 21.2235 3.55289 19.3046C3.03862 17.3858 3.30624 15.3413 4.29707 13.6194ZM31.955 20.0556L22.2312 14.4411L25.5976 12.4981C25.6142 12.4872 25.6333 12.4805 25.6531 12.4787C25.6729 12.4769 25.6928 12.4801 25.7111 12.4879L33.7631 17.1364C34.9967 17.849 36.0017 18.8982 36.6606 20.1613C37.3194 21.4244 37.6047 22.849 37.4832 24.2684C37.3617 25.6878 36.8382 27.0432 35.9743 28.1759C35.1103 29.3086 33.9415 30.1717 32.6047 30.6641C32.6047 30.5947 32.6047 30.4733 32.6047 30.3889V21.188C32.6066 20.9586 32.5474 20.7328 32.4332 20.5338C32.319 20.3348 32.154 20.1698 31.955 20.0556ZM35.3055 15.0128C35.2464 14.9765 35.1431 14.9142 35.069 14.8717L27.1045 10.2712C26.906 10.1554 26.6803 10.0943 26.4504 10.0943C26.2206 10.0943 25.9948 10.1554 25.7963 10.2712L16.0726 15.8858V11.9982C16.0715 11.9783 16.0753 11.9585 16.0837 11.9405C16.0921 11.9225 16.1048 11.9068 16.1207 11.8949L24.1719 7.25025C25.4053 6.53903 26.8158 6.19376 28.2383 6.25482C29.6608 6.31589 31.0364 6.78077 32.2044 7.59508C33.3723 8.40939 34.2842 9.53945 34.8334 10.8531C35.3826 12.1667 35.5464 13.6095 35.3055 15.0128ZM14.2424 21.9419L10.8752 19.9981C10.8576 19.9893 10.8423 19.9763 10.8309 19.9602C10.8195 19.9441 10.8122 19.9254 10.8098 19.9058V10.6071C10.8107 9.18295 11.2173 7.78848 11.9819 6.58696C12.7466 5.38544 13.8377 4.42659 15.1275 3.82264C16.4173 3.21869 17.8524 2.99464 19.2649 3.1767C20.6775 3.35876 22.0089 3.93941 23.1034 4.85067C23.0427 4.88379 22.937 4.94215 22.8668 4.98473L14.9024 9.58517C14.7025 9.69878 14.5366 9.86356 14.4215 10.0626C14.3065 10.2616 14.2466 10.4877 14.2479 10.7175L14.2424 21.9419ZM16.071 17.9991L20.4018 15.4978L24.7325 17.9975V22.9985L20.4018 25.4983L16.071 22.9985V17.9991Z"
             fill="currentColor"></path>
         </svg></div>`}
-      <div id="thread-buttons-wrapper-${id}" class="text-xs flex items-center justify-center gap-1 ${autoHideThreadCount || (childCount === 1) ? 'invisible' : ''} absolute left-0 top-2 -ml-4 -translate-x-full ${childCount > 1 ? 'group-hover:visible' : ''}"><button id="thread-prev-button-${id}" class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400" ${childIndex === 1 ? 'disabled' : ''}><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="15 18 9 12 15 6"></polyline></svg></button><span id="thread-count-wrapper-${id}" class="flex-grow flex-shrink-0">${childIndex} / ${childCount}</span><button id="thread-next-button-${id}" class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400" ${childIndex === childCount ? 'disabled' : ''}><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="9 18 15 12 9 6"></polyline></svg></button></div>
+      
     </div>
     <div class="relative flex flex-col agent-turn" style="width:calc(100% - 80px);">
     ${nodes[0]?.message?.metadata?.gizmo_id || gizmoData ? `<div class="font-semibold select-none" id="gizmo-name" data-gizmoid="${nodes[0]?.message?.metadata?.gizmo_id || gizmoData?.resource?.gizmo?.id}">${displayName}</div>` : '<div class="font-semibold select-none">ChatGPT</div>'}
       <div class="flex flex-grow flex-col gap-1 max-w-full">
-        ${renderedNodes}        
+        ${renderedNodes}
         <div id="message-action-wrapper-${id}" class="flex justify-between empty:hidden gizmo:mt-1 gizmo:justify-start gizmo:gap-3 lg:block gizmo:lg:flex">
         <div class="text-token-text-secondary flex self-end lg:self-center justify-center gizmo:lg:justify-start mt-2 gizmo:mt-0 visible gap-1">
 
-        <button id="text-to-speech-button-${id}" class="flex items-center gap-1 gap-1.5 rounded-md p-1 text-xs text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible" style=""><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path d="M6 9H4C2.89543 9 2 9.89543 2 11V13C2 14.1046 2.89543 15 4 15H6L10.3243 18.9639C10.9657 19.5519 12 19.0969 12 18.2268V5.77324C12 4.90313 10.9657 4.44813 10.3243 5.03608L6 9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16.3984 8.70001C17.0889 9.61924 17.498 10.7618 17.498 12C17.498 13.1119 17.1681 14.1468 16.6007 15.012M20.7922 7.23543C21.5612 8.65189 21.998 10.2749 21.998 12C21.998 13.684 21.5818 15.2708 20.8465 16.6631" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button>
+        <div id="thread-buttons-wrapper-${id}" class="text-xs flex items-center justify-center gap-1 self-center ${childCount === 1 ? 'hidden' : ''}"><button id="thread-prev-button-${id}" class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400" ${childIndex === 1 ? 'disabled' : ''}><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="15 18 9 12 15 6"></polyline></svg></button><span id="thread-count-wrapper-${id}" class="flex-grow flex-shrink-0">${childIndex} / ${childCount}</span><button id="thread-next-button-${id}" class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400" ${childIndex === childCount ? 'disabled' : ''}><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="9 18 15 12 9 6"></polyline></svg></button></div>
+
+        <button id="text-to-speech-button-${id}" class="flex items-center gap-1 gap-1.5 rounded-md p-1 text-xs text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible" style=""><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M11 4.9099C11 4.47485 10.4828 4.24734 10.1621 4.54132L6.67572 7.7372C6.49129 7.90626 6.25019 8.00005 6 8.00005H4C3.44772 8.00005 3 8.44776 3 9.00005V15C3 15.5523 3.44772 16 4 16H6C6.25019 16 6.49129 16.0938 6.67572 16.2629L10.1621 19.4588C10.4828 19.7527 11 19.5252 11 19.0902V4.9099ZM8.81069 3.06701C10.4142 1.59714 13 2.73463 13 4.9099V19.0902C13 21.2655 10.4142 22.403 8.81069 20.9331L5.61102 18H4C2.34315 18 1 16.6569 1 15V9.00005C1 7.34319 2.34315 6.00005 4 6.00005H5.61102L8.81069 3.06701ZM20.3166 6.35665C20.8019 6.09313 21.409 6.27296 21.6725 6.75833C22.5191 8.3176 22.9996 10.1042 22.9996 12.0001C22.9996 13.8507 22.5418 15.5974 21.7323 17.1302C21.4744 17.6185 20.8695 17.8054 20.3811 17.5475C19.8927 17.2896 19.7059 16.6846 19.9638 16.1962C20.6249 14.9444 20.9996 13.5175 20.9996 12.0001C20.9996 10.4458 20.6064 8.98627 19.9149 7.71262C19.6514 7.22726 19.8312 6.62017 20.3166 6.35665ZM15.7994 7.90049C16.241 7.5688 16.8679 7.65789 17.1995 8.09947C18.0156 9.18593 18.4996 10.5379 18.4996 12.0001C18.4996 13.3127 18.1094 14.5372 17.4385 15.5604C17.1357 16.0222 16.5158 16.1511 16.0539 15.8483C15.5921 15.5455 15.4632 14.9255 15.766 14.4637C16.2298 13.7564 16.4996 12.9113 16.4996 12.0001C16.4996 10.9859 16.1653 10.0526 15.6004 9.30063C15.2687 8.85905 15.3578 8.23218 15.7994 7.90049Z" fill="currentColor"></path></svg></button>
 
         
         <button id="message-pin-button-${id}" class="p-1 gizmo:pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="none" class="icon-sm"><path fill="${pinned ? 'gold' : 'currentColor'}" d="M336 0h-288C21.49 0 0 21.49 0 48v431.9c0 24.7 26.79 40.08 48.12 27.64L192 423.6l143.9 83.93C357.2 519.1 384 504.6 384 479.9V48C384 21.49 362.5 0 336 0zM336 452L192 368l-144 84V54C48 50.63 50.63 48 53.1 48h276C333.4 48 336 50.63 336 54V452z"/></svg></div></button>
@@ -118,12 +120,30 @@ function pythonImageSkeleton(node) {
   return `${resultImages.map((image) => `<img style="border-radius:8px; aspect-ratio: ${image.width}/${image.height};" id="python-image-displayed-${messageId}" data-file-id="${image.image_url.split('file-service://').pop()}" src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" class="my-1" alt="Output image">`).join('')}`;
 }
 // eslint-disable-next-line no-unused-vars
-function renderAllPythonImages() {
+function renderAllPythonImages(conversation) {
   const allPythonImages = document.querySelectorAll('[id^="python-image-displayed-"]');
   allPythonImages.forEach((image) => {
+    const node = conversation.mapping[image.id.split('python-image-displayed-').pop()];
     const { fileId } = image.dataset;
     getDownloadUrlFromFileId(fileId).then((response) => {
       image.src = response.download_url;
+      const galleryImage = {
+        image_id: fileId,
+        width: image.style.aspectRatio.split('/')[0].trim(),
+        height: image.style.aspectRatio.split('/')[1].trim(),
+        download_url: response.download_url,
+        prompt: node.message?.metadata?.aggregate_result?.code,
+        is_public: false,
+        category: 'chart',
+        conversation_id: conversation.conversation_id,
+        created_at: new Date(response.creation_time),
+      };
+      chrome.runtime.sendMessage({
+        addGalleryImages: true,
+        detail: {
+          images: [galleryImage],
+        },
+      });
     });
   });
 }
@@ -230,7 +250,6 @@ function addNodeToRowAssistant(conversationId, node, gizmoId, continueGenerating
       const isPluginResponse = 'invoked_plugin' in node.message.metadata || node.message.author.name === 'python';
       const isActionResponse = 'jit_plugin_data' in node.message.metadata;
       const imageDisplayed = node?.message?.content?.text?.includes('<<ImageDisplayed>>');
-
       if (name === 'dalle.text2im') {
         dalleImageRenderer(node, conversationId, true);
       } else if (imageDisplayed) {
@@ -264,15 +283,15 @@ function addPluginContentNode(node) {
 }
 function hiddenPluginDropdownRenderer(pluginRequestNode, isLoading) {
   const recipient = pluginRequestNode?.message?.recipient;
-  const title = recipient === 'dalle.text2im' ? 'DALL·E 3' : `Browsing${isLoading ? '...' : ''}`;
-  const subtitle = recipient === 'dalle.text2im' ? 'Creating Images' : 'Starting up';
+  const title = recipient === 'dalle.text2im' ? 'Creating Images' : 'Browsing...';
   const messageId = pluginRequestNode?.message?.id;
-
-  return `<div class="flex flex-col items-start gap-2" id="hidden-plugin-${messageId}"><div class="bg-white dark:bg-gray-600 rounded-xl max-w-full overflow-hidden border-black/10 border-[0.5px] shadow-xxs ${isLoading ? 'conic' : ''}"><div class="flex items-center justify-between"><div class="min-w-0"><div class="flex h-14 items-center gap-2.5 px-3 py-2"><div class="flex h-[34px] w-[34px] shrink-0 items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 34 34" fill="none" class="h-[34px] w-[34px]" width="34" height="34"><rect width="34" height="34" rx="6" fill="#ECECF1"></rect><rect x="29" y="19.4004" width="4.8" height="4.8" transform="rotate(180 29 19.4004)" fill="#3C46FF"></rect><rect x="24.1992" y="19.4004" width="4.8" height="4.8" transform="rotate(180 24.1992 19.4004)" fill="#FF6E3C"></rect><rect x="19.3984" y="19.4004" width="4.8" height="4.8" transform="rotate(180 19.3984 19.4004)" fill="#51DA4C"></rect><rect x="14.6016" y="19.4004" width="4.8" height="4.8" transform="rotate(180 14.6016 19.4004)" fill="#42FFFF"></rect><rect x="9.80078" y="19.4004" width="4.8" height="4.8" transform="rotate(180 9.80078 19.4004)" fill="#FFFF66"></rect></svg></div><div class="flex min-w-0 flex-1 flex-col items-start text-sm leading-[18px]"><div class="truncate font-medium" id="hidden-plugin-title-${messageId}">${title}</div><div class="max-w-full truncate opacity-70" id="hidden-plugin-subtitle-${messageId}">${subtitle}</div></div></div></div></div></div></div>${recipient === 'dalle.text2im' ? `<div id="message-dalle-content-${messageId}" class="grid gap-4 grid-cols-2 transition-opacity duration-300 opacity-100"></div>` : ''}`;
+  const existingHiddenPluginDropdown = document.querySelector('[id^=hidden-plugin-]');
+  if (recipient === 'browser' && existingHiddenPluginDropdown) return '';
+  return `<div class="flex flex-col items-start gap-2" id="hidden-plugin-${messageId}"><div class="max-w-full ${isLoading ? '' : 'hidden'}"><div class="flex items-center justify-between"><div class="min-w-0"><div class="flex items-center gap-2.5 py-2"><div class="flex h-4 w-4 shrink-0 items-center justify-center"><svg x="0" y="0" viewbox="0 0 40 40" class="spinner text-brand-purple"><circle fill="transparent" class="stroke-brand-purple/25 dark:stroke-brand-purple/50" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.6" cx="20" cy="20" r="18"></circle></svg></div><div class="flex min-w-0 flex-1 flex-col items-start leading-[18px]"> <div class="max-w-full truncate text-token-text-secondary">${title}</div></div></div></div></div></div></div>${recipient === 'dalle.text2im' ? `<div id="message-dalle-content-${messageId}" class="grid gap-4 grid-cols-2 transition-opacity duration-300 opacity-100"></div>` : ''}`;
 }
 function dalleImageSkeleton(messageId, images) {
   const { width, height } = images[0];
-  return `${images.map((p, index) => `<div class="flex"><div type="button" class="w-full cursor-pointer" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:r1t:" data-state="closed" aria-label="Show Image"><div class="relative overflow-hidden rounded group/dalle-image" style="aspect-ratio: ${width}/${height};"><div style="width:${width}px; height:${height}px;" class="pointer-events-none absolute inset-0 bg-gray-100 animate-pulse w-full" style="animation-delay: 0ms;"></div><div class="relative h-full"><img id="dalle-image-${messageId}-${index}" alt="Generated by DALL·E" loading="lazy" width="${width}" height="${height}" decoding="async" data-nimg="1" class="w-full transition-opacity duration-300 opacity-100" src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" style="color: transparent;"><div class="pointer-events-none absolute inset-0 rounded shadow-[inset_0_0_0.5px_rgba(0,0,0,0.5)]"></div><div id="dalle-image-info-${messageId}-${index}" title="Click to copy Gen ID, Shift+Click to copy Seed" class="invisible absolute left-1 bottom-1 bg-gray-600 px-2 py-1 rounded text-xs group-hover/dalle-image:visible"><div class="flex">Gen ID:&nbsp;<div class="font-bold" id="dalle-image-gen-id-${messageId}-${index}"></div></div><div class="flex">Seed:&nbsp;<div class="font-bold" id="dalle-image-seed-${messageId}-${index}"></div></div></div><div class="invisible absolute left-1 top-1 group-hover/dalle-image:visible"><button id="dalle-image-download-button-${messageId}-${index}" class="flex h-6 w-6 items-center justify-center rounded bg-black/50"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm text-white"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.70711 10.2929C7.31658 9.90237 6.68342 9.90237 6.29289 10.2929C5.90237 10.6834 5.90237 11.3166 6.29289 11.7071L11.2929 16.7071C11.6834 17.0976 12.3166 17.0976 12.7071 16.7071L17.7071 11.7071C18.0976 11.3166 18.0976 10.6834 17.7071 10.2929C17.3166 9.90237 16.6834 9.90237 16.2929 10.2929L13 13.5858L13 4C13 3.44771 12.5523 3 12 3C11.4477 3 11 3.44771 11 4L11 13.5858L7.70711 10.2929ZM5 19C4.44772 19 4 19.4477 4 20C4 20.5523 4.44772 21 5 21H19C19.5523 21 20 20.5523 20 20C20 19.4477 19.5523 19 19 19L5 19Z" fill="currentColor"></path></svg></button></div></div></div></div></div>`).join('')}`;
+  return `${images.map((p, index) => `<div class="flex"><div type="button" class="w-full cursor-pointer" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:r1t:" data-state="closed" aria-label="Show Image"><div class="relative overflow-hidden rounded group/dalle-image max-w-[400px]" style="aspect-ratio: ${width}/${height};"><div style="width:${width}px; height:${height}px;" class="pointer-events-none absolute inset-0 bg-gray-100 animate-pulse w-full" style="animation-delay: 0ms;"></div><div class="relative h-full"><img id="dalle-image-${messageId}-${index}" alt="Generated by DALL·E" loading="lazy" width="${width}" height="${height}" decoding="async" data-nimg="1" class="w-full transition-opacity duration-300 opacity-100" src="https://upload.wikimedia.org/wikipedia/commons/c/ca/1x1.png" style="color: transparent;"><div class="pointer-events-none absolute inset-0 rounded shadow-[inset_0_0_0.5px_rgba(0,0,0,0.5)]"></div><div id="dalle-image-info-${messageId}-${index}" title="Click to copy Gen ID, Shift+Click to copy Seed" class="invisible absolute bg-gray-600 px-2 py-1 rounded text-xs group-hover/dalle-image:visible" style="left:4px; bottom:4px;"><div class="flex">Gen ID:&nbsp;<div class="font-bold" id="dalle-image-gen-id-${messageId}-${index}"></div></div><div class="flex">Seed:&nbsp;<div class="font-bold" id="dalle-image-seed-${messageId}-${index}"></div></div></div><div class="invisible absolute group-hover/dalle-image:visible" style="left:4px; top:4px;"><button id="dalle-image-download-button-${messageId}-${index}" class="flex h-8 w-8 items-center justify-center rounded bg-black/50"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm text-white"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.70711 10.2929C7.31658 9.90237 6.68342 9.90237 6.29289 10.2929C5.90237 10.6834 5.90237 11.3166 6.29289 11.7071L11.2929 16.7071C11.6834 17.0976 12.3166 17.0976 12.7071 16.7071L17.7071 11.7071C18.0976 11.3166 18.0976 10.6834 17.7071 10.2929C17.3166 9.90237 16.6834 9.90237 16.2929 10.2929L13 13.5858L13 4C13 3.44771 12.5523 3 12 3C11.4477 3 11 3.44771 11 4L11 13.5858L7.70711 10.2929ZM5 19C4.44772 19 4 19.4477 4 20C4 20.5523 4.44772 21 5 21H19C19.5523 21 20 20.5523 20 20C20 19.4477 19.5523 19 19 19L5 19Z" fill="currentColor"></path></svg></button></div></div></div></div></div>`).join('')}`;
 }
 // rende all images after conversation is loaded
 // eslint-disable-next-line no-unused-vars
@@ -303,11 +322,6 @@ function dalleImageRenderer(node, conversationId, isNew = false) {
 
   const images = content?.parts;
 
-  const hiddenPluginSubtitle = document.querySelector(`#hidden-plugin-subtitle-${parentId}`);
-  if (hiddenPluginSubtitle) {
-    hiddenPluginSubtitle.innerText = `Created ${images?.length > 1 ? `${images?.length} images` : 'image'}`;
-  }
-
   const messageDalleContent = document.querySelector(`#message-dalle-content-${parentId}`);
   if (messageDalleContent) {
     if (images?.length <= 1) {
@@ -325,6 +339,7 @@ function dalleImageRenderer(node, conversationId, isNew = false) {
       const allHiddenPluginFirstChilds = [...document.querySelectorAll('[id^="hidden-plugin-"]')].map((hiddenPlugin) => hiddenPlugin.firstChild);
       allHiddenPluginFirstChilds.forEach((hiddenPluginFirstChild) => {
         hiddenPluginFirstChild.classList?.remove('conic');
+        hiddenPluginFirstChild.classList?.add('hidden');
       });
       const dalleElementImage = document.querySelector(`img#dalle-image-${parentId}-${index}`);
       if (dalleElementImage) {
@@ -414,10 +429,13 @@ function actionConfirmationRenderer(actionRequestNode, actionResponseNode) {
   const actionType = metadata?.jit_plugin_data?.from_server?.type;
 
   if (actionType === 'confirm_action') {
-    return `<div id="tool-action-request-wrapper-${messageId}" data-domain=${domain}>${actionDisclaimerRenderer(domain)}<div class="mb-2 flex gap-2"><button id="tool-action-request-allow-${messageId}" class="btn relative btn-dark h-8"><div class="flex w-full gap-2 items-center justify-center">Allow</div></button><button id="tool-action-request-always-allow-${messageId}" class="btn relative btn-dark h-8"><div class="flex w-full gap-2 items-center justify-center">Always Allow</div></button><button id="tool-action-request-deny-${messageId}" class="btn relative btn-neutral h-8"><div class="flex w-full gap-2 items-center justify-center">Decline</div></button></div></div>`;
+    return `<div id="tool-action-request-wrapper-${messageId}" data-domain=${domain}>${actionDisclaimerRenderer(domain)}<div class="mb-2 flex gap-2"><button id="tool-action-request-allow-${messageId}" class="btn relative btn-primary h-8"><div class="flex w-full gap-2 items-center justify-center">Allow</div></button><button id="tool-action-request-always-allow-${messageId}" class="btn relative btn-dark h-8"><div class="flex w-full gap-2 items-center justify-center">Always Allow</div></button><button id="tool-action-request-deny-${messageId}" class="btn relative btn-neutral h-8"><div class="flex w-full gap-2 items-center justify-center">Decline</div></button></div></div>`;
   }
   if (actionType === 'oauth_required') {
-    return `<div id="tool-action-request-wrapper-${messageId}" data-domain=${domain}>${actionDisclaimerRenderer(domain)}<div class="mb-2 flex gap-2"><button id="tool-action-request-oauth-${messageId}" class="btn relative btn-dark h-8"><div class="flex w-full gap-2 items-center justify-center">Sign in with ${domain}</div></button></div></div>`;
+    const action = metadata?.jit_plugin_data?.from_server?.body?.actions?.find((a) => a.type === 'oauth_redirect')?.oauth_redirect;
+    const gizmoId = action?.gizmo_id;
+    const actionId = action?.gizmo_action_id;
+    return `<div id="tool-action-request-wrapper-${messageId}">${actionDisclaimerRenderer(domain)}<div class="mb-2 flex gap-2"><button id="tool-action-request-oauth-${messageId}" data-domain=${domain} data-gizmoId="${gizmoId}" data-actionId="${actionId}" class="btn btn-primary relative h-8"><div class="flex w-full gap-2 items-center justify-center">Sign in with ${domain}</div></button></div></div>`;
   }
   return '';
 }
@@ -507,7 +525,7 @@ function dalleImageEventListener(images, dalleElementImage, messageId, index) {
 function pluginDropdownRenderer(pluginRequestNode, isLoading, isOpen = false) {
   const recipient = pluginRequestNode?.message?.recipient;
   if (recipient === 'dalle.text2im') return hiddenPluginDropdownRenderer(pluginRequestNode, isLoading);
-  // if (recipient === 'browser') return hiddenPluginDropdownRenderer(pluginRequestNode, isLoading);
+  if (recipient === 'browser') return hiddenPluginDropdownRenderer(pluginRequestNode, isLoading);
 
   const pluginName = pluginRequestNode?.message?.recipient?.split('.')[0]?.replace(/([A-Z])/g, ' $1')?.replace(/^./, (str) => str.toUpperCase());
   const messageId = pluginRequestNode?.message?.id;
@@ -522,7 +540,8 @@ function pluginContentRenderer(pluginNode) {
   } = pluginNode.message;
   const toolName = author?.name;
   if (toolName === 'dalle.text2im') return '';
-  // if (toolName === 'browser') return '';
+  if (toolName === 'browser') return '';
+  if (recipient === 'dalle.text2im') return '';
 
   const role = pluginNode.message?.role || pluginNode.message?.author?.role;
   const { content_type: contentType } = content;
@@ -577,6 +596,11 @@ function updateCounter() {
   }
 }
 function addAssistantNode(node, continueGenerating = false, existingInnerHTML = '') {
+  const allHiddenPluginFirstChilds = [...document.querySelectorAll('[id^="hidden-plugin-"]')].map((hiddenPlugin) => hiddenPlugin.firstChild);
+  allHiddenPluginFirstChilds.forEach((hiddenPluginFirstChild) => {
+    hiddenPluginFirstChild.classList?.remove('conic');
+    hiddenPluginFirstChild.classList?.add('hidden');
+  });
   const lastRowAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
 
   const existingMessageText = continueGenerating
@@ -626,19 +650,19 @@ function addAssistantNode(node, continueGenerating = false, existingInnerHTML = 
     // const diff = diffdom.diff(elementA, elementB);
     // diffdom.apply(existingMessageText, diff);
   } else {
-    const { renderedNode } = assistantRenderer(node);
+    const { renderedNode } = assistantRenderer(node, true);
     const lastMessageActionWrapper = [...document.querySelectorAll('[id^=message-action-wrapper-]')].pop();
     lastMessageActionWrapper.insertAdjacentHTML('beforebegin', renderedNode);
   }
 }
-function assistantRenderer(assistantNode) {
+function assistantRenderer(assistantNode, streaming = false) {
   const { id } = assistantNode.message;
 
   const { assistantMessageHTML, wordCount, charCount } = assistantContentGenerator(assistantNode, true);
 
   return {
     renderedNode: `<div dir="auto" class="min-h-[20px] flex flex-col items-start whitespace-pre-wrap gap-4 break-words">
-  <div id="message-text-${id}" class="markdown prose w-full flex flex-col break-words dark:prose-invert">
+  <div id="message-text-${id}" class="${streaming ? 'result-streaming' : ''} markdown prose w-full flex flex-col break-words dark:prose-invert">
     ${assistantMessageHTML}
     </div>
   </div>`,
@@ -696,4 +720,39 @@ function assistantContentGenerator(assistantNode, returnCounters = false) {
     return { assistantMessageHTML, wordCount, charCount };
   }
   return { assistantMessageHTML };
+}
+
+// eslint-disable-next-line no-unused-vars
+function thinkingRowAssistant(settings) {
+  const { customConversationWidth, conversationWidth } = settings;
+  const isGPT4 = document.querySelector('#navbar-selected-model-title')?.innerText?.toLowerCase()?.includes('gpt-4');
+  // tagged-gizmo-wrapper
+  const taggedGizmoWrapper = document.querySelector('#tagged-gizmo-wrapper');
+  const gizmoMenu = document.querySelector('#gizmo-menu');
+  const isGizmo = taggedGizmoWrapper || gizmoMenu;
+
+  let gizmoName = '';
+  let gizmoAvatar = '';
+  if (isGizmo) {
+    if (taggedGizmoWrapper) {
+      // eslint-disable-next-line prefer-destructuring
+      gizmoName = taggedGizmoWrapper.innerText.split('Talking to ')[1];
+      gizmoAvatar = taggedGizmoWrapper.querySelector('img').src;
+    } else if (gizmoMenu) {
+      gizmoName = gizmoMenu.innerText;
+      gizmoAvatar = gizmoMenu.getAttribute('data-gizmoavatar');
+    }
+  }
+  const modelName = isGizmo ? gizmoName : 'ChatGPT';
+  const modelAvatar = isGizmo
+    ? `<div class="gizmo-shadow-stroke relative flex h-6 w-6"><img id="gizmo-avatar" src="${gizmoAvatar}" class="h-full w-full bg-token-main-surface-tertiary rounded-full" alt="GPT" width="80" height="80"></div>`
+    : isGPT4
+      ? '<div style="background-color:rgb(171, 104, 255);width:24px;height:24px;" class="gizmo-shadow-stroke relative p-1 rounded-full h-6 w-6 text-white flex items-center justify-center"><svg width="41" height="41" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.5" class="h-6 w-6"> <path d="M37.5324 16.8707C37.9808 15.5241 38.1363 14.0974 37.9886 12.6859C37.8409 11.2744 37.3934 9.91076 36.676 8.68622C35.6126 6.83404 33.9882 5.3676 32.0373 4.4985C30.0864 3.62941 27.9098 3.40259 25.8215 3.85078C24.8796 2.7893 23.7219 1.94125 22.4257 1.36341C21.1295 0.785575 19.7249 0.491269 18.3058 0.500197C16.1708 0.495044 14.0893 1.16803 12.3614 2.42214C10.6335 3.67624 9.34853 5.44666 8.6917 7.47815C7.30085 7.76286 5.98686 8.3414 4.8377 9.17505C3.68854 10.0087 2.73073 11.0782 2.02839 12.312C0.956464 14.1591 0.498905 16.2988 0.721698 18.4228C0.944492 20.5467 1.83612 22.5449 3.268 24.1293C2.81966 25.4759 2.66413 26.9026 2.81182 28.3141C2.95951 29.7256 3.40701 31.0892 4.12437 32.3138C5.18791 34.1659 6.8123 35.6322 8.76321 36.5013C10.7141 37.3704 12.8907 37.5973 14.9789 37.1492C15.9208 38.2107 17.0786 39.0587 18.3747 39.6366C19.6709 40.2144 21.0755 40.5087 22.4946 40.4998C24.6307 40.5054 26.7133 39.8321 28.4418 38.5772C30.1704 37.3223 31.4556 35.5506 32.1119 33.5179C33.5027 33.2332 34.8167 32.6547 35.9659 31.821C37.115 30.9874 38.0728 29.9178 38.7752 28.684C39.8458 26.8371 40.3023 24.6979 40.0789 22.5748C39.8556 20.4517 38.9639 18.4544 37.5324 16.8707ZM22.4978 37.8849C20.7443 37.8874 19.0459 37.2733 17.6994 36.1501C17.7601 36.117 17.8666 36.0586 17.936 36.0161L25.9004 31.4156C26.1003 31.3019 26.2663 31.137 26.3813 30.9378C26.4964 30.7386 26.5563 30.5124 26.5549 30.2825V19.0542L29.9213 20.998C29.9389 21.0068 29.9541 21.0198 29.9656 21.0359C29.977 21.052 29.9842 21.0707 29.9867 21.0902V30.3889C29.9842 32.375 29.1946 34.2791 27.7909 35.6841C26.3872 37.0892 24.4838 37.8806 22.4978 37.8849ZM6.39227 31.0064C5.51397 29.4888 5.19742 27.7107 5.49804 25.9832C5.55718 26.0187 5.66048 26.0818 5.73461 26.1244L13.699 30.7248C13.8975 30.8408 14.1233 30.902 14.3532 30.902C14.583 30.902 14.8088 30.8408 15.0073 30.7248L24.731 25.1103V28.9979C24.7321 29.0177 24.7283 29.0376 24.7199 29.0556C24.7115 29.0736 24.6988 29.0893 24.6829 29.1012L16.6317 33.7497C14.9096 34.7416 12.8643 35.0097 10.9447 34.4954C9.02506 33.9811 7.38785 32.7263 6.39227 31.0064ZM4.29707 13.6194C5.17156 12.0998 6.55279 10.9364 8.19885 10.3327C8.19885 10.4013 8.19491 10.5228 8.19491 10.6071V19.808C8.19351 20.0378 8.25334 20.2638 8.36823 20.4629C8.48312 20.6619 8.64893 20.8267 8.84863 20.9404L18.5723 26.5542L15.206 28.4979C15.1894 28.5089 15.1703 28.5155 15.1505 28.5173C15.1307 28.5191 15.1107 28.516 15.0924 28.5082L7.04046 23.8557C5.32135 22.8601 4.06716 21.2235 3.55289 19.3046C3.03862 17.3858 3.30624 15.3413 4.29707 13.6194ZM31.955 20.0556L22.2312 14.4411L25.5976 12.4981C25.6142 12.4872 25.6333 12.4805 25.6531 12.4787C25.6729 12.4769 25.6928 12.4801 25.7111 12.4879L33.7631 17.1364C34.9967 17.849 36.0017 18.8982 36.6606 20.1613C37.3194 21.4244 37.6047 22.849 37.4832 24.2684C37.3617 25.6878 36.8382 27.0432 35.9743 28.1759C35.1103 29.3086 33.9415 30.1717 32.6047 30.6641C32.6047 30.5947 32.6047 30.4733 32.6047 30.3889V21.188C32.6066 20.9586 32.5474 20.7328 32.4332 20.5338C32.319 20.3348 32.154 20.1698 31.955 20.0556ZM35.3055 15.0128C35.2464 14.9765 35.1431 14.9142 35.069 14.8717L27.1045 10.2712C26.906 10.1554 26.6803 10.0943 26.4504 10.0943C26.2206 10.0943 25.9948 10.1554 25.7963 10.2712L16.0726 15.8858V11.9982C16.0715 11.9783 16.0753 11.9585 16.0837 11.9405C16.0921 11.9225 16.1048 11.9068 16.1207 11.8949L24.1719 7.25025C25.4053 6.53903 26.8158 6.19376 28.2383 6.25482C29.6608 6.31589 31.0364 6.78077 32.2044 7.59508C33.3723 8.40939 34.2842 9.53945 34.8334 10.8531C35.3826 12.1667 35.5464 13.6095 35.3055 15.0128ZM14.2424 21.9419L10.8752 19.9981C10.8576 19.9893 10.8423 19.9763 10.8309 19.9602C10.8195 19.9441 10.8122 19.9254 10.8098 19.9058V10.6071C10.8107 9.18295 11.2173 7.78848 11.9819 6.58696C12.7466 5.38544 13.8377 4.42659 15.1275 3.82264C16.4173 3.21869 17.8524 2.99464 19.2649 3.1767C20.6775 3.35876 22.0089 3.93941 23.1034 4.85067C23.0427 4.88379 22.937 4.94215 22.8668 4.98473L14.9024 9.58517C14.7025 9.69878 14.5366 9.86356 14.4215 10.0626C14.3065 10.2616 14.2466 10.4877 14.2479 10.7175L14.2424 21.9419ZM16.071 17.9991L20.4018 15.4978L24.7325 17.9975V22.9985L20.4018 25.4983L16.071 22.9985V17.9991Z" fill="currentColor"></path> </svg></div>'
+      : '<div style="background-color:rgb(25, 195, 125);width:24px;height:24px;" title="Default (GPT-3.5)" class="gizmo-shadow-stroke relative p-1 rounded-full h-6 w-6 text-white flex items-center justify-center"><svg width="41" height="41" viewBox="0 0 41 41" fill="none" xmlns="http://www.w3.org/2000/svg" stroke-width="1.5" class="h-6 w-6"> <path d="M37.5324 16.8707C37.9808 15.5241 38.1363 14.0974 37.9886 12.6859C37.8409 11.2744 37.3934 9.91076 36.676 8.68622C35.6126 6.83404 33.9882 5.3676 32.0373 4.4985C30.0864 3.62941 27.9098 3.40259 25.8215 3.85078C24.8796 2.7893 23.7219 1.94125 22.4257 1.36341C21.1295 0.785575 19.7249 0.491269 18.3058 0.500197C16.1708 0.495044 14.0893 1.16803 12.3614 2.42214C10.6335 3.67624 9.34853 5.44666 8.6917 7.47815C7.30085 7.76286 5.98686 8.3414 4.8377 9.17505C3.68854 10.0087 2.73073 11.0782 2.02839 12.312C0.956464 14.1591 0.498905 16.2988 0.721698 18.4228C0.944492 20.5467 1.83612 22.5449 3.268 24.1293C2.81966 25.4759 2.66413 26.9026 2.81182 28.3141C2.95951 29.7256 3.40701 31.0892 4.12437 32.3138C5.18791 34.1659 6.8123 35.6322 8.76321 36.5013C10.7141 37.3704 12.8907 37.5973 14.9789 37.1492C15.9208 38.2107 17.0786 39.0587 18.3747 39.6366C19.6709 40.2144 21.0755 40.5087 22.4946 40.4998C24.6307 40.5054 26.7133 39.8321 28.4418 38.5772C30.1704 37.3223 31.4556 35.5506 32.1119 33.5179C33.5027 33.2332 34.8167 32.6547 35.9659 31.821C37.115 30.9874 38.0728 29.9178 38.7752 28.684C39.8458 26.8371 40.3023 24.6979 40.0789 22.5748C39.8556 20.4517 38.9639 18.4544 37.5324 16.8707ZM22.4978 37.8849C20.7443 37.8874 19.0459 37.2733 17.6994 36.1501C17.7601 36.117 17.8666 36.0586 17.936 36.0161L25.9004 31.4156C26.1003 31.3019 26.2663 31.137 26.3813 30.9378C26.4964 30.7386 26.5563 30.5124 26.5549 30.2825V19.0542L29.9213 20.998C29.9389 21.0068 29.9541 21.0198 29.9656 21.0359C29.977 21.052 29.9842 21.0707 29.9867 21.0902V30.3889C29.9842 32.375 29.1946 34.2791 27.7909 35.6841C26.3872 37.0892 24.4838 37.8806 22.4978 37.8849ZM6.39227 31.0064C5.51397 29.4888 5.19742 27.7107 5.49804 25.9832C5.55718 26.0187 5.66048 26.0818 5.73461 26.1244L13.699 30.7248C13.8975 30.8408 14.1233 30.902 14.3532 30.902C14.583 30.902 14.8088 30.8408 15.0073 30.7248L24.731 25.1103V28.9979C24.7321 29.0177 24.7283 29.0376 24.7199 29.0556C24.7115 29.0736 24.6988 29.0893 24.6829 29.1012L16.6317 33.7497C14.9096 34.7416 12.8643 35.0097 10.9447 34.4954C9.02506 33.9811 7.38785 32.7263 6.39227 31.0064ZM4.29707 13.6194C5.17156 12.0998 6.55279 10.9364 8.19885 10.3327C8.19885 10.4013 8.19491 10.5228 8.19491 10.6071V19.808C8.19351 20.0378 8.25334 20.2638 8.36823 20.4629C8.48312 20.6619 8.64893 20.8267 8.84863 20.9404L18.5723 26.5542L15.206 28.4979C15.1894 28.5089 15.1703 28.5155 15.1505 28.5173C15.1307 28.5191 15.1107 28.516 15.0924 28.5082L7.04046 23.8557C5.32135 22.8601 4.06716 21.2235 3.55289 19.3046C3.03862 17.3858 3.30624 15.3413 4.29707 13.6194ZM31.955 20.0556L22.2312 14.4411L25.5976 12.4981C25.6142 12.4872 25.6333 12.4805 25.6531 12.4787C25.6729 12.4769 25.6928 12.4801 25.7111 12.4879L33.7631 17.1364C34.9967 17.849 36.0017 18.8982 36.6606 20.1613C37.3194 21.4244 37.6047 22.849 37.4832 24.2684C37.3617 25.6878 36.8382 27.0432 35.9743 28.1759C35.1103 29.3086 33.9415 30.1717 32.6047 30.6641C32.6047 30.5947 32.6047 30.4733 32.6047 30.3889V21.188C32.6066 20.9586 32.5474 20.7328 32.4332 20.5338C32.319 20.3348 32.154 20.1698 31.955 20.0556ZM35.3055 15.0128C35.2464 14.9765 35.1431 14.9142 35.069 14.8717L27.1045 10.2712C26.906 10.1554 26.6803 10.0943 26.4504 10.0943C26.2206 10.0943 25.9948 10.1554 25.7963 10.2712L16.0726 15.8858V11.9982C16.0715 11.9783 16.0753 11.9585 16.0837 11.9405C16.0921 11.9225 16.1048 11.9068 16.1207 11.8949L24.1719 7.25025C25.4053 6.53903 26.8158 6.19376 28.2383 6.25482C29.6608 6.31589 31.0364 6.78077 32.2044 7.59508C33.3723 8.40939 34.2842 9.53945 34.8334 10.8531C35.3826 12.1667 35.5464 13.6095 35.3055 15.0128ZM14.2424 21.9419L10.8752 19.9981C10.8576 19.9893 10.8423 19.9763 10.8309 19.9602C10.8195 19.9441 10.8122 19.9254 10.8098 19.9058V10.6071C10.8107 9.18295 11.2173 7.78848 11.9819 6.58696C12.7466 5.38544 13.8377 4.42659 15.1275 3.82264C16.4173 3.21869 17.8524 2.99464 19.2649 3.1767C20.6775 3.35876 22.0089 3.93941 23.1034 4.85067C23.0427 4.88379 22.937 4.94215 22.8668 4.98473L14.9024 9.58517C14.7025 9.69878 14.5366 9.86356 14.4215 10.0626C14.3065 10.2616 14.2466 10.4877 14.2479 10.7175L14.2424 21.9419ZM16.071 17.9991L20.4018 15.4978L24.7325 17.9975V22.9985L20.4018 25.4983L16.071 22.9985V17.9991Z" fill="currentColor"></path></svg></div>';
+  return `<div id="thinking-message-wrapper" data-role="assistant" class="group w-full text-token-text-primary bg-token-main-surface-primary"> <div class="relative text-base gap-4 m-auto md:max-w-2xl lg:max-w-2xl xl:max-w-3xl p-4 pb-0 flex" style="${customConversationWidth ? `max-width:${conversationWidth}%` : ''}"> <div class="flex-shrink-0 flex flex-col relative items-end"> ${modelAvatar} </div> <div class="relative flex flex-col agent-turn" style="width:calc(100% - 80px);"> <div class="font-semibold select-none">${modelName}</div> <div class="flex flex-grow flex-col gap-1 max-w-full"> <div dir="auto" class="min-h-[20px] flex flex-col items-start whitespace-pre-wrap gap-4 break-words"> <div class="result-thinking relative"></div></div></div> </div> </div> </div>`;
+}
+// eslint-disable-next-line no-unused-vars
+function removeThinkingRowAssistant() {
+  const thinkingRow = document.getElementById('thinking-message-wrapper');
+  if (thinkingRow) thinkingRow.remove();
 }

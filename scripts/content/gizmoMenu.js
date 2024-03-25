@@ -1,4 +1,4 @@
-/* global isDescendant, updateActionSettings, showNewChatPage, updateGizmoSidebar, getGizmoUserActionSettings, toast, openOAuthDialog, getGizmoAbout */
+/* global isDescendant, updateActionSettings, showNewChatPage, updateGizmoSidebar, getGizmoUserActionSettings, toast, openOAuthDialog, getGizmoAbout, getGizmosByUser */
 /* eslint-disable no-unused-vars */
 function gizmoMenu(gizmoData, currentUserId, side = 'left', forceDark = false) {
   const gizmoResource = gizmoData?.resource;
@@ -7,7 +7,7 @@ function gizmoMenu(gizmoData, currentUserId, side = 'left', forceDark = false) {
   const isPublic = gizmoResource?.gizmo?.tags?.includes('public');
   const gizmoAction = gizmoResource?.tools?.find((tool) => !['browser', 'dalle', 'python']?.includes(tool.type));
 
-  return `<div style="left:12px;height:46px;z-index:100;width:100%;"><button id="gizmo-menu" class="relative w-full h-full flex items-center cursor-pointer rounded-md border border-token-border-light bg-token-main-surface-primary p-2 text-center focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 sm:text-sm" type="button">
+  return `<div style="left:12px;height:46px;z-index:100;width:100%;"><button id="gizmo-menu" class="relative w-full h-full flex items-center cursor-pointer rounded-md border border-token-border-light bg-token-main-surface-primary p-2 text-center focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 sm:text-sm" type="button" data-gizmoAvatar="${gizmoResource?.gizmo?.display?.profile_picture_url}">
   <span class="flex items-center justify-center w-full truncate font-semibold text-token-text-primary">
 ${gizmoResource?.gizmo?.display?.name} <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="ml-2 h-4 w-4 text-gray-400" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="6 9 12 15 18 9"></polyline></svg></svg>
 </button>
@@ -246,7 +246,6 @@ function openPrivacySettingsDialog(gizmoResource) {
         const gizmoActionId = button.id.split('gizmo-connected-account-action-')[1];
         const gizmoAction = gizmoActions.find((action) => action.metadata.action_id === gizmoActionId);
         const { domain } = gizmoAction.metadata;
-        const { auth } = gizmoAction.metadata;
         const redirectTo = encodeURIComponent(`https://chat.openai.com/g/${gizmoResource.gizmo.short_url}`);
         openOAuthDialog(gizmoResource.gizmo.id, domain, gizmoActionId, redirectTo);
       });
@@ -265,7 +264,7 @@ function showGizmoAboutDialog(gizmoResource, showStartChat = false) {
   const rating = gizmoResource?.about_blocks?.find((block) => block.type === 'rating');
   const category = gizmoResource?.about_blocks?.find((block) => block.type === 'category');
   const conversations = gizmoResource?.about_blocks?.find((block) => block.type === 'generic_title_subtitle');
-  const conversationStarters = gizmoResource?.gizmo?.display?.prompt_starters;
+  const conversationStarters = gizmoResource?.gizmo?.display?.prompt_starters.sort(() => Math.random() - 0.5).slice(0, 4);
 
   const aboutDialog = `<div id="gizmo-about-dialog" class="absolute inset-0">
   <div data-state="open" class="fixed inset-0 bg-black/50 dark:bg-black/80" style="pointer-events: auto;">
@@ -273,7 +272,7 @@ function showGizmoAboutDialog(gizmoResource, showStartChat = false) {
       <div role="dialog" id="gizmo-about-dialog-content" aria-describedby="radix-:r6c:" aria-labelledby="radix-:r6b:" data-state="open" class="popover relative left-1/2 col-auto col-start-2 row-auto row-start-2 w-full -translate-x-1/2 rounded-xl bg-token-main-surface-primary text-left shadow-xl transition-all flex flex-col focus:outline-none max-w-md flex h-[calc(100vh-25rem)] min-h-[80vh] max-w-xl flex-col" tabindex="-1" style="pointer-events: auto;">
         <div class="flex-grow overflow-y-auto">
           <div class="relative flex h-full flex-col gap-2 overflow-hidden px-2 py-4">
-            <div class="relative flex flex-grow flex-col gap-4 overflow-y-auto px-6 pb-20 pt-16">
+            <div id="gizmo-about-dialog-inner-content" class="relative flex flex-grow flex-col gap-4 overflow-y-auto px-6 pb-20 pt-16">
               <div class="absolute top-0">
                 <div class="fixed left-4 right-4 z-10 flex min-h-[64px] items-start justify-end gap-4 bg-gradient-to-b from-token-main-surface-primary to-transparent px-2">
                   <button id="gizmo-about-menu-button" type="button" id="radix-:r6d:" aria-haspopup="menu" aria-expanded="false" data-state="closed" class="hidden text-token-text-primary border border-transparent inline-flex h-9 items-center justify-center gap-1 rounded-lg bg-white px-3 text-sm dark:transparent dark:bg-transparent leading-none outline-none cursor-pointer hover:bg-token-main-surface-secondary dark:hover:bg-token-main-surface-secondary focus-visible:border-green-500 dark:focus-visible:border-green-500 radix-state-active:text-token-text-secondary radix-disabled:cursor-auto radix-disabled:bg-transparent radix-disabled:text-token-text-tertiary dark:radix-disabled:bg-transparent focus:border-0">
@@ -348,7 +347,7 @@ function showGizmoAboutDialog(gizmoResource, showStartChat = false) {
                     ${conversationStarters.map((conversationStarter) => `<div class="flex" tabindex="0">
                       <a class="group relative ml-2 h-14 flex-grow rounded-xl border border-token-border-medium bg-token-main-surface-primary px-4 hover:bg-token-main-surface-secondary focus:outline-none" target="_self" href="/g/${gizmoResource.gizmo.short_url}?p=${conversationStarter}">
                         <div class="flex h-full items-center">
-                          <div class="text-sm line-clamp-2">${conversationStarter}</div>
+                          <div class="text-sm line-clamp-2 break-all">${conversationStarter}</div>
                         </div>
                         <div class="absolute -bottom-px -left-2 h-3 w-4 border-b border-token-border-medium bg-token-main-surface-primary group-hover:bg-token-main-surface-secondary">
                           <div class="h-3 w-2 rounded-br-full border-b border-r border-token-border-medium bg-token-main-surface-primary"></div>
@@ -420,6 +419,16 @@ function showGizmoAboutDialog(gizmoResource, showStartChat = false) {
       const curAboutDialog = document.querySelector('#gizmo-about-dialog');
       curAboutDialog.remove();
     }
+  });
+  getGizmosByUser(gizmoResource?.gizmo?.author?.user_id).then((response) => {
+    const gizmosByUser = response.items;
+    if (gizmosByUser.length === 0) return;
+    const gizmosByUserElement = `<div class="flex flex-col"><div class="mb-2"><div class="font-bold mt-6">More by ${gizmoResource.gizmo.author.display_name}</div></div><div class="no-scrollbar group flex min-h-[104px] items-center space-x-2 overflow-x-auto overflow-y-hidden">
+      ${gizmosByUser.map((gizmoByUser) => `
+      <a href="/g/${gizmoByUser.gizmo.short_url}" class="h-fit min-w-fit rounded-xl bg-token-main-surface-secondary px-1 py-4 md:px-3 md:py-4 lg:px-3"><div class="flex w-full flex-grow items-center gap-4 overflow-hidden"><div class="h-12 w-12 flex-shrink-0"><div class="gizmo-shadow-stroke overflow-hidden rounded-full"><img src="${gizmoByUser.gizmo.display.profile_picture_url}" class="h-full w-full bg-token-main-surface-secondary" alt="GPT" width="80" height="80"></div></div><div class="overflow-hidden text-ellipsis break-words"><span class="text-sm font-medium leading-tight line-clamp-2">${gizmoByUser.gizmo.display.name}</span><span class="text-xs line-clamp-3">${gizmoByUser.gizmo.display.description}</span><div class="mt-1 flex items-center gap-1 text-ellipsis whitespace-nowrap pr-1 text-xs text-token-text-tertiary"><div class="mt-1 flex flex-row items-center space-x-1"><div class="text-token-text-tertiary text-xs">By ${gizmoByUser.gizmo.author.display_name}</div></div><span class="text-[8px]">•</span><svg width="24" height="24" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3"><path id="vector" fill-rule="evenodd" clip-rule="evenodd" d="M9 2.33317C5.31811 2.33317 2.33334 5.31794 2.33334 8.99984C2.33334 10.8282 3.06828 12.4833 4.2608 13.6886C4.52859 13.9592 4.57889 14.377 4.383 14.7034L3.80516 15.6665H9C12.6819 15.6665 15.6667 12.6817 15.6667 8.99984C15.6667 5.31794 12.6819 2.33317 9 2.33317ZM0.666672 8.99984C0.666672 4.39746 4.39763 0.666504 9 0.666504C13.6024 0.666504 17.3333 4.39746 17.3333 8.99984C17.3333 13.6022 13.6024 17.3332 9 17.3332H2.33334C2.03311 17.3332 1.75609 17.1717 1.60817 16.9104C1.46025 16.6492 1.4643 16.3285 1.61876 16.0711L2.63448 14.3782C1.40745 12.9272 0.666672 11.0494 0.666672 8.99984Z" fill="currentColor"></path></svg>${gizmoByUser.gizmo.vanity_metrics.num_conversations_str}</div></div></div></a>`).join('')}  
+    </div></div>`;
+    const aboutDialogInnerContent = document.querySelector('#gizmo-about-dialog-inner-content');
+    aboutDialogInnerContent.insertAdjacentHTML('beforeend', gizmosByUserElement);
   });
 }
 function toolPrettyName(tool) {

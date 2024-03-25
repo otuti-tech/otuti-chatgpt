@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global isFirefox, arkoseTrigger, addArkoseCallback, TurndownService, generateInstructions, generateChat, generateChatWS, formatDate, loadConversation, resetSelection, initializeAutoArchive, ChatGPTIcon, rowUser, rowAssistant, updateOrCreateConversation, sharedWebsocket, isGenerating:true, generateTitle, debounce, replaceTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, createTemplateWordsModal, initializePromptChain, initializeUpgradeButton, insertNextChain, runningPromptChainSteps:true, runningPromptChainStepIndex:true, lastPromptSuggestions, playSound, toast, curImageAssets:true, curFileAttachments:true, addConversationsEventListeners, addFinalCompletionClassToLastMessageWrapper, addMessagePluginToggleButtonsEventListeners, addNodeToRowAssistant, showDefaultFolderActions, updateLastMessagePluginDropdown, textAreaElementOldValue:true, conversationSettingsMenu, toggleKeepFoldersAtTheTop, addConversationSettingsMenuEventListener, addCustomInstructionInfoIconEventListener, getGizmoById, updateGPTEditIcon, renderGizmoDiscoveryPage, initializeCustomSelectionMenu,getGizmoIdFromUrl, renderGPTList, getMousePosition, updateGizmoSidebar, formatTime, replaceAllConfimationWrappersWithActionStopped, initializeGallery, resetFolders, generateRandomDarkColor, unarchiveConversationById, closeMenus, animateFavicon, stopAnimateFavicon, updateCounter, arkoseDXIsPending, createSettingsModal, addMissingGizmoNamesAndAvatars, registerWebsocket */
+/* global isFirefox, arkoseTrigger, addArkoseCallback, TurndownService, generateInstructions, generateChat, generateChatWS, formatDate, loadConversation, resetSelection, initializeAutoArchive, ChatGPTIcon, rowUser, rowAssistant, updateOrCreateConversation, sharedWebsocket, isGenerating:true, generateTitle, debounce, replaceTextAreaElement, showNewChatPage, chatStreamIsClosed:true, addScrollDetector, scrolUpDetected:true, Sortable, updateInputCounter, addUserPromptToHistory, getGPT4CounterMessageCapWindow, createFolder, getConversationElementClassList, notSelectedClassList, selectedClassList, conversationActions, addCheckboxToConversationElement, createConversation, deleteConversation, handleQueryParams, addScrollButtons, updateTotalCounter, isWindows, createTemplateWordsModal, initializePromptChain, initializeUpgradeButton, insertNextChain, runningPromptChainSteps:true, runningPromptChainStepIndex:true, lastPromptSuggestions, playSound, toast, curImageAssets:true, curFileAttachments:true, addConversationsEventListeners, addFinalCompletionClassToLastMessageWrapper, addMessagePluginToggleButtonsEventListeners, addNodeToRowAssistant, showDefaultFolderActions, updateLastMessagePluginDropdown, textAreaElementOldValue:true, conversationSettingsMenu, toggleKeepFoldersAtTheTop, addConversationSettingsMenuEventListener, addCustomInstructionInfoIconEventListener, getGizmoById, updateGPTEditIcon, renderGizmoDiscoveryPage, initializeCustomSelectionMenu,getGizmoIdFromUrl, renderGPTList, getMousePosition, updateGizmoSidebar, formatTime, replaceAllConfimationWrappersWithActionStopped, initializeGallery, resetFolders, generateRandomDarkColor, unarchiveConversationById, closeMenus, animateFavicon, stopAnimateFavicon, updateCounter, chatRequirementsIsPending, createSettingsModal, addMissingGizmoNamesAndAvatars, registerWebsocket, thinkingRowAssistant, removeThinkingRowAssistant */
 
 // Initial state
 let userChatIsActuallySaved = false;
@@ -617,6 +617,11 @@ function updateNewChatButtonSynced() {
   });
 }
 function submitChat(userInput, conversation, messageId, parentId, settings, account, chatgptAccountId, models, selectedModel, imageAssets = [], fileAttachments = [], continueGenerating = false, regenerateResponse = false, authorRole = 'user', authorName = '', initialMetadata = {}) {
+  const conversationBottom = document.querySelector('#conversation-bottom');
+  conversationBottom.insertAdjacentHTML('beforebegin', thinkingRowAssistant(settings));
+  if (!scrolUpDetected && settings.autoScroll) {
+    document.querySelector('#conversation-bottom')?.scrollIntoView();
+  }
   // const chatgptAccountId = document?.cookie?.split('; ')?.find((row) => row?.startsWith('_account'))?.split('=')?.[1] || 'default';
 
   // const sharedWebsocket = chatgptAccountId ? account?.accounts?.[chatgptAccountId]?.features?.includes('shared_websocket') : false;
@@ -635,7 +640,7 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
   const foundArkoseSetups = JSON.parse(window.localStorage.getItem('sp/arkoseSetups') || '[]');
 
   // if (isGPT4 && !arkoseToken) {
-  if (!arkoseToken && foundArkoseSetups.length > 0) {
+  if (!arkoseToken) {
     arkoseTrigger();
   }
   const userMessageId = messageId;
@@ -645,7 +650,7 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
   const interval = setInterval(() => {
     arkoseToken = window.localStorage.getItem('sp/arkoseToken');
 
-    if (Date.now() - startTime > 5000 && !arkoseDXIsPending) {
+    if (Date.now() - startTime > 5000 && !chatRequirementsIsPending) {
       clearInterval(interval);
       isGenerating = false;
       chunkNumber = 1;
@@ -664,8 +669,12 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
       const submitButton = document.querySelector('[data-testid="send-button"]');
       // submitButton.disabled = false;
       submitButton.classList.replace('rounded-full', 'rounded-lg');
-
       submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+      removeThinkingRowAssistant();
+      const resultStreamingDivs = document.querySelectorAll('.result-streaming');
+      resultStreamingDivs?.forEach((div) => {
+        div.classList.remove('result-streaming');
+      });
       return;
     }
     // if (arkoseToken || (isPaid && !selectedModel.tags.includes('gpt4'))) {
@@ -707,7 +716,7 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
         generateChat(userInputParts, conversation?.id, userMessageId, parentId, arkoseToken, gizmoData?.resource, metadata, lastPromptSuggestions, saveHistory, authorRole, authorName, action, contentType, lastMessageFailed).then((chatStream) => {
           const curSubmitButton = document.querySelector('[data-testid="send-button"]');
           curSubmitButton.classList.replace('rounded-lg', 'rounded-full');
-          curSubmitButton.innerHTML = '<span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="16" height="16" class="text-white dark:text-black"><path d="M384 128v255.1c0 35.35-28.65 64-64 64H64c-35.35 0-64-28.65-64-64V128c0-35.35 28.65-64 64-64H320C355.3 64 384 92.65 384 128z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+          curSubmitButton.innerHTML = '<span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 384 512" width="16" height="16" class="text-white dark:text-black"><path d="M384 128v255.1c0 35.35-28.65 64-64 64H64c-35.35 0-64-28.65-64-64V128c0-35.35 28.65-64 64-64H320C355.3 64 384 92.65 384 128z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
 
           const faviconTimeout = settings.animateFavicon ? animateFavicon() : undefined;
           userChatIsActuallySaved = regenerateResponse || continueGenerating || authorRole !== 'user';
@@ -749,8 +758,11 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
               // submitButton.disabled = false;
               if (submitButton) {
                 submitButton.classList.replace('rounded-full', 'rounded-lg');
-
                 submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+                const resultStreamingDivs = document.querySelectorAll('.result-streaming');
+                resultStreamingDivs?.forEach((div) => {
+                  div.classList.remove('result-streaming');
+                });
               }
               if (chatStreamIsClosed && e.data !== '[DONE]') {
                 try {
@@ -969,7 +981,7 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
                 if (finalConversationId !== urlConversationId) return;
 
                 if (role === 'system') return;
-
+                removeThinkingRowAssistant();
                 const lastRowAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
                 const existingRowAssistant = (continueGenerating || authorRole !== 'user') ? lastRowAssistant : document.querySelector(`[id="message-wrapper-${assistantData[0]?.message?.id}"][data-role="assistant"]`);
 
@@ -993,7 +1005,7 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
                       isRenderingAssistantRow = true;
                       let threadCount = Object.keys(conversation).length > 0 ? conversation?.mapping[userMessageId]?.children?.length || 1 : 1;
                       if (regenerateResponse && !lastMessageFailed) threadCount += 1;
-                      const assistantRow = rowAssistant(conversation, assistantData, threadCount, threadCount, models, settings, gizmoData, true);
+                      const assistantRow = rowAssistant(conversation, assistantData, threadCount, threadCount, models, settings, gizmoData, true, true);
 
                       const conversationBottom = document.querySelector('#conversation-bottom');
                       conversationBottom.insertAdjacentHTML('beforebegin', assistantRow);
@@ -1041,8 +1053,11 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
             const submitButton = document.querySelector('[data-testid="send-button"]');
             // submitButton.disabled = false;
             submitButton.classList.replace('rounded-full', 'rounded-lg');
-
             submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+            const resultStreamingDivs = document.querySelectorAll('.result-streaming');
+            resultStreamingDivs?.forEach((div) => {
+              div.classList.remove('result-streaming');
+            });
 
             // eslint-disable-next-line no-console
             console.warn(err);
@@ -1095,7 +1110,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
   let arkoseToken = window.localStorage.getItem('sp/arkoseToken');
   const foundArkoseSetups = JSON.parse(window.localStorage.getItem('sp/arkoseSetups') || '[]');
   // if (isGPT4 && !arkoseToken) {
-  if (!arkoseToken && foundArkoseSetups.length > 0) {
+  if (!arkoseToken) {
     arkoseTrigger();
   }
   const userMessageId = messageId;
@@ -1105,7 +1120,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
   const interval = setInterval(() => {
     arkoseToken = window.localStorage.getItem('sp/arkoseToken');
 
-    if (Date.now() - startTime > 5000 && !arkoseDXIsPending) {
+    if (Date.now() - startTime > 5000 && !chatRequirementsIsPending) {
       clearInterval(interval);
       isGenerating = false;
       chunkNumber = 1;
@@ -1117,14 +1132,19 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
       const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
       if (lastMessageWrapper?.dataset?.role !== 'assistant') {
         lastMessageWrapper.remove();
+        toast('Something went wrong. Please refresh the page!', 'error');
       }
       const syncDiv = document.getElementById('sync-div');
       syncDiv.style.opacity = '1';
       const submitButton = document.querySelector('[data-testid="send-button"]');
       // submitButton.disabled = false;
       submitButton.classList.replace('rounded-full', 'rounded-lg');
-
       submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+      removeThinkingRowAssistant();
+      const resultStreamingDivs = document.querySelectorAll('.result-streaming');
+      resultStreamingDivs?.forEach((div) => {
+        div.classList.remove('result-streaming');
+      });
       return;
     }
     // if (arkoseToken || (isPaid && !selectedModel.tags.includes('gpt4'))) {
@@ -1208,8 +1228,11 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
               // submitButton.disabled = false;
               if (submitButton) {
                 submitButton.classList.replace('rounded-full', 'rounded-lg');
-
                 submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+                const resultStreamingDivs = document.querySelectorAll('.result-streaming');
+                resultStreamingDivs?.forEach((div) => {
+                  div.classList.remove('result-streaming');
+                });
               }
               if (chatStreamIsClosed && decodedBody !== '[DONE]') {
                 const data = decodedBody ? JSON.parse(decodedBody) : {};
@@ -1428,6 +1451,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
                 if (finalConversationId !== urlConversationId) return;
 
                 if (role === 'system') return;
+                removeThinkingRowAssistant();
 
                 const lastRowAssistant = [...document.querySelectorAll('[id^="message-wrapper-"][data-role="assistant"]')].pop();
                 const existingRowAssistant = (continueGenerating || authorRole !== 'user') ? lastRowAssistant : document.querySelector(`[id="message-wrapper-${assistantData[0]?.message?.id}"][data-role="assistant"]`);
@@ -1452,7 +1476,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
                       isRenderingAssistantRow = true;
                       let threadCount = Object.keys(conversation).length > 0 ? conversation?.mapping[userMessageId]?.children?.length || 1 : 1;
                       if (regenerateResponse && !lastMessageFailed) threadCount += 1;
-                      const assistantRow = rowAssistant(conversation, assistantData, threadCount, threadCount, models, settings, gizmoData, true);
+                      const assistantRow = rowAssistant(conversation, assistantData, threadCount, threadCount, models, settings, gizmoData, true, true);
 
                       const conversationBottom = document.querySelector('#conversation-bottom');
                       conversationBottom.insertAdjacentHTML('beforebegin', assistantRow);
@@ -1505,6 +1529,11 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
             if (submitButton) {
               submitButton.classList.replace('rounded-full', 'rounded-lg');
               submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+              // find all div with class result-streaming
+              const resultStreamingDivs = document.querySelectorAll('.result-streaming');
+              resultStreamingDivs?.forEach((div) => {
+                div.classList.remove('result-streaming');
+              });
             }
             // eslint-disable-next-line no-console
             // console.warn(err);
@@ -1546,7 +1575,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
           generateChatWS(userInputParts, conversation?.id, userMessageId, parentId, arkoseToken, gizmoData?.resource, metadata, lastPromptSuggestions, saveHistory, authorRole, authorName, action, contentType, lastMessageFailed).then(() => {
             const curSubmitButton = document.querySelector('[data-testid="send-button"]');
             curSubmitButton.classList.replace('rounded-lg', 'rounded-full');
-            curSubmitButton.innerHTML = '<span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="16" height="16" class="text-white dark:text-black"><path d="M384 128v255.1c0 35.35-28.65 64-64 64H64c-35.35 0-64-28.65-64-64V128c0-35.35 28.65-64 64-64H320C355.3 64 384 92.65 384 128z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+            curSubmitButton.innerHTML = '<span class="" data-state="closed"><svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 384 512" width="16" height="16" class="text-white dark:text-black"><path d="M384 128v255.1c0 35.35-28.65 64-64 64H64c-35.35 0-64-28.65-64-64V128c0-35.35 28.65-64 64-64H320C355.3 64 384 92.65 384 128z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
           }).catch((err) => {
             spws.close();
             // Firefox returns error when closing chat stream
@@ -1565,8 +1594,11 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
             const submitButton = document.querySelector('[data-testid="send-button"]');
             // submitButton.disabled = false;
             submitButton.classList.replace('rounded-full', 'rounded-lg');
-
             submitButton.innerHTML = '<span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span>';
+            const resultStreamingDivs = document.querySelectorAll('.result-streaming');
+            resultStreamingDivs?.forEach((div) => {
+              div.classList.remove('result-streaming');
+            });
 
             // eslint-disable-next-line no-console
             if (err) {
@@ -1781,9 +1813,7 @@ ${settings.autoSplitChunkPrompt}`;
             // check if user is replying to a message
             const replyToPreviewContent = document.querySelector('#reply-to-preview-content');
             if (replyToPreviewContent) {
-              const turndownService = new TurndownService();
-              const replyToText = turndownService.turndown(replyToPreviewContent);
-              initialMetadata.targeted_reply = replyToText;
+              initialMetadata.targeted_reply = replyToPreviewContent.innerText;
               document.getElementById('reply-to-preview-wrapper')?.remove();
             }
             // eslint-disable-next-line no-nested-ternary
@@ -2017,10 +2047,10 @@ function loadConversationList(skipFullReload = false) {
               handleQueryParams(search);
             }
           } else {
-            unarchiveConversationById(conversationId, false).then((convExistsInRemoteButIsArchived) => {
+            unarchiveConversationById(conversationId, false).then(({ conv, convExistsInRemoteButIsArchived }) => {
               if (convExistsInRemoteButIsArchived) {
                 const historySyncMessage = document.querySelector('#history-sync-message');
-                const isArchived = settings?.autoSyncCount > 0 && !historySyncMessage; // if autoSyncCount is 0, there is a good chance the convesation still exists in remote but we are just not seeing it. if autoSyncCount > 0, it less likely to go to a chat that is archived in remote but not locally, so we consider it as archived(but that's not the case always). if historySyncMessage exists, it means we are currently doing the initial history syncing, so we don't want to show the conversation as archived
+                const isArchived = conv.is_archived && settings?.autoSyncCount > 0 && !historySyncMessage; // if autoSyncCount is 0, there is a good chance the convesation still exists in remote but we are just not seeing it. if autoSyncCount > 0, it less likely to go to a chat that is archived in remote but not locally, so we consider it as archived(but that's not the case always). if historySyncMessage exists, it means we are currently doing the initial history syncing, so we don't want to show the conversation as archived
                 loadConversation(conversationId, isArchived);
               } else {
                 showNewChatPage();

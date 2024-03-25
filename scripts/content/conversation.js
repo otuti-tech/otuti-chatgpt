@@ -1,6 +1,6 @@
 /* eslint-disable no-restricted-globals */
 // eslint-disable-next-line no-unused-vars
-/* global TurndownService, closeMenus, conversationSettingsMenu, addConversationSettingsMenuEventListener, submitChat, openSubmitPromptModal, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, languageList, writingStyleList, toneList, arkoseTrigger, createFullSizeFileWrapper, addFullSizeFileWrapperEventListener, addUploadFileButton, getMousePosition, renderAllDalleImages, getGizmoById, initializeNavbar, replacePageContent, replaceTextAreaElement, addFinalCompletionClassToLastMessageWrapper, highlightSearch, getGizmoUserActionSettings, actionAllowedRenderer, actionDeniedRenderer, updateLastMessagePluginDropdown, initializeAutoSave, renderAllPythonImages, getDownloadUrlFromFileId, getDownloadUrlFromSandBoxPath, toast, unarchiveConversation, downloadFileFrmoUrl, unarchiveConversationById, openUpgradeModal, registerWebsocket, synthesize, playingAudios: true, stopAllAudios */
+/* global TurndownService, closeMenus, conversationSettingsMenu, addConversationSettingsMenuEventListener, submitChat, openSubmitPromptModal, rowAssistant, rowUser, copyRichText, messageFeedback, openFeedbackModal, generateInstructions, isGenerating:true, scrolUpDetected:true, addScrollDetector, languageList, writingStyleList, toneList, arkoseTrigger, createFullSizeFileWrapper, addFullSizeFileWrapperEventListener, addUploadFileButton, getMousePosition, renderAllDalleImages, getGizmoById, initializeNavbar, replacePageContent, replaceTextAreaElement, addFinalCompletionClassToLastMessageWrapper, highlightSearch, getGizmoUserActionSettings, actionAllowedRenderer, actionDeniedRenderer, updateLastMessagePluginDropdown, initializeAutoSave, renderAllPythonImages, getDownloadUrlFromFileId, getDownloadUrlFromSandBoxPath, toast, unarchiveConversation, downloadFileFrmoUrl, unarchiveConversationById, openUpgradeModal, registerWebsocket, synthesize, playingAudios: true, stopAllAudios, dalleModes, addDalleModeEventListeners, openOAuthDialog */
 
 let speakingMessageId;
 function showCustomInstructionTooltip(event, aboutUser, aboutModel) {
@@ -47,12 +47,33 @@ function addPinNav(sortedNodes) {
     main.appendChild(pinNav);
   });
 }
+function removeSystemMessages(fullConversation) {
+  if (!fullConversation) return fullConversation;
+  Object.keys(fullConversation.mapping).forEach((nodeId) => {
+    const node = fullConversation.mapping[nodeId];
+    if (node?.message?.role === 'system' || node?.message?.author?.role === 'system') {
+      const systemNodeParentId = node.parent;
+      const systemNodeChildren = node.children;
+      const parent = fullConversation.mapping[systemNodeParentId];
+      if (parent) {
+        parent.children = parent.children.filter((id) => id !== nodeId);
+        parent.children.push(...systemNodeChildren);
+      }
+      const child = fullConversation.mapping[systemNodeChildren[0]];
+      if (child) {
+        child.parent = systemNodeParentId;
+      }
+      // delete fullConversation.mapping[nodeId];
+    }
+  });
+  return fullConversation;
+}
 function loadConversationFromNode(conversationId, newMessageId, oldMessageId) {
   const searchInput = document.querySelector('#conversation-search');
   const searchValue = searchInput?.value || '';
   chrome.storage.sync.get(['name', 'avatar'], (result) => {
     chrome.storage.local.get(['conversations', 'settings', 'models'], (res) => {
-      const fullConversation = res.conversations?.[conversationId];
+      const fullConversation = removeSystemMessages(res.conversations?.[conversationId]);
       if (!fullConversation) return;
       getGizmoById(fullConversation?.gizmo_id).then((gizmoData) => {
         const { settings } = res;
@@ -143,7 +164,7 @@ function loadConversation(conversationId, isArchived = false) {
   }, (hasSubscription) => {
     chrome.storage.sync.get(['name', 'avatar'], (result) => {
       chrome.storage.local.get(['conversationsOrder', 'conversations', 'settings', 'models'], (res) => {
-        const fullConversation = res.conversations?.[conversationId];
+        const fullConversation = removeSystemMessages(res.conversations?.[conversationId]);
         if (!fullConversation) return;
         getGizmoById(fullConversation?.gizmo_id).then((gizmoData) => {
           const { settings, conversationsOrder } = res;
@@ -264,6 +285,8 @@ function loadConversation(conversationId, isArchived = false) {
           initializeNavbar(fullConversation);
           replaceTextAreaElement(settings);
           updateTotalCounter(settings);
+          addDalleModes(settings, gizmoData);
+
           if (fullConversation.gizmo_id) {
             getGizmoUserActionSettings(fullConversation.gizmo_id, true);
           }
@@ -282,7 +305,25 @@ function loadConversation(conversationId, isArchived = false) {
     });
   });
 }
+function addDalleModes(settings, gizmoData) {
+  const dalleModeWrapper = document.querySelector('#dalle-mode-wrapper');
 
+  if (settings.showExamplePrompts) {
+    if (gizmoData) {
+      const isDallE = gizmoData?.resource?.gizmo?.id === 'g-2fkFE8rbu';
+      if (isDallE) {
+        if (dalleModeWrapper) return;
+        const inputFormActionWrapper = document.querySelector('#input-form-action-wrapper');
+        if (inputFormActionWrapper) {
+          inputFormActionWrapper.insertAdjacentHTML('beforeend', dalleModes());
+          addDalleModeEventListeners();
+          return;
+        }
+      }
+    }
+  }
+  if (dalleModeWrapper) dalleModeWrapper.remove();
+}
 function updateTotalCounter(settings) {
   if (settings.showTotalWordCount === false) return;
   const totalCounterElement = document.querySelector('#total-counter');
@@ -351,7 +392,7 @@ function addMissingGizmoNamesAndAvatars() {
     });
   });
 }
-function showCopyMenu(event, messageId) {
+function showCopyMenu(event, messageId, conversationId) {
   const { x, y } = getMousePosition(event);
   const translateX = x + 4;
   const translateY = y + 4;
@@ -365,32 +406,29 @@ function showCopyMenu(event, messageId) {
   
   </div></div>`;
   document.querySelector(`#message-wrapper-${messageId}`).insertAdjacentHTML('beforeend', menu);
-  addCopyMenuEventListeners(messageId);
+  addCopyMenuEventListeners(messageId, conversationId);
 }
-function addCopyMenuEventListeners(messageId) {
+function addCopyMenuEventListeners(messageId, conversationId) {
   const copyTextButton = document.querySelector(`#copy-text-button-${messageId}`);
   const copyHtmlButton = document.querySelector(`#copy-html-button-${messageId}`);
   const copyMarkdownButton = document.querySelector(`#copy-markdown-button-${messageId}`);
   copyTextButton.addEventListener('click', () => {
     document.getElementById('copy-message-menu')?.remove();
-    chrome.storage.local.get(['settings'], (result) => {
-      // while parent is not user, keep going up
+    chrome.storage.local.get(['settings', 'conversations'], (result) => {
+      const conversation = result.conversations[conversationId];
+      let messageText = '';
+      let currentNode = conversation.mapping[messageId];
+      while (currentNode && currentNode?.message?.author?.role !== 'user') {
+        if (currentNode?.message?.author?.role === 'assistant' && currentNode?.message?.recipient === 'all') {
+          messageText = `${currentNode?.message?.content?.parts?.join('\n')}\n\n${messageText}`;
+        }
+        currentNode = conversation.mapping[currentNode.parent];
+      }
       const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
-      // get all message text nodes in the messageWrapperClone
-      const messageTextNodes = messageWrapper.querySelectorAll('[id^="message-text-"]');
-      // create a new div that only contains the message text nodes
-      const assistantTextOnlyElements = document.createElement('div');
-      messageTextNodes.forEach((node) => {
-        assistantTextOnlyElements.insertAdjacentHTML('beforeend', node.outerHTML.replaceAll('><', '>\n<'));
-      });
 
       const userElement = messageWrapper.previousElementSibling;
-      const codeHeaders = assistantTextOnlyElements.querySelectorAll('#code-header');
-      // hide all code headers
-      codeHeaders.forEach((header) => {
-        header.remove();
-      });
-      const text = `${result.settings.copyMode ? `>> USER: ${userElement.innerText}\n>> ASSISTANT: ` : ''}${assistantTextOnlyElements.innerText}`;
+
+      const text = `${result.settings.copyMode ? `>> USER: ${userElement.innerText}\n>> ASSISTANT: ` : ''}${messageText}`;
       navigator.clipboard.writeText(text.trim());
 
       toast('Copied to clipboard', 'success');
@@ -570,11 +608,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
           threadNextButton.disabled = true;
           threadCountWrapper.innerText = `${parseInt(childCount, 10) + 1} / ${parseInt(childCount, 10) + 1}`;
           const threadButtonsWrapper = messageWrapper.querySelector(`#thread-buttons-wrapper-${messageId}`);
-          if (result.settings.autoHideThreadCount) {
-            threadButtonsWrapper.classList.add('group-hover:visible');
-          } else {
-            threadButtonsWrapper.classList.remove('invisible');
-          }
+          threadButtonsWrapper.classList.remove('hidden');
           // replace messageId with newMessageId in all the children ids
           // id ends with messageId
           const children = messageWrapper.querySelectorAll(`[id$="-${messageId}"]`);
@@ -672,7 +706,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
       event.preventDefault();
       event.stopPropagation();
       closeMenus();
-      showCopyMenu(event, messageId);
+      showCopyMenu(event, messageId, conversationId);
     });
   });
 
@@ -682,7 +716,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
     btn.parentNode.replaceChild(button, btn);
     button.addEventListener('click', () => {
       chrome.storage.local.get(['conversations'], (result) => {
-        const conversation = result.conversations[conversationId];
+        const conversation = removeSystemMessages(result.conversations[conversationId]);
         const messageId = button.id.split('thread-prev-button-').pop();
         const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
         const previousMessageWrapper = messageWrapper.previousElementSibling;
@@ -711,7 +745,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
     btn.parentNode.replaceChild(button, btn);
     button.addEventListener('click', () => {
       chrome.storage.local.get(['conversations'], (result) => {
-        const conversation = result.conversations[conversationId];
+        const conversation = removeSystemMessages(result.conversations[conversationId]);
         const messageId = button.id.split('thread-next-button-').pop();
         const messageWrapper = document.querySelector(`#message-wrapper-${messageId}`);
         const previousMessageWrapper = messageWrapper.previousElementSibling;
@@ -752,7 +786,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
         synthesize(conversationId, messageId).then(async (audio) => {
           if (!audio || !audio.src) {
             button.style = '';
-            button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path d="M6 9H4C2.89543 9 2 9.89543 2 11V13C2 14.1046 2.89543 15 4 15H6L10.3243 18.9639C10.9657 19.5519 12 19.0969 12 18.2268V5.77324C12 4.90313 10.9657 4.44813 10.3243 5.03608L6 9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16.3984 8.70001C17.0889 9.61924 17.498 10.7618 17.498 12C17.498 13.1119 17.1681 14.1468 16.6007 15.012M20.7922 7.23543C21.5612 8.65189 21.998 10.2749 21.998 12C21.998 13.684 21.5818 15.2708 20.8465 16.6631" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+            button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M11 4.9099C11 4.47485 10.4828 4.24734 10.1621 4.54132L6.67572 7.7372C6.49129 7.90626 6.25019 8.00005 6 8.00005H4C3.44772 8.00005 3 8.44776 3 9.00005V15C3 15.5523 3.44772 16 4 16H6C6.25019 16 6.49129 16.0938 6.67572 16.2629L10.1621 19.4588C10.4828 19.7527 11 19.5252 11 19.0902V4.9099ZM8.81069 3.06701C10.4142 1.59714 13 2.73463 13 4.9099V19.0902C13 21.2655 10.4142 22.403 8.81069 20.9331L5.61102 18H4C2.34315 18 1 16.6569 1 15V9.00005C1 7.34319 2.34315 6.00005 4 6.00005H5.61102L8.81069 3.06701ZM20.3166 6.35665C20.8019 6.09313 21.409 6.27296 21.6725 6.75833C22.5191 8.3176 22.9996 10.1042 22.9996 12.0001C22.9996 13.8507 22.5418 15.5974 21.7323 17.1302C21.4744 17.6185 20.8695 17.8054 20.3811 17.5475C19.8927 17.2896 19.7059 16.6846 19.9638 16.1962C20.6249 14.9444 20.9996 13.5175 20.9996 12.0001C20.9996 10.4458 20.6064 8.98627 19.9149 7.71262C19.6514 7.22726 19.8312 6.62017 20.3166 6.35665ZM15.7994 7.90049C16.241 7.5688 16.8679 7.65789 17.1995 8.09947C18.0156 9.18593 18.4996 10.5379 18.4996 12.0001C18.4996 13.3127 18.1094 14.5372 17.4385 15.5604C17.1357 16.0222 16.5158 16.1511 16.0539 15.8483C15.5921 15.5455 15.4632 14.9255 15.766 14.4637C16.2298 13.7564 16.4996 12.9113 16.4996 12.0001C16.4996 10.9859 16.1653 10.0526 15.6004 9.30063C15.2687 8.85905 15.3578 8.23218 15.7994 7.90049Z" fill="currentColor"></path></svg>';
             speakingMessageId = '';
             delete playingAudios[messageId];
             return;
@@ -762,7 +796,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
           // check if audio finished playing
           audio.addEventListener('ended', () => {
             button.style = '';
-            button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path d="M6 9H4C2.89543 9 2 9.89543 2 11V13C2 14.1046 2.89543 15 4 15H6L10.3243 18.9639C10.9657 19.5519 12 19.0969 12 18.2268V5.77324C12 4.90313 10.9657 4.44813 10.3243 5.03608L6 9Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M16.3984 8.70001C17.0889 9.61924 17.498 10.7618 17.498 12C17.498 13.1119 17.1681 14.1468 16.6007 15.012M20.7922 7.23543C21.5612 8.65189 21.998 10.2749 21.998 12C21.998 13.684 21.5818 15.2708 20.8465 16.6631" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+            button.innerHTML = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M11 4.9099C11 4.47485 10.4828 4.24734 10.1621 4.54132L6.67572 7.7372C6.49129 7.90626 6.25019 8.00005 6 8.00005H4C3.44772 8.00005 3 8.44776 3 9.00005V15C3 15.5523 3.44772 16 4 16H6C6.25019 16 6.49129 16.0938 6.67572 16.2629L10.1621 19.4588C10.4828 19.7527 11 19.5252 11 19.0902V4.9099ZM8.81069 3.06701C10.4142 1.59714 13 2.73463 13 4.9099V19.0902C13 21.2655 10.4142 22.403 8.81069 20.9331L5.61102 18H4C2.34315 18 1 16.6569 1 15V9.00005C1 7.34319 2.34315 6.00005 4 6.00005H5.61102L8.81069 3.06701ZM20.3166 6.35665C20.8019 6.09313 21.409 6.27296 21.6725 6.75833C22.5191 8.3176 22.9996 10.1042 22.9996 12.0001C22.9996 13.8507 22.5418 15.5974 21.7323 17.1302C21.4744 17.6185 20.8695 17.8054 20.3811 17.5475C19.8927 17.2896 19.7059 16.6846 19.9638 16.1962C20.6249 14.9444 20.9996 13.5175 20.9996 12.0001C20.9996 10.4458 20.6064 8.98627 19.9149 7.71262C19.6514 7.22726 19.8312 6.62017 20.3166 6.35665ZM15.7994 7.90049C16.241 7.5688 16.8679 7.65789 17.1995 8.09947C18.0156 9.18593 18.4996 10.5379 18.4996 12.0001C18.4996 13.3127 18.1094 14.5372 17.4385 15.5604C17.1357 16.0222 16.5158 16.1511 16.0539 15.8483C15.5921 15.5455 15.4632 14.9255 15.766 14.4637C16.2298 13.7564 16.4996 12.9113 16.4996 12.0001C16.4996 10.9859 16.1653 10.0526 15.6004 9.30063C15.2687 8.85905 15.3578 8.23218 15.7994 7.90049Z" fill="currentColor"></path></svg>';
             speakingMessageId = '';
             delete playingAudios[messageId];
           });
@@ -982,6 +1016,18 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
       submitActionResponse(conversationId, parentMessageId, domain, 'deny');
     });
   });
+  toolActionRequestOauthButtons.forEach((btn) => {
+    const button = btn.cloneNode(true);
+    btn.parentNode.replaceChild(button, btn);
+    button.addEventListener('click', () => {
+      const gizmoActionId = button.getAttribute('data-actionId');
+      const gizmoId = button.getAttribute('data-gizmoId');
+      const domain = button.getAttribute('data-domain');
+      const redirectTo = encodeURIComponent(window.location.href);
+
+      openOAuthDialog(gizmoId, domain, gizmoActionId, redirectTo);
+    });
+  });
   addMessagePluginToggleButtonsEventListeners(messagePluginToggleButtons);
 }
 function submitActionResponse(conversationId, parentMessageId, domain, actionType) {
@@ -1091,7 +1137,7 @@ function showCitationTooltip(e, citationElement) {
   const citationDomain = citationUrl.hostname;
   const { x, y } = citationElement.getBoundingClientRect();
   if (!citationTitle) return;
-  const citationTooltip = `<div id="citation-tooltip" data-radix-popper-content-wrapper="" style="position: fixed; left: 0px; top: 0px; transform: translate3d(${x}px, ${y - 30}px, 0px); min-width: max-content; z-index: auto; --radix-popper-anchor-width: 25px; --radix-popper-anchor-height: 21px; --radix-popper-available-width: 753.3125px; --radix-popper-available-height: 535px; --radix-popper-transform-origin: 50% 34px;"><div data-side="top" data-align="center" data-state="delayed-open" class="relative rounded-lg border border-token-border-light bg-black p-1 shadow-xs transition-opacity max-w-sm" style="--radix-tooltip-content-transform-origin: var(--radix-popper-transform-origin); --radix-tooltip-content-available-width: var(--radix-popper-available-width); --radix-tooltip-content-available-height: var(--radix-popper-available-height); --radix-tooltip-trigger-width: var(--radix-popper-anchor-width); --radix-tooltip-trigger-height: var(--radix-popper-anchor-height);"><span class="flex items-center whitespace-pre-wrap px-2 py-1 text-center font-medium normal-case text-token-text-primary text-sm"><a href="${citationUrl.href}" target="_blank" rel="noreferrer" class="text-xs !no-underline"><div class="flex items-center gap-2">${citationUrl.host ? `<div class="flex shrink-0 items-center justify-center"><img src="https://icons.duckduckgo.com/ip3/${citationDomain}.ico" alt="Favicon" width="16" height="16" class="my-0"></div>` : ''}<div class="max-w-xs truncate">${citationTitle}</div>${citationUrl.host ? '<div class="shrink-0"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-xs" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></div>' : ''}</div></a></span></div></div>`;
+  const citationTooltip = `<div id="citation-tooltip" data-radix-popper-content-wrapper="" style="position: fixed; left: 0px; top: 0px; transform: translate3d(${x}px, ${y - 30}px, 0px); min-width: max-content; z-index: auto; --radix-popper-anchor-width: 25px; --radix-popper-anchor-height: 21px; --radix-popper-available-width: 753.3125px; --radix-popper-available-height: 535px; --radix-popper-transform-origin: 50% 34px;"><div data-side="top" data-align="center" data-state="delayed-open" class="relative rounded-lg border border-token-border-light bg-black p-1 shadow-xs transition-opacity max-w-sm" style="--radix-tooltip-content-transform-origin: var(--radix-popper-transform-origin); --radix-tooltip-content-available-width: var(--radix-popper-available-width); --radix-tooltip-content-available-height: var(--radix-popper-available-height); --radix-tooltip-trigger-width: var(--radix-popper-anchor-width); --radix-tooltip-trigger-height: var(--radix-popper-anchor-height);"><span class="flex items-center whitespace-pre-wrap px-2 py-1 text-center font-medium normal-case text-gray-100 text-sm"><a href="${citationUrl.href}" target="_blank" rel="noreferrer" class="text-xs !no-underline"><div class="flex items-center gap-2">${citationUrl.host ? `<div class="flex shrink-0 items-center justify-center"><img src="https://icons.duckduckgo.com/ip3/${citationDomain}.ico" alt="Favicon" width="16" height="16" class="my-0"></div>` : ''}<div class="max-w-xs truncate">${citationTitle}</div>${citationUrl.host ? '<div class="shrink-0"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-xs" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></div>' : ''}</div></a></span></div></div>`;
   const existingTooltip = document.querySelector('#citation-tooltip');
   if (existingTooltip) return;
   document.body.insertAdjacentHTML('beforeend', citationTooltip);

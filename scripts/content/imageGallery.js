@@ -1,17 +1,56 @@
-/* global downloadFileFrmoUrl, getAllConversations, getConversation, openUpgradeModal, hljs, formatDate, toast, getDownloadUrlFromFileId, debounce, JSZip, saveAs */
+/* global downloadFileFrmoUrl, getAllConversations, getConversation, openUpgradeModal, hljs, formatDate, toast, getDownloadUrlFromFileId, debounce, imageGalleryMenu, addImageGalleryMenuEventListener, imageGalleryMenuOptions, highlightSearch */
 let selectedGalleryImage = null;
 const allImageNodes = [];
-let currentTab = 'dalle'; // dalle or chart or public
+let selectedImageGalleryImageIds = [];
+let imageGalleryCurrentTab = 'dalle'; // dalle or chart or public
 // eslint-disable-next-line no-unused-vars
 function openImageGallery() {
   selectedGalleryImage = null;
-  const gallery = `<div id="image-gallery" data-state="open" style="z-index:20;" class="dark fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur-xl radix-state-open:animate-show" style="pointer-events: auto;"><div role="dialog" id="radix-:rl:" aria-describedby="radix-:rn:" aria-labelledby="radix-:rm:" data-state="open" class="relative flex h-screen w-screen justify-stretch divide-x divide-white/10 focus:outline-none radix-state-open:animate-contentShow" tabindex="-1" style="pointer-events: auto;"><div id="image-gallery-image-wrapper" class="flex flex-1 transition-[flex-basis]"><div class="flex flex-1 flex-col md:p-6"><div class="flex items-center justify-between text-token-text-primary"><div class="flex"><button id="gallery-close-button" class="transition text-token-text-secondary hover:text-token-text-primary" aria-label="Close Modal" type="button"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-md" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div><div class="flex"><button id="toggle-gallery-sidebar" class="btn relative btn-small md:inline-flex" aria-label="Toggle Sidebar"><div class="flex w-full gap-2 items-center justify-center"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-md" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></div></button></div></div><div class="flex items-center justify-between px-6 py-2 pt-6 text-token-text-primary sm:mb-4 md:mt-2 md:px-0 md:py-2"><div class="flex"><input type="search" id="gallery-search" tabindex="0" placeholder="Search gallery" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-token-main-surface-secondary"></div><div id="gallery-tabs-wrapper" role="radiogroup" aria-required="false" dir="ltr" class="flex w-full overflow-hidden rounded-xl bg-token-main-surface-secondary p-1.5 dark:bg-token-main-surface-tertiary md:w-1/3 flex-shrink-0 self-center" tabindex="0" style="outline: none;"><button id="gallery-tab-dalle" type="button" role="radio" data-state="${currentTab === 'dalle' ? 'checked' : 'unchecked'}" value="dalle" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="0" data-radix-collection-item="">Dall·E</button><button id="gallery-tab-chart" type="button" role="radio" data-state="${currentTab === 'chart' ? 'checked' : 'unchecked'}" value="chart" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="-1" data-radix-collection-item="">Charts</button><button id="gallery-tab-public" type="button" role="radio" data-state="${currentTab === 'public' ? 'checked' : 'unchecked'}" value="public" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="-1" data-radix-collection-item="">Public</button></div><div class="flex"><button id="gallery-download-all-button" class="btn btn-dark mr-4 flex items-center justify-center" style="width:110px;height:40px;">Download All</button></div></div><div id="gallery-image-list" style="display: flex;flex-flow: wrap;justify-content: start;align-items: stretch;overflow-y:scroll;"></div></div></div><div id="image-gallery-sidebar" class="flex overflow-y-scroll hidden items-start justify-start overflow-hidden bg-gray-900 text-token-text-primary transition-[flex-basis] duration-500 md:flex md:basis-[25vw]"><div class="w-[25vw]"><div class="flex flex-col w-full justify-start items-start gap-2 p-4" draggable="false" data-projection-id="38"><img id="gallery-selected-image" style="aspect-ratio:1;background-color: #333;" src="${chrome.runtime.getURL('images/loading.gif')}" class="row-span-4 mx-auto h-full rounded-md object-scale-down" data-projection-id="39"><div id="gallery-selected-image-timestamp" class="w-full text-xs text-gray-500">${formatDate(new Date(selectedGalleryImage?.created_at)) || '...'}</div></div><div class="flex flex-col items-start gap-3 p-4"><div class="text-sm text-gray-300 sm:text-base" id="gallery-selected-image-prompt-title">${currentTab === 'chart' ? 'Code' : 'Prompt'}</div><div id="gallery-selected-image-prompt" class="w-full text-sm sm:text-lg !whitespace-pre-wrap">${currentTab === 'chart' ? codeWrapper(selectedGalleryImage?.prompt) || '...' : selectedGalleryImage?.prompt || '...'}</div><button id="gallery-selected-image-prompt-copy-button" class="btn relative btn-dark hidden sm:block"><div class="flex w-full gap-2 items-center justify-center"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy</div></button><div><div class="flex my-1 ${selectedGalleryImage?.gen_id && currentTab !== 'public' ? 'visible' : 'invisible'}">Gen ID:&nbsp;<div class="font-bold flex cursor-pointer" id="gallery-selected-image-gen-id-copy-button"><span id="gallery-selected-image-gen-id">${selectedGalleryImage?.gen_id}</span><button class="flex ml-1 gap-2 items-center rounded-md p-1 text-xs text-token-text-secondary hover:text-token-text-primary"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></button></div></div><div class="flex my-1 ${selectedGalleryImage?.seed && currentTab !== 'public' ? 'visible' : 'invisible'}">Seed:&nbsp;<div class="font-bold flex cursor-pointer" id="gallery-selected-image-seed-copy-button"><span id="gallery-selected-image-seed">${selectedGalleryImage?.seed}</span><button class="flex ml-1 gap-2 items-center rounded-md p-1 text-xs text-token-text-secondary hover:text-token-text-primary"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></button></div></div></div>
+  const gallery = `<div id="image-gallery" data-state="open" style="z-index:20;" class="dark fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur-xl radix-state-open:animate-show" style="pointer-events: auto;"><div role="dialog" id="radix-:rl:" aria-describedby="radix-:rn:" aria-labelledby="radix-:rm:" data-state="open" class="relative flex h-screen w-screen justify-stretch divide-x divide-white/10 focus:outline-none radix-state-open:animate-contentShow" tabindex="-1" style="pointer-events: auto;">
   
-  <a id="go-to-conversation" class="${currentTab !== 'public' ? 'visible' : 'invisible'} target="_blank" href="${selectedGalleryImage?.conversation_id ? `https://chat.openai.com/c/${selectedGalleryImage?.conversation_id}` : 'https://chat.openai.com'}" cursor-pointer no-underline hover:underline" style="color:#3c80f5;">Open conversation in new tab ➜</a>
+  <div id="image-gallery-image-wrapper" class="flex flex-1 transition-[flex-basis]"><div class="flex flex-1 flex-col md:p-6">
+
+  <div class="flex items-center justify-between text-token-text-primary"><div class="flex"><button id="gallery-close-button" class="transition text-token-text-secondary hover:text-token-text-primary" aria-label="Close Modal" type="button"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-md" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div><div class="flex"><button id="toggle-gallery-sidebar" class="btn relative btn-small md:inline-flex" aria-label="Toggle Sidebar"><div class="flex w-full gap-2 items-center justify-center"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-md" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></div></button></div></div>
   
-  <a id="more-by" class="${currentTab === 'public' ? 'visible' : 'invisible'} cursor-pointer no-underline hover:underline" target="_blank" href="${selectedGalleryImage?.created_by?.url || 'https://chat.openai.com'}" style="color:#3c80f5;">More by ${selectedGalleryImage?.created_by?.name || selectedGalleryImage?.created_by?.nickname}</a>
+  <div id="gallery-header" class="flex items-center justify-between px-6 py-2 pt-6 text-token-text-primary sm:mb-4 md:mt-2 md:px-0 md:py-2">
   
-  </div></div></div></div></div>`;
+  <div class="flex"><input type="search" id="gallery-search" tabindex="0" placeholder="Search gallery" class="w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm bg-token-main-surface-secondary"></div>
+  
+  <div id="gallery-tabs-wrapper" role="radiogroup" aria-required="false" dir="ltr" class="flex w-full overflow-hidden rounded-xl bg-token-main-surface-secondary p-1.5 dark:bg-token-main-surface-tertiary md:w-1/3 flex-shrink-0 self-center" tabindex="0" style="outline: none;"><button id="gallery-tab-dalle" type="button" role="radio" data-state="${imageGalleryCurrentTab === 'dalle' ? 'checked' : 'unchecked'}" value="dalle" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="0" data-radix-collection-item="">Dall·E</button><button id="gallery-tab-chart" type="button" role="radio" data-state="${imageGalleryCurrentTab === 'chart' ? 'checked' : 'unchecked'}" value="chart" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="-1" data-radix-collection-item="">Charts</button><button id="gallery-tab-public" type="button" role="radio" data-state="${imageGalleryCurrentTab === 'public' ? 'checked' : 'unchecked'}" value="public" class="text-md w-1/3 flex-grow rounded-lg border-token-border-light p-1.5 font-medium text-token-text-tertiary transition hover:text-token-text-primary radix-state-checked:border radix-state-checked:bg-token-main-surface-primary radix-state-checked:text-token-text-primary radix-state-checked:shadow-[0_0_2px_rgba(0,0,0,.03)] radix-state-checked:dark:bg-token-main-surface-secondary md:w-1/3" tabindex="-1" data-radix-collection-item="">Public</button></div>
+  
+  <div class="flex relative">${imageGalleryMenu()}</div>
+  
+  </div>
+  
+  <div id="gallery-image-list" style="display: flex;flex-flow: wrap;justify-content: start;align-items: stretch;overflow-y:scroll;"></div>
+  
+  </div></div>
+  
+  <div id="image-gallery-sidebar" class="flex overflow-y-scroll hidden items-start justify-start overflow-hidden bg-gray-900 text-token-text-primary transition-[flex-basis] duration-500 md:flex md:basis-[25vw]"><div class="w-[25vw]"><div class="flex flex-col w-full justify-start items-start gap-2 p-4" draggable="false" data-projection-id="38">
+  
+  <img id="gallery-selected-image" style="aspect-ratio:1;background-color: #333;" src="${chrome.runtime.getURL('images/loading.gif')}" class="row-span-4 mx-auto h-full rounded-md object-scale-down" data-projection-id="39">
+  
+  <div id="gallery-selected-image-timestamp" class="w-full text-xs text-gray-500">${formatDate(new Date(selectedGalleryImage?.created_at)) || '...'}</div></div>
+  
+  <div class="flex flex-col items-start gap-3 p-4"><div class="text-sm text-gray-300 sm:text-base" id="gallery-selected-image-prompt-title">${imageGalleryCurrentTab === 'chart' ? 'Code' : 'Prompt'}</div>
+  
+  <div id="gallery-selected-image-prompt" class="w-full text-sm sm:text-lg !whitespace-pre-wrap">${imageGalleryCurrentTab === 'chart' ? codeWrapper(selectedGalleryImage?.prompt) || '...' : selectedGalleryImage?.prompt || '...'}</div>
+  <button id="gallery-selected-image-prompt-copy-button" class="btn relative btn-dark hidden sm:block"><div class="flex w-full gap-2 items-center justify-center"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-5 w-5" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>Copy</div></button>
+  
+  <div>
+  <div class="flex my-1 ${selectedGalleryImage?.gen_id && imageGalleryCurrentTab !== 'public' ? 'visible' : 'invisible'}">Gen ID:&nbsp;<div class="font-bold flex cursor-pointer" id="gallery-selected-image-gen-id-copy-button"><span id="gallery-selected-image-gen-id">${selectedGalleryImage?.gen_id}</span><button class="flex ml-1 gap-2 items-center rounded-md p-1 text-xs text-token-text-secondary hover:text-token-text-primary"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></button></div></div>
+  
+  <div class="flex my-1 ${selectedGalleryImage?.seed && imageGalleryCurrentTab !== 'public' ? 'visible' : 'invisible'}">Seed:&nbsp;<div class="font-bold flex cursor-pointer" id="gallery-selected-image-seed-copy-button"><span id="gallery-selected-image-seed">${selectedGalleryImage?.seed}</span><button class="flex ml-1 gap-2 items-center rounded-md p-1 text-xs text-token-text-secondary hover:text-token-text-primary"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></button></div></div>
+  
+  </div>
+  
+  <a id="go-to-conversation" class="${imageGalleryCurrentTab !== 'public' ? 'visible' : 'invisible'} target="_blank" href="${selectedGalleryImage?.conversation_id ? `https://chat.openai.com/c/${selectedGalleryImage?.conversation_id}` : 'https://chat.openai.com'}" cursor-pointer no-underline hover:underline" style="color:#3c80f5;">Open conversation in new tab ➜</a>
+  
+  <div id="more-by" class="${imageGalleryCurrentTab === 'public' ? 'invisible' : 'invisible'} cursor-pointer no-underline hover:underline" style="color:#3c80f5;">More images by this user</div>
+  
+  </div></div></div>
+  
+  </div></div>`;
   // remove existing gallery
   const existingGallery = document.getElementById('image-gallery');
   existingGallery?.remove();
@@ -107,13 +146,25 @@ function syncImages(hasSubscription) {
     });
   });
 }
-function loadImageList(pageNumber = 1) {
+function loadImageList(pageNumber = 1, byUserId = '', showAll = false) {
+  if (pageNumber === 1) {
+    selectedImageGalleryImageIds = [];
+    selectedGalleryImage = null;
+  }
+
+  if (!byUserId) {
+    const existingFilters = document.querySelectorAll('#gallery-filter');
+    existingFilters.forEach((filter) => filter.remove());
+  }
   chrome.runtime.sendMessage({
     getGalleryImages: true,
     detail: {
+      showAll,
       pageNumber,
-      category: currentTab,
+      byUserId,
+      category: imageGalleryCurrentTab === 'public' ? 'dalle' : imageGalleryCurrentTab,
       searchTerm: document.getElementById('gallery-search').value.toLowerCase(),
+      isPublic: imageGalleryCurrentTab === 'public',
     },
   }, (galleryImages) => {
     // console.warn('galleryImages', galleryImages);
@@ -126,11 +177,23 @@ function loadImageList(pageNumber = 1) {
     const galleryImageList = document.getElementById('gallery-image-list');
     if (!galleryImageList) return;
 
-    if (allImageNodes.length === 0) {
-      galleryImageList.innerHTML = '<div class="flex flex-col w-full justify-start items-start"><div class="relative flex flex-col w-full h-full justify-center items-center gap-2 p-4 text-token-text-primary text-2xl font-bold cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-900 hover:shadow-xl rounded-xl">No images found!</div></div>';
-      return;
+    if (imageGalleryCurrentTab === 'public') {
+      const existingPublicImagesTip = document.getElementById('public-images-tip');
+      if (!existingPublicImagesTip) {
+        galleryImageList.insertAdjacentHTML('beforebegin', '<div id="public-images-tip" class="flex flex-col w-full justify-start items-start"><div class="relative flex flex-col w-full h-full justify-center items-center gap-2 p-4 text-token-text-primary text-md font-bold cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-900 hover:shadow-xl rounded-xl text-center">To see public images, first you need to share some of your images. The more images you share, the more public images you will see.<br/>To share, go to the Dall-E tab, select the images you would like to share, then select Make Public from the menu.</div></div>');
+      }
+    } else {
+      const existingPublicImagesTip = document.getElementById('public-images-tip');
+      existingPublicImagesTip?.remove();
+      if (allImageNodes.length === 0) {
+        galleryImageList.innerHTML = '<div class="flex flex-col w-full justify-start items-start"><div class="relative flex flex-col w-full h-full justify-center items-center gap-2 p-4 text-token-text-primary text-2xl font-bold cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-900 hover:shadow-xl rounded-xl text-center">No images found!</div></div>';
+        return;
+      }
     }
-    const imageListHtml = `${galleryImages?.results?.map((imageNode) => `<div class="group/dalle-image relative flex flex-col w-full justify-start items-start gap-2 p-2 cursor-pointer" style="font-size:12px;min-width:20%;max-width: 20%;" draggable="false" data-projection-id="38"><img id="gallery-image-card-${imageNode.image_id}" src="${imageNode.image}" alt="${imageNode.prompt?.replace(/[^a-zA-Z0-9 ]/gi, '') || 'Generated by DALL·E'}" style="aspect-ratio:1;background-color:#333;" class="w-full row-span-4 mx-auto h-full rounded-md object-scale-down ${selectedGalleryImage.image_id === imageNode.image_id ? 'ring-2 ring-white ring-offset-4 ring-offset-black' : ''}" data-projection-id="39"><div class="invisible absolute left-3 top-3 group-hover/dalle-image:visible"><button id="image-download-button-${imageNode.image_id}" class="flex h-6 w-6 items-center justify-center rounded bg-black/50"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm text-token-text-primary"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.70711 10.2929C7.31658 9.90237 6.68342 9.90237 6.29289 10.2929C5.90237 10.6834 5.90237 11.3166 6.29289 11.7071L11.2929 16.7071C11.6834 17.0976 12.3166 17.0976 12.7071 16.7071L17.7071 11.7071C18.0976 11.3166 18.0976 10.6834 17.7071 10.2929C17.3166 9.90237 16.6834 9.90237 16.2929 10.2929L13 13.5858L13 4C13 3.44771 12.5523 3 12 3C11.4477 3 11 3.44771 11 4L11 13.5858L7.70711 10.2929ZM5 19C4.44772 19 4 19.4477 4 20C4 20.5523 4.44772 21 5 21H19C19.5523 21 20 20.5523 20 20C20 19.4477 19.5523 19 19 19L5 19Z" fill="currentColor"></path></svg></button></div></div>`).join('')}${galleryImages?.next ? '<div class="flex flex-col w-full justify-start items-start gap-2 p-2" style="min-width:20%;max-width:20%;aspect-ration:1;"><div id="load-more-images-button" class="relative flex flex-col w-full h-full justify-center items-center gap-2 p-4 text-token-text-primary text-2xl font-bold cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-900 hover:shadow-xl rounded-xl">Load more...</div></div>' : ''}`;
+    const imageListHtml = `${galleryImages?.results?.map((imageNode) => `<div class="group/dalle-image relative flex flex-col w-full justify-start items-start gap-2 p-2 cursor-pointer" style="font-size:12px;min-width:20%;max-width: 20%;" draggable="false" data-projection-id="38"><img id="gallery-image-card-${imageNode.image_id}" src="${imageNode.image}" alt="${imageNode.prompt?.replace(/[^a-zA-Z0-9 ]/gi, '') || 'Generated by DALL·E'}" style="aspect-ratio:1;background-color:#333;" class="w-full row-span-4 mx-auto h-full rounded-md object-scale-down ${selectedGalleryImage?.image_id === imageNode?.image_id ? 'ring-2 ring-white ring-offset-4 ring-offset-black' : ''}" data-projection-id="39"><div class="invisible absolute left-3 top-3 group-hover/dalle-image:visible"><button id="image-download-button-${imageNode.image_id}" class="flex h-6 w-6 items-center justify-center rounded bg-black/50"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-sm text-token-text-primary"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.70711 10.2929C7.31658 9.90237 6.68342 9.90237 6.29289 10.2929C5.90237 10.6834 5.90237 11.3166 6.29289 11.7071L11.2929 16.7071C11.6834 17.0976 12.3166 17.0976 12.7071 16.7071L17.7071 11.7071C18.0976 11.3166 18.0976 10.6834 17.7071 10.2929C17.3166 9.90237 16.6834 9.90237 16.2929 10.2929L13 13.5858L13 4C13 3.44771 12.5523 3 12 3C11.4477 3 11 3.44771 11 4L11 13.5858L7.70711 10.2929ZM5 19C4.44772 19 4 19.4477 4 20C4 20.5523 4.44772 21 5 21H19C19.5523 21 20 20.5523 20 20C20 19.4477 19.5523 19 19 19L5 19Z" fill="currentColor"></path></svg></button></div>  
+    <input type="checkbox" id="image-gallery-checkbox-${imageNode.image_id}" class="invisible absolute right-3 top-3 ${imageGalleryCurrentTab !== 'public' ? 'group-hover/dalle-image:visible' : ''}" style="z-index: 11; cursor: pointer; border-radius: 2px;">
+    
+    </div>`).join('')}${galleryImages?.next ? '<div class="flex flex-col w-full justify-start items-start gap-2 p-2" style="min-width:20%;max-width:20%;aspect-ration:1;"><div id="load-more-images-button" class="relative flex flex-col w-full h-full justify-center items-center gap-2 p-4 text-token-text-primary text-2xl font-bold cursor-pointer bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-900 hover:shadow-xl rounded-xl">Load more...</div></div>' : ''}`;
     if (pageNumber === 1) {
       galleryImageList.innerHTML = imageListHtml;
     } else {
@@ -146,34 +209,6 @@ function loadImageList(pageNumber = 1) {
       const firstImage = document.getElementById(`gallery-image-card-${allImageNodes[0]?.image_id}`);
       firstImage?.click();
     }
-  });
-}
-async function downloadAllImages() {
-  await chrome.runtime.sendMessage({
-    getAllGalleryImages: true,
-    detail: {
-    },
-  }, async (allGalleryImages) => {
-    const zip = new JSZip();
-    const folder = zip.folder('Superpower-ChatGPT-Gallery');
-    for (let i = 0; i < allGalleryImages.length; i += 1) {
-      const imageNode = allGalleryImages[i];
-      const url = decodeURIComponent(imageNode.image);
-      const format = url.split('.').pop() || 'png';
-      // const filename = currentTab === 'dalle' ? `DALL·E ${formatDateDalle()} - ${imageNode?.prompt.replaceAll('.', '_')}.${format}` : `Data Analytic Image ${formatDateDalle()}.${format}`;
-      const filename = `${imageNode.image_id}.${format}`;
-      // save the image to zip
-      // eslint-disable-next-line no-await-in-loop
-      const blob = await fetch(url).then((response) => response.blob());
-      folder.file(filename, blob, { binary: true });
-    }
-
-    zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }).then((content) => {
-      const downloadAllButton = document.getElementById('gallery-download-all-button');
-      downloadAllButton.innerHTML = 'Download All';
-      downloadAllButton.disabled = false;
-      saveAs(content, `${new Date().toISOString().slice(0, 10)}-superpower-chatgpt-gallery.zip`);
-    });
   });
 }
 
@@ -225,43 +260,41 @@ function addImageGalleryEventListeners() {
   const dalleTab = document.getElementById('gallery-tab-dalle');
   const chartsTab = document.getElementById('gallery-tab-chart');
   const publicTab = document.getElementById('gallery-tab-public');
+
   dalleTab?.addEventListener('click', () => {
-    if (currentTab === 'dalle') return;
+    if (imageGalleryCurrentTab === 'dalle') return;
     dalleTab.dataset.state = 'checked';
     chartsTab.dataset.state = 'unchecked';
     publicTab.dataset.state = 'unchecked';
+    imageGalleryCurrentTab = 'dalle';
     document.getElementById('gallery-search').value = '';
-    currentTab = 'dalle';
     resetSidebar();
     loadImageList();
   });
   chartsTab?.addEventListener('click', () => {
-    if (currentTab === 'chart') return;
+    if (imageGalleryCurrentTab === 'chart') return;
     dalleTab.dataset.state = 'unchecked';
     chartsTab.dataset.state = 'checked';
     publicTab.dataset.state = 'unchecked';
+    imageGalleryCurrentTab = 'chart';
     document.getElementById('gallery-search').value = '';
-    currentTab = 'chart';
     resetSidebar();
     loadImageList();
   });
-  publicTab?.addEventListener('click', () => {
-    if (currentTab === 'public') return;
+  publicTab?.addEventListener('click', (e) => {
+    // check if shift clicked
+    let showAll = false;
+    if (e.shiftKey) {
+      showAll = true;
+    }
+    if (imageGalleryCurrentTab === 'public') return;
     dalleTab.dataset.state = 'unchecked';
     chartsTab.dataset.state = 'unchecked';
     publicTab.dataset.state = 'checked';
+    imageGalleryCurrentTab = 'public';
     document.getElementById('gallery-search').value = '';
-    currentTab = 'public';
     resetSidebar();
-    loadImageList();
-  });
-
-  // download all
-  const downloadAllButton = document.querySelector('[id="gallery-download-all-button"]');
-  downloadAllButton?.addEventListener('click', async () => {
-    downloadAllButton.innerHTML = '<svg x="0" y="0" viewbox="0 0 40 40" class="spinner" style="height:24px;"><circle fill="transparent" stroke="#ffffff50" stroke-width="4" stroke-linecap="round" stroke-dasharray="125.6" cx="20" cy="20" r="18"></circle></svg>';
-    downloadAllButton.disabled = true;
-    await downloadAllImages();
+    loadImageList(1, '', showAll);
   });
 
   // copy prompt
@@ -288,17 +321,39 @@ function addImageGalleryEventListeners() {
     navigator.clipboard.writeText(copySeedButton.innerText);
     toast('Copied Seed to clipboard');
   });
+  // more by
+  const moreBy = document.getElementById('more-by');
+  moreBy.addEventListener('click', () => {
+    if (!selectedGalleryImage?.created_by?.id) return;
+    addUserFilter(selectedGalleryImage?.created_by);
+    loadImageList(1, selectedGalleryImage?.created_by?.id);
+  });
+  // menu button
+  const menu = document.querySelector('#image-gallery-menu');
+  const menuButton = document.querySelector('#image-gallery-menu-button');
+  menuButton?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    const optionListDropdown = document.querySelector('#image-gallery-menu-options');
+    if (optionListDropdown) {
+      optionListDropdown.remove();
+    } else {
+      const newOptionListDropdown = imageGalleryMenuOptions();
+      menu.insertAdjacentHTML('beforeend', newOptionListDropdown);
+      addImageGalleryMenuEventListener();
+    }
+  });
 }
 function addGalleryImageCardEventListeners(imageNodes) {
   // download center image
   // get last 24 image-download-button-*
   const imageDownloadButtons = [...document.querySelectorAll('[id^="image-download-button-"]')].slice(-24);
 
-  const newImageNodeIds = imageNodes.map((imageNode) => imageNode.image_id);
+  const newImageNodeIds = imageNodes?.map((imageNode) => imageNode.image_id);
   imageDownloadButtons.forEach((imageDownloadButton) => {
     const imageId = imageDownloadButton.id.split('image-download-button-')[1];
     if (!imageId) return;
-    if (!newImageNodeIds.includes(imageId)) return;
+    if (!newImageNodeIds?.includes(imageId)) return;
     imageDownloadButton?.addEventListener('click', () => {
       const imageElement = document.getElementById(`gallery-image-card-${imageId}`);
       const url = decodeURIComponent(imageElement.src);
@@ -311,6 +366,33 @@ function addGalleryImageCardEventListeners(imageNodes) {
     });
   });
 
+  // image-gallery-checkbox
+  const imageGalleryCheckboxes = document.querySelectorAll('[id^="image-gallery-checkbox"]');
+  imageGalleryCheckboxes.forEach((checkbox) => {
+    checkbox.addEventListener('change', () => {
+      const imageId = checkbox.id.split('image-gallery-checkbox-')[1];
+      if (!newImageNodeIds.includes(imageId)) return;
+
+      if (checkbox.checked && !selectedImageGalleryImageIds.includes(imageId)) {
+        selectedImageGalleryImageIds.push(imageId);
+        // remove invisible class from all checkboxes
+        const curImageGalleryCheckboxes = document.querySelectorAll('[id^="image-gallery-checkbox"]');
+
+        curImageGalleryCheckboxes.forEach((cb) => {
+          cb.classList.remove('invisible');
+        });
+      } else {
+        selectedImageGalleryImageIds = selectedImageGalleryImageIds.filter((id) => id !== imageId);
+        // if no selected checkbox, add invisible class to all checkboxes
+        if (selectedImageGalleryImageIds.length === 0) {
+          const curImageGalleryCheckboxes = document.querySelectorAll('[id^="image-gallery-checkbox"]');
+          curImageGalleryCheckboxes.forEach((cb) => {
+            cb.classList.add('invisible');
+          });
+        }
+      }
+    });
+  });
   // thumbnail image click
   const galleryImages = document.querySelectorAll('[id^="gallery-image-card-"]');
   galleryImages.forEach((image) => {
@@ -337,19 +419,21 @@ function addGalleryImageCardEventListeners(imageNodes) {
       const selectedImagePromptTitle = document.getElementById('gallery-selected-image-prompt-title');
       selectedImagePromptTitle.textContent = selectedGalleryImage.category === 'chart' ? 'Code' : 'Prompt';
       const prompt = document.getElementById('gallery-selected-image-prompt');
-      prompt.innerHTML = currentTab === 'chart' ? codeWrapper(selectedGalleryImage.prompt) : selectedGalleryImage.prompt;
+      prompt.innerHTML = imageGalleryCurrentTab === 'chart' ? codeWrapper(selectedGalleryImage.prompt) : selectedGalleryImage.prompt;
+      const searchValue = document.getElementById('gallery-search').value;
+      if (searchValue) {
+        highlightSearch([prompt], searchValue);
+      }
       const genId = document.getElementById('gallery-selected-image-gen-id');
       const seed = document.getElementById('gallery-selected-image-seed');
       const goToConversationButton = document.getElementById('go-to-conversation');
       goToConversationButton.href = selectedGalleryImage?.conversation_id ? `https://chat.openai.com/c/${selectedGalleryImage?.conversation_id}` : 'https://chat.openai.com';
       const moreBy = document.getElementById('more-by');
-      moreBy.href = selectedGalleryImage?.created_by?.url || 'https://chat.openai.com';
-      moreBy.textContent = `More by ${selectedGalleryImage?.created_by?.name || selectedGalleryImage?.created_by?.nickname}`;
-      if (currentTab === 'public') {
+      if (imageGalleryCurrentTab === 'public') {
         genId.parentElement.parentElement.classList.add('invisible');
         seed.parentElement.parentElement.classList.add('invisible');
         goToConversationButton.classList.add('invisible');
-        moreBy.classList.remove('invisible');
+        // moreBy.classList.remove('invisible');
       } else {
         genId.textContent = selectedGalleryImage.gen_id;
         genId.parentElement.parentElement.classList = `flex my-1 ${selectedGalleryImage.gen_id ? 'visible' : 'invisible'}`;
@@ -361,6 +445,22 @@ function addGalleryImageCardEventListeners(imageNodes) {
     });
   });
 }
+function addUserFilter(user) {
+  const existingFilters = document.querySelectorAll('#gallery-filter');
+  existingFilters.forEach((filter) => filter.remove());
+  const galleryHeader = document.getElementById('gallery-header');
+  const galleryFilter = document.createElement('div');
+  galleryFilter.id = 'gallery-filter';
+  galleryFilter.classList = 'flex items-center justify-between py-2 text-token-text-primary';
+  galleryFilter.innerHTML = `<div class="flex items-center gap-2 py-1 px-3 border border-token-border-heavy rounded-full"><div class="text-xs">Images by user id: ${user?.id}</div><button id="remove-filter-button" class="transition text-token-text-secondary hover:text-token-text-primary" aria-label="remove filter" type="button"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-md" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button></div><div class="flex"><button id="toggle-gallery-sidebar" class="btn relative btn-small md:inline-flex" aria-label="Toggle Sidebar"><div class="flex w-full gap-2 items-center justify-center"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-md" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg></div></button></div>`;
+  // add filter after header
+  galleryHeader.insertAdjacentElement('afterend', galleryFilter);
+  // add filter event listener
+  const removeFilterButton = document.getElementById('remove-filter-button');
+  removeFilterButton?.addEventListener('click', () => {
+    loadImageList();
+  });
+}
 function resetSidebar() {
   const selectedImage = document.getElementById('gallery-selected-image');
   selectedImage.src = chrome.runtime.getURL('images/loading.gif');
@@ -368,19 +468,22 @@ function resetSidebar() {
   const selectedImageTime = document.getElementById('gallery-selected-image-timestamp');
   selectedImageTime.textContent = '...';
   const selectedImagePromptTitle = document.getElementById('gallery-selected-image-prompt-title');
-  selectedImagePromptTitle.textContent = currentTab === 'chart' ? 'Code' : 'Prompt';
+  selectedImagePromptTitle.textContent = imageGalleryCurrentTab === 'chart' ? 'Code' : 'Prompt';
   const prompt = document.getElementById('gallery-selected-image-prompt');
   prompt.innerHTML = '...';
   const genId = document.getElementById('gallery-selected-image-gen-id');
   const seed = document.getElementById('gallery-selected-image-seed');
   const goToConversationButton = document.getElementById('go-to-conversation');
   const moreBy = document.getElementById('more-by');
-  if (currentTab === 'public') {
+  const menuButton = document.querySelector('#image-gallery-menu-button');
+  if (imageGalleryCurrentTab === 'public') {
+    menuButton?.classList?.add('invisible');
     genId.parentElement.parentElement.classList.add('invisible');
     seed.parentElement.parentElement.classList.add('invisible');
     goToConversationButton.classList.add('invisible');
-    moreBy.classList.remove('invisible');
+    // moreBy.classList.remove('invisible');
   } else {
+    menuButton?.classList?.remove('invisible');
     genId.parentElement.parentElement.classList.remove('invisible');
     genId.textContent = '';
     seed.parentElement.parentElement.classList.remove('invisible');
@@ -390,16 +493,9 @@ function resetSidebar() {
   }
 }
 function codeWrapper(code) {
+  if (!code) return '';
   const { language } = hljs.highlightAuto(code);
   return `<div class="overflow-y-auto" style="background: #333; padding: 8px; border-radius: 8px;"><code hljs language-${language} id="message-plugin-request-html-36053455-5209-4236-901d-a179d861f092" class="!whitespace-pre-wrap" style="font-size:12px;">${code}</code></div>`;
-}
-function goToConversation(conversationId) {
-  // open a new tab with the conversation
-  window.open(`https://chat.openai.com/c/${conversationId}`, '_blank');
-  // open in the same tab
-  // const conversationButton = document.querySelector(`[id="conversation-button-${conversationId}"]`);
-  // if (!conversationButton) return;
-  // conversationButton.click();
 }
 function openSubscriptionModal() {
   const gallery = `<div id="image-gallery" data-state="open" style="z-index:20;" class="dark fixed inset-0 flex items-center justify-center bg-black/90 backdrop-blur-xl radix-state-open:animate-show" style="pointer-events: auto;"><div class="w-full absolute inset-0 flex items-center flex-wrap justify-center text-token-text-primary m-auto p-4 bg-black rounded-md" style="max-width:400px; max-height:240px;"><div>Image gallery requires a Superpower ChatGPT Pro subscription. Upgrade to Pro to see the full list of all of your images. You can search, see the prompts, and download all images! <a href="https://www.youtube.com/watch?v=oU6_wgJLYEM&ab_channel=Superpower" target="_blank" class="underline text-gold" rel="noreferrer">Learn more</a> about Image Gallery!</div><button id="cancel-button" class="btn p-3 relative btn-neutral" as="button"><div class="flex w-full gap-2 items-center justify-center">Cancel</div></button><button id="upgrade-to-pro-button-gallery" class="flex flex-wrap px-3 py-1 items-center rounded-md bg-gold hover:bg-gold-dark transition-colors duration-200 text-black cursor-pointer text-sm m-4 font-bold" style="width: 230px;"><div class="flex w-full"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" style="width:20px; height:20px; margin-right:6px;position:relative; top:10px;" stroke="purple" fill="purple"><path d="M240.5 224H352C365.3 224 377.3 232.3 381.1 244.7C386.6 257.2 383.1 271.3 373.1 280.1L117.1 504.1C105.8 513.9 89.27 514.7 77.19 505.9C65.1 497.1 60.7 481.1 66.59 467.4L143.5 288H31.1C18.67 288 6.733 279.7 2.044 267.3C-2.645 254.8 .8944 240.7 10.93 231.9L266.9 7.918C278.2-1.92 294.7-2.669 306.8 6.114C318.9 14.9 323.3 30.87 317.4 44.61L240.5 224z"></path></svg> Upgrade to Pro</div><div style="font-size:10px;font-weight:400;margin-left:28px;" class="flex w-full">GPT Store, Image Gallery, Voice & more</div></button></div><img src="${chrome.runtime.getURL('images/gallery.png')}"></div>`;

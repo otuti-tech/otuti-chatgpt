@@ -451,10 +451,13 @@ function addGalleryImages(images) {
     body: JSON.stringify({ gallery_images: images }),
   }).then((res) => res.json());
 }
-function getGalleryImages(pageNumber = 1, searchTerm = '', sortBy = '-created_at', category = 'dalle') {
+function getGalleryImages(showAll = false, pageNumber = 1, searchTerm = '', byUserId = '', sortBy = '-created_at', category = 'dalle', isPublic = false) {
   let url = `${API_URL}/gptx/get-gallery-images/?order_by=${sortBy}&category=${category}`;
+  if (showAll) url += '&show_all=true';
   if (pageNumber) url += `&page=${pageNumber}`;
-  if (searchTerm && searchTerm.trim().length > 0) url += `&search=${searchTerm.trim()}`;
+  if (byUserId) url += `&by_user_id=${byUserId}`;
+  if (isPublic) url += `&is_public=${isPublic}`;
+  if (searchTerm && searchTerm.trim().length > 0) url += `&search=${searchTerm}`;
   return fetch(url, {
     method: 'GET',
     headers: {
@@ -463,8 +466,8 @@ function getGalleryImages(pageNumber = 1, searchTerm = '', sortBy = '-created_at
     },
   }).then((response) => response.json());
 }
-function getAllGalleryImages() {
-  const url = `${API_URL}/gptx/get-all-gallery-images/`;
+function getAllGalleryImages(category = 'dalle', conversationId = null) {
+  const url = `${API_URL}/gptx/get-all-gallery-images/?${conversationId ? `conversation_id=${conversationId}` : `category=${category}`}`;
   return fetch(url, {
     method: 'GET',
     headers: {
@@ -472,6 +475,26 @@ function getAllGalleryImages() {
       'content-type': 'application/json',
     },
   }).then((response) => response.json());
+}
+function deleteGalleryImages(imageIds = [], category = 'dalle') {
+  return fetch(`${API_URL}/gptx/delete-gallery-images/`, {
+    method: 'POST',
+    headers: {
+      ...defaultGPTXHeaders,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ image_ids: imageIds, category }),
+  }).then((res) => res.json());
+}
+function shareGalleryImages(imageIds = [], category = 'dalle') {
+  return fetch(`${API_URL}/gptx/share-gallery-images/`, {
+    method: 'POST',
+    headers: {
+      ...defaultGPTXHeaders,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ image_ids: imageIds, category }),
+  }).then((res) => res.json());
 }
 function getPrompts(pageNumber, searchTerm, sortBy = 'recent', language = 'all', category = 'all') {
   // get user id from sync storage
@@ -701,11 +724,19 @@ chrome.runtime.onMessage.addListener(
           //     sendResponse(res);
           //   });
         } else if (request.getGalleryImages) {
-          getGalleryImages(data.pageNumber, data.searchTerm, data.sortBy, data.category).then((res) => {
+          getGalleryImages(data.showAll, data.pageNumber, data.searchTerm, data.byUserId, data.sortBy, data.category, data.isPublic).then((res) => {
             sendResponse(res);
           });
         } else if (request.getAllGalleryImages) {
-          getAllGalleryImages().then((res) => {
+          getAllGalleryImages(data.category, data.conversationId).then((res) => {
+            sendResponse(res);
+          });
+        } else if (request.deleteGalleryImages) {
+          deleteGalleryImages(data.imageIds, data.category).then((res) => {
+            sendResponse(res);
+          });
+        } else if (request.shareGalleryImages) {
+          shareGalleryImages(data.imageIds, data.category).then((res) => {
             sendResponse(res);
           });
         } else if (request.getPrompt) {

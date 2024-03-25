@@ -20,7 +20,7 @@ function replaceTextAreaElement(settings) {
   const presentation = document.querySelector('main > div[role=presentation]');
   const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
 
-  const placeHolderText = `$ for Custom Prompts — # for Prompt Chains${(isFirefox || isOpera) ? '' : ' — Hold down Alt to enable speaking'}`;
+  const placeHolderText = `/ for Custom Prompts — # for Prompt Chains${(isFirefox || isOpera) ? '' : ' — Hold down Alt to enable speaking'}`;
   if (!isGenerating && lastMessageWrapper?.dataset?.role === 'user') {
     // add regenerate button event listener
     let regenerateButton = document.querySelector('#conversation-regenerate-button');
@@ -33,39 +33,38 @@ function replaceTextAreaElement(settings) {
       }
       // append to presentation
       presentation.insertAdjacentHTML('beforeend', regenerateWrapperHTML);
-      regenerateButton = document.querySelector('#conversation-regenerate-button');
-      regenerateButton.addEventListener('click', () => {
-        // remove regenerate wrapper
-        presentation.lastChild.remove();
-        // add input form
-        replaceTextAreaElement(settings);
-        chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account', 'chatgptAccountId'], (result) => {
-          const submitButton = document.querySelector('[data-testid="send-button"]');
-          if (submitButton) {
-            submitButton.disabled = false;
-          }
-          const { pathname: curPathname } = new URL(window.location.toString());
-          const conversationId = curPathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
-          if (!conversationId) return;
-          const conversation = result.conversations[conversationId];
-          if (!conversation) return;
-          isGenerating = true;
-          const curLastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
-
-          // if thread is on the first message
-          const lastUserChatMessageId = curLastMessageWrapper.id.split('message-wrapper-').pop();
-
-          const lastUserMessage = conversation.mapping[lastUserChatMessageId];
-
-          const lastUserMessageParentId = lastUserMessage.parent;
-
-          const newMessage = (lastUserMessage.message?.content?.parts || [])?.filter((p) => typeof p === 'string').join('\n');
-          const imageAssets = (lastUserMessage.message?.content?.parts || [])?.filter((p) => p && typeof p !== 'string') || [];
-          const fileAttachments = lastUserMessage.message?.metadata?.attachments || [];
-          submitChat(newMessage, conversation, lastUserChatMessageId, lastUserMessageParentId, result.settings, result.account, result.chatgptAccountId, result.models, result.selectedModel, imageAssets, fileAttachments, false, true);
-        });
-      });
     }
+    regenerateButton = document.querySelector('#conversation-regenerate-button');
+    regenerateButton.addEventListener('click', () => {
+      chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account', 'chatgptAccountId'], (result) => {
+        const { pathname: curPathname } = new URL(window.location.toString());
+        const conversationId = curPathname.split('/c/').pop().replace(/[^a-z0-9-]/gi, '');
+        if (!conversationId) return;
+        const conversation = result.conversations[conversationId];
+        if (!conversation) return;
+        isGenerating = true;
+        presentation.lastChild.remove();
+        replaceTextAreaElement(settings);
+        const submitButton = document.querySelector('[data-testid="send-button"]');
+        if (submitButton) {
+          submitButton.disabled = false;
+        }
+        const curLastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
+
+        // if thread is on the first message
+        const lastUserChatMessageId = curLastMessageWrapper.id.split('message-wrapper-').pop();
+
+        const lastUserMessage = conversation.mapping[lastUserChatMessageId];
+
+        const lastUserMessageParentId = lastUserMessage.parent;
+
+        const newMessage = (lastUserMessage.message?.content?.parts || [])?.filter((p) => typeof p === 'string').join('\n');
+        const imageAssets = (lastUserMessage.message?.content?.parts || [])?.filter((p) => p && typeof p !== 'string') || [];
+        const fileAttachments = lastUserMessage.message?.metadata?.attachments || [];
+        submitChat(newMessage, conversation, lastUserChatMessageId, lastUserMessageParentId, result.settings, result.account, result.chatgptAccountId, result.models, result.selectedModel, imageAssets, fileAttachments, false, true);
+      });
+    });
+
     return false;
   }
   const originalTextAreaElement = document.querySelector('#prompt-textarea');
@@ -73,7 +72,7 @@ function replaceTextAreaElement(settings) {
   let inputForm = document.querySelector('#prompt-input-form');
 
   if (!inputForm) {
-    const newInputFormHTML = `<div class="w-full pt-2 md:pt-0 border-token-border-light md:border-transparent md:dark:border-transparent md:w-[calc(100%-.5rem)]"><form id="prompt-input-form" class="stretch mx-2 flex flex-row gap-3 last:mb-2 md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-2xl xl:max-w-3xl"><div class="relative flex h-full flex-1 flex-col"><div><div id="input-form-action-wrapper" class="h-full flex md:w-full md:mx-auto md:mb-4 mt-2 gap-0 md:gap-2 justify-center items-end" style="min-height: 38px;"></div></div><div class="overflow-hidden [&:has(textarea:focus)]:border-token-border-xheavy [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)] flex flex-col w-full dark:border-token-border-heavy flex-grow relative border border-token-border-heavy dark:text-white rounded-2xl bg-token-main-surface-primary shadow-[0_0_0_2px_rgba(255,255,255,0.95)] dark:shadow-[0_0_0_2px_rgba(52,53,65,0.95)]"><textarea id="prompt-textarea" tabindex="0" data-id="root" rows="1" placeholder="${placeHolderText}" class="m-0 w-full resize-none border-0 bg-transparent py-[10px] pr-10 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:py-3.5 md:pr-12 placeholder-black/50 dark:placeholder-white/50 pl-3 md:pl-4" style="max-height: 200px; height: 52px; overflow-y: hidden;"></textarea><button class="absolute bg-black md:bottom-3 md:right-3 dark:hover:bg-white right-2 disabled:opacity-10 disabled:text-gray-400 enabled:bg-black text-white p-0.5 border border-black rounded-lg dark:border-white dark:bg-white bottom-1.5 transition-colors flex items-center justify-center" style="min-width:30px;min-height:30px;" data-testid="send-button" disabled=""><span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button></div></div></form></div>`;
+    const newInputFormHTML = `<div class="w-full pt-2 md:pt-0 border-token-border-light md:border-transparent md:dark:border-transparent md:w-[calc(100%-.5rem)]"><form id="prompt-input-form" class="stretch mx-2 flex flex-row gap-3 last:mb-2 md:mx-4 md:last:mb-6 lg:mx-auto lg:max-w-2xl xl:max-w-3xl"><div class="relative flex h-full flex-1 flex-col"><div><div id="input-form-action-wrapper" class="h-full flex flex-wrap md:w-full md:mx-auto md:mb-4 mt-2 gap-0 md:gap-2 justify-center items-end" style="min-height: 38px;"></div></div><div class="overflow-hidden [&:has(textarea:focus)]:border-token-border-xheavy [&:has(textarea:focus)]:shadow-[0_2px_6px_rgba(0,0,0,.05)] flex flex-col w-full dark:border-token-border-heavy flex-grow relative border border-token-border-heavy dark:text-white rounded-2xl bg-token-main-surface-primary shadow-[0_0_0_2px_rgba(255,255,255,0.95)] dark:shadow-[0_0_0_2px_rgba(52,53,65,0.95)]"><textarea id="prompt-textarea" tabindex="0" data-id="root" rows="1" placeholder="${placeHolderText}" class="m-0 w-full resize-none border-0 bg-transparent py-[10px] pr-10 focus:ring-0 focus-visible:ring-0 dark:bg-transparent md:py-3.5 md:pr-12 placeholder-black/50 dark:placeholder-white/50 pl-3 md:pl-4" style="max-height: 200px; height: 52px; overflow-y: hidden;"></textarea><button class="absolute bg-black md:bottom-3 md:right-3 dark:hover:bg-white right-2 disabled:opacity-10 disabled:text-gray-400 enabled:bg-black text-white p-0.5 border border-black rounded-lg dark:border-white dark:bg-white bottom-1.5 transition-colors flex items-center justify-center" style="min-width:30px;min-height:30px;" data-testid="send-button" disabled=""><span class="" data-state="closed"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" class="text-white dark:text-black"><path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button></div></div></form></div>`;
     if (!presentation) return false;
     // if presentation has more than 1 child remove all childs except the first one
     if (presentation.childNodes.length > 1) {

@@ -1,7 +1,7 @@
 /* global languageList,toneList, writingStyleList, escapeHtml, getDownloadUrlFromFileId, getFileType */
 // eslint-disable-next-line no-unused-vars
 function rowUser(conversation, node, childIndex, childCount, name, avatar, settings) {
-  const { customConversationWidth, conversationWidth, autoHideThreadCount } = settings;
+  const { customConversationWidth, conversationWidth } = settings;
   const { pinned, message } = node;
   const { id, content, metadata } = message;
 
@@ -43,7 +43,6 @@ function rowUser(conversation, node, childIndex, childCount, name, avatar, setti
           style="color: transparent;">
       </div>
       
-      <div id="thread-buttons-wrapper-${id}" class="text-xs flex items-center justify-center gap-1 ${autoHideThreadCount || (childCount === 1) ? 'invisible' : ''} absolute left-0 top-2 -ml-4 -translate-x-full ${childCount > 1 ? 'group-hover:visible' : ''}"><button id="thread-prev-button-${id}" class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400" ${childIndex === 1 ? 'disabled' : ''}><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="15 18 9 12 15 6"></polyline></svg></button><span id="thread-count-wrapper-${id}" class="flex-grow flex-shrink-0">${childIndex} / ${childCount}</span><button id="thread-next-button-${id}" ${childIndex === childCount ? 'disabled' : ''} class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400"><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="9 18 15 12 9 6"></polyline></svg></button></div>
     </div>
     <div class="relative flex flex-col" style="width: calc(100% - 80px);">
     <div class="font-semibold select-none">You</div>
@@ -52,6 +51,8 @@ function rowUser(conversation, node, childIndex, childCount, name, avatar, setti
         <div id="message-text-${id}" dir="auto" class="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap" style="overflow-wrap:anywhere;">${assetElements(assets)}${highlightedMessageContent}</div>
         
         <div id="message-edit-wrapper-${id}" class="flex empty:hidden mt-1 justify-start gap-3 lg:flex"><div class="text-token-text-secondary flex self-end lg:self-center lg:justify-start mt-2 mt-0 visible gap-1">
+
+        <div id="thread-buttons-wrapper-${id}" class="text-xs flex items-center justify-center gap-1 self-center ${childCount === 1 ? 'hidden' : ''}"><button id="thread-prev-button-${id}" class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400" ${childIndex === 1 ? 'disabled' : ''}><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="15 18 9 12 15 6"></polyline></svg></button><span id="thread-count-wrapper-${id}" class="flex-grow flex-shrink-0">${childIndex} / ${childCount}</span><button id="thread-next-button-${id}" ${childIndex === childCount ? 'disabled' : ''} class="dark:text-white disabled:text-gray-300 dark:disabled:text-gray-400"><svg stroke="currentColor" fill="none" stroke-width="1.5" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-3 w-3" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="9 18 15 12 9 6"></polyline></svg></button></div>
         
         <button id="message-pin-button-${id}" title="pin/unpin message" class="pl-0 rounded-md text-token-text-tertiary hover:text-token-text-primary md:invisible md:group-hover:visible md:group-[.final-completion]:visible"><div class="flex items-center gap-1.5 text-xs"><svg stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" width="16" height="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" fill="none" class="icon-sm"><path fill="${pinned ? 'gold' : 'currentColor'}" d="M336 0h-288C21.49 0 0 21.49 0 48v431.9c0 24.7 26.79 40.08 48.12 27.64L192 423.6l143.9 83.93C357.2 519.1 384 504.6 384 479.9V48C384 21.49 362.5 0 336 0zM336 452L192 368l-144 84V54C48 50.63 50.63 48 53.1 48h276C333.4 48 336 50.63 336 54V452z"/></svg></div></button>
 

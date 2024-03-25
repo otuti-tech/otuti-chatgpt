@@ -606,14 +606,14 @@ function textAreaElementKeydownEventListenerAsync(event) {
   // space key
   if (event.keyCode === 32) {
     chrome.storage.local.get(['customPrompts'], (res) => {
-      // find any word that starts with $ and ends with space
+      // find any word that starts with / and ends with space
       // if the word is in customPrompts titles, replace it with the prompt.text
       const customPrompts = res.customPrompts || [];
       const textAreaValue = textAreaElement.value;
       const words = textAreaValue.split(/[\s\n]+/);
       const lastWord = words[words.length - 2];
-      // dollar or euro or pound sign
-      if (lastWord?.startsWith('$')) {
+      // slash or euro or pound sign
+      if (lastWord?.startsWith('/')) {
         const prompt = customPrompts.find((p) => p.title.toLowerCase() === lastWord.substring(1).toLowerCase());
         if (prompt) {
           textAreaElement.value = textAreaValue.substring(0, textAreaValue.length - (lastWord.length + 1)) + prompt.text;
@@ -718,13 +718,13 @@ function textAreaElementKeydownEventListenerSync(event) {
       quickAccessMenuElement.remove();
     }
     chrome.storage.local.get(['customPrompts'], (res) => {
-      // find any word that starts with $ and ends with space
+      // find any word that starts with / and ends with space
       // if the word is in customPrompts titles, replace it with the prompt.text
       const customPrompts = res.customPrompts || [];
       const textAreaValue = textAreaElement.value;
       const words = textAreaValue.split(/[\s\n]+/);
       const lastWord = words[words.length - 2];
-      if (lastWord?.startsWith('$')) {
+      if (lastWord?.startsWith('/')) {
         const prompt = customPrompts.find((p) => p.title.toLowerCase() === lastWord.substring(1).toLowerCase());
         if (prompt) {
           textAreaElement.value = textAreaValue.substring(0, textAreaValue.length - (lastWord.length + 1)) + prompt.text;
@@ -746,7 +746,7 @@ function textAreaElementKeydownEventListenerSync(event) {
   // // $
   // if (event.shiftKey && event.keyCode === 52) {
   //   // open the dropdown with custom prompts
-  //   quickAccessMenu('$');
+  //   quickAccessMenu('/');
   // }
   // // #
   // if (event.shiftKey && event.keyCode === 51) {
@@ -758,9 +758,9 @@ function textAreaElementKeydownEventListenerSync(event) {
     const cursorPosition = textAreaElement.selectionStart;
     // $
     const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
-    const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
+    const previousSlashPosition = textAreaElement.value.lastIndexOf('/', cursorPosition);
     const previousHashtagPosition = textAreaElement.value.lastIndexOf('#', cursorPosition);
-    const previousTriggerPosition = Math.max(previousAtPosition, previousDollarPosition, previousHashtagPosition);
+    const previousTriggerPosition = Math.max(previousAtPosition, previousSlashPosition, previousHashtagPosition);
     const previousTrigger = textAreaElement.value.substring(previousTriggerPosition, previousTriggerPosition + 1);
 
     if (previousTriggerPosition > -1 && cursorPosition - 1 > previousTriggerPosition && textAreaElement.value.lastIndexOf(' ', cursorPosition) < previousTriggerPosition) {
