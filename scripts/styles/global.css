@@ -491,7 +491,7 @@ input:checked + .sp-switch-slider:before {
   padding-left: 2px;
   padding-right: 2px;
   text-decoration: none !important;
-  color: #0ba40a !important;
+  /* color: #7ab7ff !important; */
 }
 .markdown a:hover {
   text-decoration: underline !important;

@@ -74,7 +74,7 @@ function createContinueButton() {
     const existingContinueButton = document.querySelector('#continue-conversation-button-wrapper');
     if (existingContinueButton) return;
     const continueButtonWrapper = document.createElement('div');
-    continueButtonWrapper.style = 'position:absolute;left:0;z-index:200;display:flex;';
+    continueButtonWrapper.style = 'z-index:1001;display:flex;width:100%;position:relative;';
     continueButtonWrapper.id = 'continue-conversation-button-wrapper';
 
     const continueButtonDropdown = document.createElement('button');

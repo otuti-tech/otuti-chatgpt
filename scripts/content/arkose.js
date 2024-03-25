@@ -1,12 +1,13 @@
 /* eslint-disable no-console */
 /* eslint-disable no-unused-vars */
-
 function newUseArkoseSetupEnforcement(e) {
   e.setConfig({
+    data: { blob: window.localStorage.getItem('sp/arkoseDX') },
     selector: '#enforcement-trigger',
     onCompleted(x) {
       // console.warn('onCompleted4', x);
       window.localStorage.setItem('sp/arkoseToken', x.token);
+      e.setConfig({ data: { blob: window.localStorage.getItem('sp/arkoseDX') } });
     },
     onError(x) {
       console.warn('onError', x);
@@ -16,6 +17,9 @@ function newUseArkoseSetupEnforcement(e) {
     },
     onShown(x) {
       // console.warn('onShown', x);
+    },
+    onReady(x) {
+      // console.warn('onReady', x);
     },
   });
 }
@@ -43,3 +47,5 @@ const overrideArkoseSetups = newArkoseSetups.reduce((acc, trigger) => {
 }, {});
 
 Object.defineProperties(window, overrideArkoseSetups);
+
+window.localStorage.setItem('oai/apps/locale', '"en-US"');

@@ -1,5 +1,5 @@
 // eslint-disable-next-line no-unused-vars
-/* global createSwitch, gptSVG, getUserSystemMessage, setUserSystemMessage, profileDropdown, profileDropdownButton, handleQueryParams, updateOutOfDateConversation, arkoseWasInitialized, notSelectedClassList, runningPromptChainSteps:true, runningPromptChainStepIndex:true, replaceTextAreaElement, initializeNavbar, replacePageContent, languageList, writingStyleList, toneList, getExamplePrompts, getGizmoUserActionSettings, removeTextInputExtras, registerWebsocket, getChatGPTAccountIdFromCookie */
+/* global createSwitch, gptSVG, getUserSystemMessage, setUserSystemMessage, profileDropdown, profileDropdownButton, handleQueryParams, updateOutOfDateConversation, arkoseWasInitialized, notSelectedClassList, runningPromptChainSteps:true, runningPromptChainStepIndex:true, replaceTextAreaElement, initializeNavbar, replacePageContent, languageList, writingStyleList, toneList, getExamplePrompts, getGizmoUserActionSettings, removeTextInputExtras, registerWebsocket, getChatGPTAccountIdFromCookie, areSameArrays, dalleModes, addDalleModeEventListeners */
 
 // eslint-disable-next-line no-unused-vars
 function showNewChatPage(gizmoResource = null, shouldResetSearch = true) {
@@ -96,16 +96,29 @@ function showNewChatPage(gizmoResource = null, shouldResetSearch = true) {
       } else {
         searchBox.focus();
       }
+      const dalleModeWrapper = document.querySelector('#dalle-mode-wrapper');
+      if (dalleModeWrapper) dalleModeWrapper.remove();
       if (showExamplePrompts) {
         if (gizmoResource) {
-          const examplePrompts = {
-            items: gizmoResource?.gizmo?.display?.prompt_starters.map((prompt) => ({
-              title: prompt,
-              description: '',
-              prompt,
-            })),
-          };
-          loadExamplePrompts(examplePrompts);
+          const isDallE = gizmoResource?.gizmo?.id === 'g-2fkFE8rbu';
+          if (isDallE) {
+            const existingSuggestionsWrapper = document.querySelector('#suggestions-wrapper');
+            if (existingSuggestionsWrapper) existingSuggestionsWrapper.remove();
+            const inputFormActionWrapper = document.querySelector('#input-form-action-wrapper');
+            if (inputFormActionWrapper) {
+              inputFormActionWrapper.insertAdjacentHTML('beforeend', dalleModes());
+              addDalleModeEventListeners();
+            }
+          } else {
+            const examplePrompts = {
+              items: gizmoResource?.gizmo?.display?.prompt_starters.map((prompt) => ({
+                title: prompt,
+                description: '',
+                prompt,
+              })),
+            };
+            loadExamplePrompts(examplePrompts);
+          }
         } else {
           getExamplePrompts().then((examplePrompts) => {
             loadExamplePrompts(examplePrompts);
@@ -140,7 +153,7 @@ function loadExamplePrompts(examplePrompts) {
   examplePrompts?.items?.sort(() => Math.random() - 0.5);
   const existingSuggestionsWrapper = document.querySelector('#suggestions-wrapper');
   if (existingSuggestionsWrapper) existingSuggestionsWrapper.remove();
-  const suggestionsWrapper = `<div id="suggestions-wrapper" class="grow" style="z-index:1000;"><div class="absolute bottom-full left-0 mb-4 flex w-full grow gap-2 pb-1 sm:pb-0 md:static md:mb-0 md:max-w-none"><div class="grid w-full grid-flow-row grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2"><div class="flex flex-col gap-2">${suggestionColumn([examplePrompts.items[0], examplePrompts.items[2]], 0)}</div><div class="flex flex-col gap-2">${suggestionColumn([examplePrompts.items[1], examplePrompts.items[3]], 1)}</div></div></div></div>`;
+  const suggestionsWrapper = `<div id="suggestions-wrapper" class="grow w-full" style="z-index:1000;"><div class="absolute bottom-full left-0 mb-4 flex w-full grow gap-2 pb-1 sm:pb-0 md:static md:mb-0 md:max-w-none"><div class="grid w-full grid-flow-row grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-2"><div class="flex flex-col gap-2">${suggestionColumn([examplePrompts.items[0], examplePrompts.items[2]], 0)}</div><div class="flex flex-col gap-2">${suggestionColumn([examplePrompts.items[1], examplePrompts.items[3]], 1)}</div></div></div></div>`;
 
   // check if still on new chat page
   const { pathname } = new URL(window.location.toString());
@@ -264,17 +277,16 @@ function customInstructionSettingsElement() {
       let newCustomInstructionProfiles = customInstructionProfiles;
       const selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
 
-      if (!selectedProfile || selectedProfile.aboutUser.replace(/[^a-zA-Z]/g, '') !== (systemMessage?.about_user_message)?.toString()?.replace(/[^a-zA-Z]/g, '') || selectedProfile?.aboutModel?.replace(/[^a-zA-Z]/g, '') !== (systemMessage?.about_model_message)?.toString()?.replace(/[^a-zA-Z]/g, '')) {
+      if (!selectedProfile || selectedProfile.aboutUser.replace(/[^a-zA-Z]/g, '') !== (systemMessage?.about_user_message)?.toString()?.replace(/[^a-zA-Z]/g, '') || selectedProfile?.aboutModel?.replace(/[^a-zA-Z]/g, '') !== (systemMessage?.about_model_message)?.toString()?.replace(/[^a-zA-Z]/g, '') || !areSameArrays(selectedProfile?.disabledTools, systemMessage?.disabled_tools)) {
         newCustomInstructionProfiles = customInstructionProfiles.map((p) => {
-          if (p.aboutModel.replace(/[^a-zA-Z]/g, '') === (systemMessage?.about_model_message)?.toString()?.replace(/[^a-zA-Z]/g, '') && p.aboutUser.replace(/[^a-zA-Z]/g, '') === (systemMessage?.about_user_message)?.toString()?.replace(/[^a-zA-Z]/g, '')) {
-            return { ...p, isSelected: true };
+          if (p.aboutModel.replace(/[^a-zA-Z]/g, '') === (systemMessage?.about_model_message)?.toString()?.replace(/[^a-zA-Z]/g, '') && p.aboutUser.replace(/[^a-zA-Z]/g, '') === (systemMessage?.about_user_message)?.toString()?.replace(/[^a-zA-Z]/g, '') && areSameArrays(p.disabledTools, systemMessage?.disabled_tools)) {
+            return { ...p, disabledTools: systemMessage.disabled_tools, isSelected: true };
           }
           if (p.isSelected) {
-            return { ...p, isSelected: false };
+            return { ...p, disabledTools: systemMessage.disabled_tools, isSelected: false };
           }
-          return p;
+          return { ...p, disabledTools: systemMessage.disabled_tools };
         });
-
         chrome.storage.local.set({ customInstructionProfiles: newCustomInstructionProfiles, customInstructionProfileIsEnabled: systemMessage.enabled });
       } else {
         chrome.storage.local.set({ customInstructionProfileIsEnabled: systemMessage.enabled });

@@ -1,4 +1,4 @@
-/* global markdownit, hljs, gizmoCreatorProfile, getAccount, isAltKeyDown, getChatGPTAccountIdFromCookie */
+/* global markdownit, hljs, crossDeviceSyncGet, gizmoCreatorProfile, getAccount, isAltKeyDown, getChatGPTAccountIdFromCookie */
 
 /* eslint-disable no-unused-vars */
 
@@ -9,7 +9,17 @@ let isGenerating = false;// true when the user is generating a response
 let chatStreamIsClosed = false; // to force close the chat stream
 // eslint-disable-next-line prefer-const
 let shiftKeyPressed = false;
+const cachedAudios = {};
 
+const defaultPrompts = [
+  { title: 'Continue', text: 'Please continue', isDefault: true },
+  { title: 'Rewrite', text: 'Please rewrite your last response', isDefault: false },
+  { title: 'Paraphrase', text: 'Please paraphrase your last response', isDefault: false },
+  { title: 'Explain', text: 'Please explain your last response', isDefault: false },
+  { title: 'Clarify', text: 'Please clarify your last response', isDefault: false },
+  { title: 'Expand', text: 'Please expand your last response', isDefault: false },
+  { title: 'Summarize', text: 'Please summarize your last response', isDefault: false },
+];
 // chrome.storage.onChanged.addListener((changes, namespace) => {
 //   // eslint-disable-next-line no-restricted-syntax
 //   for (const [key, { oldValue, newValue }] of Object.entries(changes)) {
@@ -31,6 +41,15 @@ function openLinksInNewTab() {
   const base = document.createElement('base');
   base.target = '_blank';
   document.head.appendChild(base);
+}
+function areSameArrays(array1, array2) {
+  if (!Array.isArray(array1)) return true;
+  if (!Array.isArray(array2)) return true;
+  if (array1?.length !== array2?.length) return false;
+  for (let i = 0; i < array1.length; i += 1) {
+    if (!array2.includes(array1[i])) return false;
+  }
+  return true;
 }
 function initializeStorage() {
   // clear storage
@@ -79,10 +98,22 @@ function initializeStorage() {
       }
     });
   });
-  return chrome.storage.local.get(['customModels', 'account', 'chatgptAccountId', 'allConversations', 'allConversationsOrder', 'conversations', 'conversationsOrder']).then((result) => {
+  return chrome.storage.local.get(['customModels', 'account', 'chatgptAccountId', 'allConversations', 'allConversationsOrder', 'conversations', 'conversationsOrder', 'customPrompts', 'customInstructionProfiles']).then((result) => {
     const {
-      customModels, account, chatgptAccountId: oldChatgptAccountId, allConversations, allConversationsOrder, conversations, conversationsOrder,
+      customModels, account, chatgptAccountId: oldChatgptAccountId, allConversations, allConversationsOrder, conversations, conversationsOrder, customPrompts, customInstructionProfiles,
     } = result;
+
+    let newCustomPrompts = Array.isArray(customPrompts)
+      ? customPrompts
+      : [];
+    if (newCustomPrompts.length === 0) {
+      newCustomPrompts = defaultPrompts;
+    }
+    const hasDefault = newCustomPrompts.find((prompt) => prompt.isDefault);
+    if (!hasDefault) {
+      newCustomPrompts[0].isDefault = true;
+    }
+
     chrome.storage.local.set({
       chatgptAccountId,
       allConversations: allConversations || {},
@@ -92,6 +123,8 @@ function initializeStorage() {
       selectedConversations: [],
       lastSelectedConversation: null,
       customModels: customModels || [],
+      customPrompts: newCustomPrompts,
+      customInstructionProfiles: customInstructionProfiles !== undefined ? customInstructionProfiles : [],
       unofficialModels: [
         {
           title: 'gpt-3.5-turbo-1106',
@@ -112,18 +145,20 @@ function initializeStorage() {
           tags: ['Unofficial'],
         },
       ],
-    });
+    }, () => crossDeviceSyncGet());
   });
 }
+const unsafeLangs = ['vue'];
 // eslint-disable-next-line new-cap
 const markdown = (role) => new markdownit({
   html: role === 'assistant',
   linkify: true,
   highlight(str, lang) {
-    const { language, value } = lang && hljs.getLanguage(lang) ? hljs.highlight(str, { language: lang }) : { value: str };
-    return `<pre dir="ltr" class="w-full"><div class="dark bg-black mb-4 rounded-md"><div id='code-header' class="flex select-none items-center relative text-token-text-secondary bg-token-main-surface-secondary px-4 py-2 text-xs font-sans rounded-t-md" style='border-top-left-radius:6px;border-top-right-radius:6px;'><span class="">${lang}</span><button id='copy-code' data-initialized="false" class="flex ml-auto gap-2 text-token-text-secondary hover:text-token-text-primary"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>Copy code</button></div><div class="p-4 overflow-y-auto"><code class="!whitespace-pre hljs language-${lang}">${value}</code></div></div></pre>`;
+    const { language, value } = lang && hljs.getLanguage(lang) ? hljs.highlight(str, { language: lang }) : { language: lang, value: unsafeLangs.includes(lang) ? escapeHtml(str) : str };
+    return `<pre dir="ltr" class="w-full"><div class="dark bg-black mb-4 rounded-md"><div id='code-header' class="flex select-none items-center relative text-token-text-secondary bg-token-main-surface-secondary px-4 py-2 text-xs font-sans rounded-t-md" style='border-top-left-radius:6px;border-top-right-radius:6px;'><span class="">${language}</span><button id='copy-code' data-initialized="false" class="flex ml-auto gap-2 text-token-text-secondary hover:text-token-text-primary"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>Copy code</button></div><div class="p-4 overflow-y-auto"><code class="!whitespace-pre hljs language-${language}">${value}</code></div></div></pre>`;
   },
 });
+
 function addSounds() {
   const audio = document.createElement('audio');
   audio.id = 'beep-sound';
@@ -405,6 +440,8 @@ function closeMenus() {
   menus = document.querySelectorAll('#conversation-element-menu');
   if (menus.length > 0) menus.forEach((menu) => menu.remove());
   menus = document.querySelectorAll('#more-categories-menu');
+  if (menus.length > 0) menus.forEach((menu) => menu.remove());
+  menus = document.querySelectorAll('#dalle-aspect-ratio-menu');
   if (menus.length > 0) menus.forEach((menu) => menu.remove());
 }
 function getGizmoIdFromUrl(defaultURL = null) {

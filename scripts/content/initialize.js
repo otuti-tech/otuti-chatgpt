@@ -1,4 +1,4 @@
-/* global navigation, initializeStorage, initializeSidebar, initializeInput, initializeContinue, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, initializeAnnouncement, initializeReleaseNote, initializeSelectActionButton, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, openLinksInNewTab, initializeKeyboardShortcuts, addQuickAccessMenuEventListener, upgradeCustomInstructions, addAutoSyncToggleButton, addSounds, closeMenusEventListener, initializeAutoRefreshAccount, observeOriginalExplore, syncImages, removeGrammerly, getUserProfile, showAutoSyncWarning, startSpeechToText, initializeUpgradeButton, remoteFunction, checkVersion, crossDeviceSyncGet, crossDeviceSyncPost */
+/* global navigation, initializeStorage, initializeSidebar, initializeInput, initializeContinue, initializeSettings, initializePromptHistory, initializePromptLibrary, initializeNewsletter, initializeAutoSave, initializeAnnouncement, initializeReleaseNote, initializeSelectActionButton, initializeTimestamp, updateNewChatButtonNotSynced, addAsyncInputEvents, addDevIndicator, openLinksInNewTab, initializeKeyboardShortcuts, addQuickAccessMenuEventListener, upgradeCustomInstructions, addAutoSyncToggleButton, addSounds, closeMenusEventListener, initializeAutoRefreshAccount, observeOriginalExplore, syncImages, removeGrammerly, getUserProfile, showAutoSyncWarning, startSpeechToText, initializeUpgradeButton, remoteFunction, checkVersion, crossDeviceSyncPost, checkArkoseDX,isFirefox */
 // let initialized = false;
 let initializTimeout;
 function observeAll() {
@@ -116,27 +116,31 @@ function checkSyncAndLoad() {
     const { settings } = result;
     if ((typeof settings?.autoSync === 'undefined' || settings?.autoSync)) {
       initializeAutoSave();
-      navigation.addEventListener('navigate', () => {
-        initializTimeout = setTimeout(() => {
-          initialize();
-        }, 500);
-      });
+      if (!isFirefox) {
+        navigation.addEventListener('navigate', () => {
+          initializTimeout = setTimeout(() => {
+            initialize();
+          }, 500);
+        });
+      }
     } else {
       showAutoSyncWarning(settings);
       addAutoSyncToggleButton();
       initializeTimestamp();
       updateNewChatButtonNotSynced();
       addAsyncInputEvents();
-      navigation.addEventListener('navigate', () => {
-        initializTimeout = setTimeout(() => {
-          initialize();
-        }, 1000);
-      });
+      if (!isFirefox) {
+        navigation.addEventListener('navigate', () => {
+          initializTimeout = setTimeout(() => {
+            initialize();
+          }, 1000);
+        });
+      }
     }
     removeGrammerly();
   });
 }
-crossDeviceSyncGet();
 initializeStorage();
 observeAll();
 observeOriginalExplore();
+checkArkoseDX();

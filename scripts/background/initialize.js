@@ -5,57 +5,7 @@ let STRIPE_PAYMENT_LINK_ID = '8wM5nW6oq7y287ufZ8';
 let STRIPE_PORTAL_LINK_ID = '00g0237Sr78wcM03cc';
 chrome.storage.local.set({ API_URL, STRIPE_PAYMENT_LINK_ID, STRIPE_PORTAL_LINK_ID });
 const defaultGPTXHeaders = {};
-chrome.management.getSelf(
-  (extensionInfo) => {
-    if (extensionInfo.installType !== 'development') {
-      API_URL = 'https://dev.wfh.team:8000';
-      STRIPE_PAYMENT_LINK_ID = 'test_8wM9DsccF8XT9nWeUW';
-      STRIPE_PORTAL_LINK_ID = 'test_28o17Id1S70U6ZOfYY';
-    }
-    chrome.storage.local.set({ API_URL, STRIPE_PAYMENT_LINK_ID, STRIPE_PORTAL_LINK_ID });
-  },
-);
-chrome.runtime.onInstalled.addListener((detail) => {
-  chrome.management.getSelf(
-    (extensionInfo) => {
-      if (extensionInfo.installType === 'development') {
-        chrome.storage.local.get({ installDate: null }, (result) => {
-          if (!result.installDate) {
-            chrome.storage.local.set({ installDate: Date.now() });
-          }
-        });
-        if (detail.reason === 'install') {
-          chrome.tabs.query({ url: 'https://chat.openai.com/*', active: false }, (tabs) => {
-            tabs.forEach((tab) => {
-              chrome.tabs.remove(tab.id);
-            });
-          });
-          // chrome.tabs.create({ url: 'https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24', active: false });
-          // chrome.tabs.create({ url: 'https://superpowerdaily.com', active: false });
-          // chrome.tabs.create({ url: 'https://www.youtube.com/@superpowerdaily', active: false });
-          chrome.tabs.create({ url: 'https://chat.openai.com', active: true });
-          // } else if (detail.reason === 'update') {
-          //   chrome.tabs.query({ url: 'https://www.superpowerdaily.com/', active: false }, (tabs) => {
-          //     tabs.forEach((tab) => {
-          //       chrome.tabs.remove(tab.id);
-          //     });
-          //   });
 
-          //   checkHasSubscription(true).then((hasSubscription) => {
-          //     if (!hasSubscription) {
-          //       chrome.tabs.create({ url: 'https://superpowerdaily.com', active: false, pinned: true }, (tab) => {
-          //         const closeTabe = () => {
-          //           chrome.tabs.remove(tab.id);
-          //         };
-          //         setTimeout(closeTabe, 300000);
-          //       });
-          //     }
-          //   });
-        }
-      }
-    },
-  );
-});
 chrome.action.onClicked.addListener((tab) => {
   if (!tab.url) {
     chrome.tabs.update(tab.id, { url: 'https://chat.openai.com' });
@@ -216,7 +166,7 @@ chrome.runtime.onMessage.addListener(
 );
 //-----------------------------------
 function checkHasSubscription(forceRefresh = false) {
-  return chrome.storage.local.get(['hasSubscription', 'lastSubscriptionCheck']).then((localRes) => {
+  return chrome.storage.local.get(['hasSubscription', 'lastSubscriptionCheck', 'settings']).then((localRes) => {
     // if last check has subscription check once every 30 minutes
     if (!forceRefresh && localRes.hasSubscription && localRes.lastSubscriptionCheck && localRes.lastSubscriptionCheck > Date.now() - 1000 * 60 * 30) {
       return Promise.resolve(true);
@@ -232,12 +182,13 @@ function checkHasSubscription(forceRefresh = false) {
         'content-type': 'application/json',
       },
     }).then((res) => res.json()).then((res) => {
-      chrome.storage.local.set({ hasSubscription: true, lastSubscriptionCheck: Date.now() });
-      return true;
+        chrome.storage.local.set({ hasSubscription: true, lastSubscriptionCheck: Date.now(), settings: newSettings });
+        return true;
+      
     }).catch((error) => {
       // eslint-disable-next-line no-console
       console.warn('error', error);
-      return false;
+      return true;
     });
   });
 }
@@ -451,10 +402,13 @@ function addGalleryImages(images) {
     body: JSON.stringify({ gallery_images: images }),
   }).then((res) => res.json());
 }
-function getGalleryImages(pageNumber = 1, searchTerm = '', sortBy = '-created_at', category = 'dalle') {
+function getGalleryImages(showAll = false, pageNumber = 1, searchTerm = '', byUserId = '', sortBy = '-created_at', category = 'dalle', isPublic = false) {
   let url = `${API_URL}/gptx/get-gallery-images/?order_by=${sortBy}&category=${category}`;
+  if (showAll) url += '&show_all=true';
   if (pageNumber) url += `&page=${pageNumber}`;
-  if (searchTerm && searchTerm.trim().length > 0) url += `&search=${searchTerm.trim()}`;
+  if (byUserId) url += `&by_user_id=${byUserId}`;
+  if (isPublic) url += `&is_public=${isPublic}`;
+  if (searchTerm && searchTerm.trim().length > 0) url += `&search=${searchTerm}`;
   return fetch(url, {
     method: 'GET',
     headers: {
@@ -463,8 +417,8 @@ function getGalleryImages(pageNumber = 1, searchTerm = '', sortBy = '-created_at
     },
   }).then((response) => response.json());
 }
-function getAllGalleryImages() {
-  const url = `${API_URL}/gptx/get-all-gallery-images/`;
+function getAllGalleryImages(category = 'dalle', conversationId = null) {
+  const url = `${API_URL}/gptx/get-all-gallery-images/?${conversationId ? `conversation_id=${conversationId}` : `category=${category}`}`;
   return fetch(url, {
     method: 'GET',
     headers: {
@@ -472,6 +426,26 @@ function getAllGalleryImages() {
       'content-type': 'application/json',
     },
   }).then((response) => response.json());
+}
+function deleteGalleryImages(imageIds = [], category = 'dalle') {
+  return fetch(`${API_URL}/gptx/delete-gallery-images/`, {
+    method: 'POST',
+    headers: {
+      ...defaultGPTXHeaders,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ image_ids: imageIds, category }),
+  }).then((res) => res.json());
+}
+function shareGalleryImages(imageIds = [], category = 'dalle') {
+  return fetch(`${API_URL}/gptx/share-gallery-images/`, {
+    method: 'POST',
+    headers: {
+      ...defaultGPTXHeaders,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ image_ids: imageIds, category }),
+  }).then((res) => res.json());
 }
 function getPrompts(pageNumber, searchTerm, sortBy = 'recent', language = 'all', category = 'all') {
   // get user id from sync storage
@@ -701,11 +675,19 @@ chrome.runtime.onMessage.addListener(
           //     sendResponse(res);
           //   });
         } else if (request.getGalleryImages) {
-          getGalleryImages(data.pageNumber, data.searchTerm, data.sortBy, data.category).then((res) => {
+          getGalleryImages(data.showAll, data.pageNumber, data.searchTerm, data.byUserId, data.sortBy, data.category, data.isPublic).then((res) => {
             sendResponse(res);
           });
         } else if (request.getAllGalleryImages) {
-          getAllGalleryImages().then((res) => {
+          getAllGalleryImages(data.category, data.conversationId).then((res) => {
+            sendResponse(res);
+          });
+        } else if (request.deleteGalleryImages) {
+          deleteGalleryImages(data.imageIds, data.category).then((res) => {
+            sendResponse(res);
+          });
+        } else if (request.shareGalleryImages) {
+          shareGalleryImages(data.imageIds, data.category).then((res) => {
             sendResponse(res);
           });
         } else if (request.getPrompt) {

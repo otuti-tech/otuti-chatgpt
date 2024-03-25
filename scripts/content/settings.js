@@ -1,14 +1,6 @@
 // eslint-disable-next-line no-unused-vars
-/* global isFirefox, isOpera, createModal, Sortable, getGizmoById, generateRandomDarkColor, createReleaseNoteModal, languageList, writingStyleList, toneList, toast, loadConversationList, modelSwitcher, openUpgradeModal, addModelSwitcherEventListener, dropdown, addDropdownEventListener, API_URL:true, showConfirmDialog, createContinueButton, speechToTextLanguageList, initializePromptChain, addPromptChainCreateButton, addKeyboardShortcutsModalButton, initializePromptLibrary, initializePromptHistory, updateAccountUserSetting, checkSyncAndLoad, textToSpeechVoiceList, synthesize, getUserSettings */
-const defaultPrompts = [
-  { title: 'Continue', text: 'Please continue', isDefault: true },
-  { title: 'Rewrite', text: 'Please rewrite your last response', isDefault: false },
-  { title: 'Paraphrase', text: 'Please paraphrase your last response', isDefault: false },
-  { title: 'Explain', text: 'Please explain your last response', isDefault: false },
-  { title: 'Clarify', text: 'Please clarify your last response', isDefault: false },
-  { title: 'Expand', text: 'Please expand your last response', isDefault: false },
-  { title: 'Summarize', text: 'Please summarize your last response', isDefault: false },
-];
+/* global isFirefox, isOpera, createModal, Sortable, getGizmoById, generateRandomDarkColor, createReleaseNoteModal, languageList, writingStyleList, toneList, toast, loadConversationList, modelSwitcher, openUpgradeModal, addModelSwitcherEventListener, dropdown, addDropdownEventListener, API_URL:true, showConfirmDialog, createContinueButton, speechToTextLanguageList, initializePromptChain, addPromptChainCreateButton, addKeyboardShortcutsModalButton, initializePromptLibrary, initializePromptHistory, updateAccountUserSetting, checkSyncAndLoad, textToSpeechVoiceList, synthesize, getUserSettings, defaultPrompts */
+
 const autoArchiveModes = [{ code: 'days', name: 'Archive chats after' }, { code: 'number', name: 'Only keep the last' }];
 let settingTestAudio;
 
@@ -142,7 +134,7 @@ function generalTabContent(hasSubscription = false) {
   const hideUpdateNotificationSwitch = createSwitch('Hide Update Notification', 'Don’t show update notification when new version is available', 'hideUpdateNotification', false);
   leftContent.appendChild(hideUpdateNotificationSwitch);
 
-  const crossDeviceSyncSwitch = createSwitch('Cross Device Sync', 'Sync settings, folders, custom prompts, prompt chains and history across all your devices', 'crossDeviceSync', hasSubscription, refreshPage, ['⚡️ Requires Pro Account'], !hasSubscription);
+  const crossDeviceSyncSwitch = createSwitch('Cross Device Sync', 'Sync settings, folders, custom prompts, prompt chains and history across all your devices', 'crossDeviceSync', hasSubscription, refreshPage, ['⚡️ Requires Pro Account', 'New'], !hasSubscription);
   leftContent.appendChild(crossDeviceSyncSwitch);
 
   const enhanceGPTStoreSwitch = createSwitch('Enhanced GPT Store', 'Get access to the full list of thousands of Custom GPTs with the ability to search and sort right from inside ChatGPT', 'enhanceGPTStore', true, refreshPage, ['Requires Refresh']);
@@ -354,7 +346,7 @@ function autoSyncTabContent(hasSubscription = false) {
     content.appendChild(resetAutoSyncButton);
     const resetAutoSyncDesc = document.createElement('div');
     resetAutoSyncDesc.style = 'width:100%;font-size:0.8em;color:lightslategray;margin-top:8px;';
-    resetAutoSyncDesc.innerText = 'This will re-sync all the conversations from ChatGPT database. This is useful if you are having issues with Auto Sync.';
+    resetAutoSyncDesc.innerText = 'This will re-sync all the conversations from ChatGPT database. This is useful if you are having issues with Auto Sync. Reseting Auto Sync will also remove all your folders.';
     content.appendChild(resetAutoSyncDesc);
   });
 
@@ -751,9 +743,6 @@ function conversationTabContent(hasSubscription = false) {
     const showTotalWordCountSwitch = createSwitch('Show Total Word/Char Count', 'Show total word/char count at the bottom-right of the conversation', 'showTotalWordCount', false, () => reloadConversationList(false), ['New']);
     content.appendChild(showTotalWordCountSwitch);
 
-    const autoHideThreadCountSwitch = createSwitch('Auto Hide Thread Count', 'Hide the thread count (<1/2>) unless you hover over the message', 'autoHideThreadCount', false, toggleAutoHideThreadCount, ['Requires Auto-Sync'], !autoSync);
-    content.appendChild(autoHideThreadCountSwitch);
-
     const autoHideTopNav = createSwitch('Auto Hide Top Navbar', 'Automatically hide the navbar at the top of the page when move the mouse out of it.', 'autoHideTopNav', true, toggleTopNav, ['Requires Auto-Sync'], !autoSync);
     content.appendChild(autoHideTopNav);
 
@@ -859,18 +848,7 @@ function toggleShowPromptChainButton(isChecked) {
     if (promptChainCrreateButton) promptChainCrreateButton.remove();
   }
 }
-function toggleAutoHideThreadCount(isChecked) {
-  const allThreadButtonsWrapper = document.querySelectorAll('[id^=thread-buttons-wrapper-]');
-  allThreadButtonsWrapper.forEach((el) => {
-    if (el.textContent !== '1 / 1') {
-      if (isChecked) {
-        el.classList.add('invisible');
-      } else {
-        el.classList.remove('invisible');
-      }
-    }
-  });
-}
+
 function textToSpeechTabContent(hasSubscription = false) {
   const content = document.createElement('div');
   content.id = 'settings-modal-tab-content';
@@ -1633,10 +1611,6 @@ function newsletterTabContent(hasSubscription = false) {
   const dailyNewsletterSwitch = createSwitch('Hide Daily Newsletter', 'Do not show the daily newsletter popup inside ChatGPT.', 'hideNewsletter', false);
   content.appendChild(dailyNewsletterSwitch);
 
-  // daily newsletter
-  const showNewsletterOnUpdateSwitch = createSwitch('Show Newsletter on Update', 'Open Superpower Daily newsletter when extension updates', 'showNewsletterOnUpdate', !hasSubscription, null, ['⚡️ Requires Pro Account'], !hasSubscription);
-  content.appendChild(showNewsletterOnUpdateSwitch);
-
   return content;
 }
 function createSlider(title, subtitle, settingsKey, defaultValue, min, max, step, callback = null, tags = [], disabled = false) {
@@ -1729,7 +1703,7 @@ function createSwitch(title, subtitle, settingsKey, defaultValue, callback = nul
     if (tag === '⚡️ Requires Pro Account') {
       betaTag.role = 'button';
       betaTag.addEventListener('click', () => {
-        document.querySelector('#upgrade-to-pro-button-settings').click();
+        document.querySelector('#upgrade-to-pro-button-settings')?.click();
       });
     }
     betaTagWrapper.appendChild(betaTag);
@@ -1958,20 +1932,7 @@ function initializeSettings(hasSubscription) {
     }
   });
 
-  chrome.storage.local.get(['settings', 'presetPrompts', 'selectedConversations', 'customPrompts', 'customInstructionProfiles', 'openAIUserSettings'], (result) => {
-    let newCustomPrompts = Array.isArray(result.customPrompts)
-      ? result.customPrompts
-      : [
-        ...(result.presetPrompts ? Object.keys(result.presetPrompts).map((key) => ({ title: key, text: result.presetPrompts[key], isDefault: false })) : []),
-        ...(result.customPrompts ? Object.keys(result.customPrompts).map((key) => ({ title: key, text: result.customPrompts[key], isDefault: false })) : []),
-      ];
-    if (newCustomPrompts.length === 0) {
-      newCustomPrompts = defaultPrompts;
-    }
-    const hasDefault = newCustomPrompts.find((prompt) => prompt.isDefault);
-    if (!hasDefault) {
-      newCustomPrompts[0].isDefault = true;
-    }
+  chrome.storage.local.get(['settings', 'presetPrompts', 'selectedConversations', 'customInstructionProfiles', 'openAIUserSettings'], (result) => {
     window.localStorage.setItem('sp/autoSync', result.settings?.autoSync !== undefined ? result.settings.autoSync : true);
     window.localStorage.setItem('sp/enhanceGPTStore', result.settings?.enhanceGPTStore !== undefined ? result.settings.enhanceGPTStore : true);
     chrome.storage.local.set({
@@ -2007,7 +1968,6 @@ function initializeSettings(hasSubscription) {
         useCustomInstruction: result.settings?.useCustomInstruction !== undefined ? result.settings.useCustomInstruction : false,
         customConversationWidth: result.settings?.customConversationWidth !== undefined ? result.settings.customConversationWidth : false,
         conversationWidth: result.settings?.conversationWidth !== undefined ? result.settings.conversationWidth : 50,
-        autoHideThreadCount: result.settings?.autoHideThreadCount !== undefined ? result.settings.autoHideThreadCount : false,
         autoArchiveOldChats: result.settings?.autoArchiveOldChats !== undefined ? result.settings.autoArchiveOldChats : false,
         skipAutoArchiveFolder: result.settings?.skipAutoArchiveFolder !== undefined ? result.settings.skipAutoArchiveFolder : false,
         autoArchiveMode: result.settings?.autoArchiveMode !== undefined ? result.settings.autoArchiveMode : autoArchiveModes[0],
@@ -2061,9 +2021,6 @@ Don't reply with anything else!`,
         speechToTextInterimResults: result.settings?.speechToTextInterimResults !== undefined ? result.settings?.speechToTextInterimResults : true,
         autoSubmitWhenReleaseAlt: result.settings?.autoSubmitWhenReleaseAlt !== undefined ? result.settings.autoSubmitWhenReleaseAlt && hasSubscription : false,
       },
-      presetPrompts: {},
-      customInstructionProfiles: result.customInstructionProfiles !== undefined ? result.customInstructionProfiles : [],
-      customPrompts: newCustomPrompts,
     }, () => {
       addSettingsButton();
       checkSyncAndLoad();

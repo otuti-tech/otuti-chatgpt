@@ -1,4 +1,4 @@
-/* global getGizmoDiscovery, dropdown, showNewChatPage, addDropdownEventListener, showConfirmDialog, openUpgradeModal, notSelectedClassList, deleteGizmo, isWindows, toast, debounce, gizmoSortByList, getGizmosBootstrap, updateGizmoSidebar, getGizmoAbout, showGizmoAboutDialog */
+/* global getGizmoDiscovery, dropdown, showNewChatPage, addDropdownEventListener, showConfirmDialog, openUpgradeModal, notSelectedClassList, deleteGizmo, isWindows, toast, debounce, gizmoSortByList, getGizmosPinned, getGizmosBootstrap, updateGizmoSidebar, getGizmoAbout, showGizmoAboutDialog */
 let gizmoPageNumber = 1;
 let gizmoCursor = null;
 let noMoreGizmo = false;
@@ -560,11 +560,10 @@ function renderGizmoGrid(gizmos, gizmoType, currentUserId, hasSubscription = fal
   });
 }
 function gizmoCardMenu(gizmo, currentUserId) {
-  return getGizmosBootstrap(false).then((gizmosBootstrap) => {
-    const { gizmos } = gizmosBootstrap;
+  return getGizmosBootstrap(false).then((gizmosBootstrap) => getGizmosPinned(false).then((gizmosPinned) => {
     const isDraft = gizmo.live_version === 0;
 
-    const gizmoExistInSidebar = gizmos.find((g) => g?.resource?.gizmo?.id === gizmo.id);
+    const gizmoExistInSidebar = [...gizmosBootstrap.gizmos, ...gizmosPinned].find((g) => g?.resource?.gizmo?.id === gizmo.id);
 
     return `<div id="gizmo-card-menu" class="absolute top-0 right-0 mt-2 mr-2 w-40 rounded-md shadow-lg p-1 ring-1 ring-black ring-opacity-5 bg-token-main-surface-primary text-token-text-primary"> 
     
@@ -575,7 +574,7 @@ function gizmoCardMenu(gizmo, currentUserId) {
     ${isDraft ? '' : '<button id="gizmo-card-about" class="block w-full flex items-start px-4 py-2 text-sm hover:bg-token-main-surface-secondary" role="menuitem">About</button>'}
  
     </div>`;
-  });
+  }));
 }
 function gizmoCardMenuEventListener(gizmoId) {
   const gizmoCardMenuElement = document.querySelector('#gizmo-card-menu');

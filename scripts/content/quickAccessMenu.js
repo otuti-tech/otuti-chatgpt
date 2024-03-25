@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-/* global defaultPrompts, getGizmosBootstrap, getGizmoDiscovery, createSettingsModal, createPromptChainListModal, runPromptChain */
+/* global defaultPrompts, getGizmosPinned, getGizmoDiscovery, createSettingsModal, createPromptChainListModal, runPromptChain */
 function addQuickAccessMenuEventListener() {
   document.addEventListener('selectionchange', (e) => {
     // bsckspace does not trigger selectionchange
@@ -10,14 +10,14 @@ function addQuickAccessMenuEventListener() {
     const cursorPosition = textAreaElement.selectionStart;
     const textAreaValue = textAreaElement.value;
     const previousAtPosition = textAreaValue.lastIndexOf('@', cursorPosition - 1);
-    const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition - 1);
+    const previousSlashPosition = textAreaValue.lastIndexOf('/', cursorPosition - 1);
     const previousHashtagPosition = textAreaValue.lastIndexOf('#', cursorPosition - 1);
-    if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
+    if (cursorPosition === 0 || (previousAtPosition === -1 && previousSlashPosition === -1 && previousHashtagPosition === -1)) {
       if (quickAccessMenuElement) quickAccessMenuElement.remove();
       return;
     }
     // whichever is closer to the cursor
-    const previousTriggerPosition = Math.max(previousAtPosition, previousDollarPosition, previousHashtagPosition);
+    const previousTriggerPosition = Math.max(previousAtPosition, previousSlashPosition, previousHashtagPosition);
     const previousTrigger = textAreaElement.value.substring(previousTriggerPosition, previousTriggerPosition + 1);
     // get the word between the previous trigger and the cursor
     if (!quickAccessMenuElement && previousTriggerPosition !== -1 && cursorPosition > previousTriggerPosition && textAreaValue.lastIndexOf(' ', cursorPosition - 1) < previousTriggerPosition) {
@@ -39,14 +39,14 @@ function addQuickAccessMenuEventListener() {
       const textAreaValue = textAreaElement.value;
 
       const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
-      const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
+      const previousSlashPosition = textAreaElement.value.lastIndexOf('/', cursorPosition);
       const previousHashtagPosition = textAreaElement.value.lastIndexOf('#', cursorPosition);
-      if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
+      if (cursorPosition === 0 || (previousAtPosition === -1 && previousSlashPosition === -1 && previousHashtagPosition === -1)) {
         if (quickAccessMenuElement) quickAccessMenuElement.remove();
         return;
       }
       // whichever is closer to the cursor
-      const previousTriggerPosition = Math.max(previousAtPosition, previousDollarPosition, previousHashtagPosition);
+      const previousTriggerPosition = Math.max(previousAtPosition, previousSlashPosition, previousHashtagPosition);
       const previousTrigger = textAreaElement.value.substring(previousTriggerPosition, previousTriggerPosition + 1);
 
       // if there is a space between previoustriggerpos and cur cursor position
@@ -142,14 +142,14 @@ function updateQuickAccessMenuItems() {
   const cursorPosition = textAreaElement.selectionStart;
   const textAreaValue = textAreaElement.value;
   const previousAtPosition = textAreaElement.value.lastIndexOf('@', cursorPosition);
-  const previousDollarPosition = textAreaElement.value.lastIndexOf('$', cursorPosition);
+  const previousSlashPosition = textAreaElement.value.lastIndexOf('/', cursorPosition);
   const previousHashtagPosition = textAreaValue.lastIndexOf('#', cursorPosition - 1);
-  if (cursorPosition === 0 || (previousAtPosition === -1 && previousDollarPosition === -1 && previousHashtagPosition === -1)) {
+  if (cursorPosition === 0 || (previousAtPosition === -1 && previousSlashPosition === -1 && previousHashtagPosition === -1)) {
     return;
   }
   let nextSpacePos = textAreaValue.indexOf(' ', cursorPosition);
   if (nextSpacePos === -1) nextSpacePos = textAreaValue.length;
-  const previousTriggerPosition = Math.max(previousAtPosition, previousDollarPosition, previousHashtagPosition);
+  const previousTriggerPosition = Math.max(previousAtPosition, previousSlashPosition, previousHashtagPosition);
 
   const triggerWord = textAreaValue.substring(previousTriggerPosition + 1, nextSpacePos);
 
@@ -186,7 +186,7 @@ function quickAccessMenu(trigger) {
       const menu = document.createElement('div');
       menu.id = 'quick-access-menu';
       menu.classList = 'absolute flex flex-col gap-2 bg-token-main-surface-primary border border-token-border-light rounded-xl shadow-xs';
-      menu.style = 'height: 300px; top:-316px; left:0; width:100%; z-index: 1000;';
+      menu.style = 'height: 300px; top:-316px; left:0; width:100%; z-index: 10000;';
       const menuHeader = document.createElement('div');
       menuHeader.classList = 'flex justify-between items-center py-2 px-3 border-b border-token-border-light';
       const menuTitle = document.createElement('h3');
@@ -208,7 +208,7 @@ function quickAccessMenu(trigger) {
         });
         menu.appendChild(loadCustomGPTs());
       }
-      if (trigger === '$') {
+      if (trigger === '/') {
         menuTitle.textContent = `Custom Prompts (${trigger})`;
         menuHeaderButton.id = 'see-all-custom-prompts';
         menuHeaderButton.textContent = '+ Add More';
@@ -239,17 +239,17 @@ function loadCustomGPTs() {
   menuContent.classList = 'flex flex-col gap-2';
   menuContent.style = 'overflow-y: scroll;height: 100%; width: 100%;padding:1px;';
   getGizmoDiscovery('recent', null, 24, 'global', false).then((gizmoDiscovery) => {
-    getGizmosBootstrap(false).then((gizmosBootstrap) => {
-      const gizmos = gizmoDiscovery.list.items.map((item) => ({ ...item.resource.gizmo, isRecent: true }));
-      // add gizmo bootstrap to gizmos if not already present
-      gizmosBootstrap.gizmos.forEach((gizmoBootstrap) => {
-        const gizmoBootstrapId = gizmoBootstrap?.resource?.gizmo?.id;
-        if (!gizmos.find((gizmo) => gizmo.id === gizmoBootstrapId)) {
-          gizmos.push(gizmoBootstrap.resource.gizmo);
+    getGizmosPinned(false).then((gizmosPinned) => {
+      const recentGizmos = gizmoDiscovery.list.items.map((item) => ({ ...item.resource.gizmo, isRecent: true }));
+      // add gizmo pinned to gizmos if not already present
+      gizmosPinned.forEach((gizmoPinned) => {
+        const gizmoPinnedId = gizmoPinned?.gizmo?.id;
+        if (!recentGizmos.find((recentGizmo) => recentGizmo.id === gizmoPinnedId)) {
+          recentGizmos.push(gizmoPinned.gizmo);
         }
       });
-      for (let i = 0; i < gizmos.length; i += 1) {
-        const gizmo = gizmos[i];
+      for (let i = 0; i < recentGizmos.length; i += 1) {
+        const gizmo = recentGizmos[i];
         const gizmoRow = document.createElement('button');
         gizmoRow.type = 'button';
         gizmoRow.id = `quick-access-menu-item-${i}`;
@@ -260,7 +260,7 @@ function loadCustomGPTs() {
           const textAreaElement = document.querySelector('#prompt-textarea');
           if (!textAreaElement) return;
           document.querySelector('#quick-access-menu').remove();
-          // find the neeares previous $ position
+          // find the neeares previous @ position
           const textAreaValue = textAreaElement.value;
           const cursorPosition = textAreaElement.selectionStart;
           const previousAtPosition = textAreaValue.lastIndexOf('@', cursorPosition);
@@ -313,11 +313,11 @@ function loadCustomPrompts() {
         const textAreaElement = document.querySelector('#prompt-textarea');
         if (!textAreaElement) return;
         document.querySelector('#quick-access-menu').remove();
-        // find the neeares previous $ position
+        // find the neeares previous / position
         const textAreaValue = textAreaElement.value;
         const cursorPosition = textAreaElement.selectionStart;
-        const previousDollarPosition = textAreaValue.lastIndexOf('$', cursorPosition);
-        const newText = textAreaValue.substring(0, previousDollarPosition) + prompt.text + textAreaValue.substring(cursorPosition);
+        const previousSlashPosition = textAreaValue.lastIndexOf('/', cursorPosition);
+        const newText = textAreaValue.substring(0, previousSlashPosition) + prompt.text + textAreaValue.substring(cursorPosition);
         textAreaElement.value = newText;
         textAreaElement.focus();
         textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));

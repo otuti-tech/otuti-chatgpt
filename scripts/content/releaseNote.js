@@ -81,9 +81,11 @@ function initializeReleaseNote() {
     // get current app version
     const { version } = chrome.runtime.getManifest();
     // get lastSeenReleaseNoteVersion from storage
-    chrome.storage.local.get(['settings'], (res) => {
-      const { settings } = res;
-      if (settings?.hideReleaseNote) return;
+    chrome.storage.local.get(['settings', 'installDate'], (res) => {
+      const { settings, installDate } = res;
+      if (typeof settings?.hideReleaseNote === 'undefined' || settings?.hideReleaseNote) return;
+      if (typeof installDate === 'undefined' || (installDate && (1) < 172800000)) return;
+
       chrome.storage.sync.get(['lastSeenReleaseNoteVersion'], (result) => {
         const { lastSeenReleaseNoteVersion } = result;
         // if lastSeenReleaseNoteVersion is not equal to current app version

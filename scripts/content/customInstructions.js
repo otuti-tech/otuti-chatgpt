@@ -43,6 +43,7 @@ function profileDropdown(customInstructionProfiles, customInstructionProfileIsEn
     const profileName = newCustomInstructionProfiles[i].name;
     const profileAboutUser = newCustomInstructionProfiles[i].aboutUser;
     const profileAboutModel = newCustomInstructionProfiles[i].aboutModel;
+    const profileDisabledTools = newCustomInstructionProfiles[i].disabledTools;
     const { isSelected } = newCustomInstructionProfiles[i];
     const dropdownItem = document.createElement('li');
     dropdownItem.id = `custom-instructions-profile-dropdown-item-${placement}-${profileId}`;
@@ -132,7 +133,6 @@ function profileDropdown(customInstructionProfiles, customInstructionProfileIsEn
               return { ...p, isSelected: false };
             })
             : oldCip;
-
           chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
             const selectedProfileTitle = document.querySelector(`[id^="custom-instructions-selected-profile-title-${placement}-"]`);
             selectedProfileTitle.textContent = profileName;
@@ -356,6 +356,10 @@ function upgradeCustomInstructions() {
                   chrome.storage.local.get(['customInstructionProfiles'], (res) => {
                     const { customInstructionProfiles: cip } = res;
                     const curNameInput = document.querySelector('#custom-instructions-name-input');
+                    // const curBrowsingCheckbox = document.querySelector('[role="switch"]');
+                    // const curDallECheckbox = document.querySelector('[role="switch"]');
+                    // const curCodeCheckbox = document.querySelector('[role="switch"]');
+
                     const curTextAreaFields = document.querySelectorAll('[role="dialog"][data-state="open"][tabindex="-1"] textarea');
                     const curAboutUserInput = curTextAreaFields[0];
                     const curAboutModelInput = curTextAreaFields[1];
