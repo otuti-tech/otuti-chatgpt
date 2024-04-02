@@ -281,6 +281,8 @@ function addPluginContentNode(node) {
     lastMessagePluginContent?.insertAdjacentHTML('beforeend', renderedNode);
   }
 }
+
+// TODO: tranlaste
 function hiddenPluginDropdownRenderer(pluginRequestNode, isLoading) {
   const recipient = pluginRequestNode?.message?.recipient;
   const title = recipient === 'dalle.text2im' ? 'Creating Images' : 'Browsing...';
@@ -434,6 +436,8 @@ function actionConfirmationRenderer(actionRequestNode, actionResponseNode) {
   if (role !== 'tool') return '';
   if (recipient !== 'assistant') return '';
   const actionType = metadata?.jit_plugin_data?.from_server?.type;
+
+// TODO: tranlaste
 
   if (actionType === 'confirm_action') {
     return `<div id="tool-action-request-wrapper-${messageId}" data-domain=${domain}>${actionDisclaimerRenderer(domain)}<div class="mb-2 flex gap-2"><button id="tool-action-request-allow-${messageId}" class="btn relative btn-primary h-8"><div class="flex w-full gap-2 items-center justify-center">Allow</div></button><button id="tool-action-request-always-allow-${messageId}" class="btn relative btn-dark h-8"><div class="flex w-full gap-2 items-center justify-center">Always Allow</div></button><button id="tool-action-request-deny-${messageId}" class="btn relative btn-neutral h-8"><div class="flex w-full gap-2 items-center justify-center">Decline</div></button></div></div>`;
@@ -601,6 +605,9 @@ function pluginContentRenderer(pluginNode) {
     resultLanguage = resLanguage;
     resultHTML = resValue;
   }
+
+  // TODO: tranlaste
+
   // eslint-disable-next-line no-nested-ternary
   const codeHeader = contentType === 'text'
     ? role === 'assistant' ? `Request to ${pluginName}` : `Response from ${pluginName}`
@@ -625,7 +632,7 @@ function updateCounter() {
   const wordCount = messageContentParts.split(/\s+/).filter((word) => word !== '').length;
 
   if (wordCount > Number(messageCounter.innerText.split(' ')[3])) {
-    messageCounter.innerHTML = `${charCount} chars / ${wordCount} words`;
+    messageCounter.innerHTML = `${charCount} chars / ${wordCount} palavras`;
   }
 }
 function addAssistantNode(node, continueGenerating = false, existingInnerHTML = '') {
@@ -657,7 +664,7 @@ function addAssistantNode(node, continueGenerating = false, existingInnerHTML = 
           }
         }
         existingMessageText.insertAdjacentElement('beforeend', [...tempChildren].pop());
-        if ([...tempChildren]?.pop()?.innerText?.includes('Copy code')) {
+        if ([...tempChildren]?.pop()?.innerText?.includes('Copiar código')) {
           addCopyCodeButtonsEventListeners();
         }
       } else {

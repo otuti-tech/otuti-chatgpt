@@ -227,7 +227,7 @@ function quickAccessMenu(trigger) {
       if (trigger === '#') {
         menuTitle.textContent = 'Prompt Chains (#)';
         menuHeaderButton.id = 'see-all-prompt-chains';
-        menuHeaderButton.textContent = 'See All Prompt Chains';
+        menuHeaderButton.textContent = 'Mostrar todas Prompt Chains';
         menuHeaderButton.addEventListener('click', () => {
           menu.remove();
           createPromptChainListModal();
@@ -274,7 +274,7 @@ function loadCustomGPTs() {
           textAreaElement.value = newText;
           const existingTaggedGizmoElement = document.getElementById('tagged-gizmo-wrapper');
           if (existingTaggedGizmoElement) existingTaggedGizmoElement.remove();
-          const taggedGizmoElement = `<div id="tagged-gizmo-wrapper" data-gizmoid="${gizmo.id}" class="flex w-full flex-row items-center rounded-t-2xl bg-token-main-surface-secondary px-2 py-1"><div class="group flex h-10 items-center gap-2 rounded-lg px-2 font-medium"><div class="h-6 w-6 flex-shrink-0"><div class="gizmo-shadow-stroke overflow-hidden rounded-full"><img src="${gizmo?.display?.profile_picture_url}" class="h-full w-full bg-token-main-surface-secondary dark:bg-token-main-surface-tertiary" alt="GPT" width="80" height="80"></div></div><div class="space-x-2 overflow-hidden text-ellipsis text-sm font-light text-token-text-tertiary">Talking to <span class="font-medium text-token-text-secondary">${gizmo?.display?.name}</span></div></div><button id="tagged-gizmo-close-button" class="absolute right-4 text-sm font-bold"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md text-token-text-secondary hover:text-token-text-primary"><path d="M6.34315 6.34338L17.6569 17.6571M17.6569 6.34338L6.34315 17.6571" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>`;
+          const taggedGizmoElement = `<div id="tagged-gizmo-wrapper" data-gizmoid="${gizmo.id}" class="flex w-full flex-row items-center rounded-t-2xl bg-token-main-surface-secondary px-2 py-1"><div class="group flex h-10 items-center gap-2 rounded-lg px-2 font-medium"><div class="h-6 w-6 flex-shrink-0"><div class="gizmo-shadow-stroke overflow-hidden rounded-full"><img src="${gizmo?.display?.profile_picture_url}" class="h-full w-full bg-token-main-surface-secondary dark:bg-token-main-surface-tertiary" alt="GPT" width="80" height="80"></div></div><div class="space-x-2 overflow-hidden text-ellipsis text-sm font-light text-token-text-tertiary">Conversando com <span class="font-medium text-token-text-secondary">${gizmo?.display?.name}</span></div></div><button id="tagged-gizmo-close-button" class="absolute right-4 text-sm font-bold"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md text-token-text-secondary hover:text-token-text-primary"><path d="M6.34315 6.34338L17.6569 17.6571M17.6569 6.34338L6.34315 17.6571" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button></div>`;
 
           const replyToPreviewElement = document.getElementById('reply-to-preview-wrapper');
           if (replyToPreviewElement) {
@@ -345,7 +345,7 @@ function loadPromptChains() {
     if (!promptChains) {
       const noPromptChains = document.createElement('div');
       noPromptChains.classList = 'text-center text-token-text-secondary text-sm';
-      noPromptChains.textContent = 'You haven\'t created any prompt chain yet.';
+      noPromptChains.textContent = 'Você ainda não criou nenhuma Prompt Chain.';
       menuContent.appendChild(noPromptChains);
       return;
     }

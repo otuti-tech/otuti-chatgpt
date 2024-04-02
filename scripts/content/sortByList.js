@@ -1,12 +1,12 @@
 // eslint-disable-next-line no-unused-vars
-const librarySortByList = [
-  { code: 'recent', name: 'New' },
-  { code: 'use', name: 'Most Used' },
-  { code: 'vote', name: 'Most Votes' },
-  { code: 'mine', name: 'My prompts' },
+const listaOrdenarBiblioteca = [
+  { code: 'recent', name: 'Novo' },
+  { code: 'use', name: 'Mais Usado' },
+  { code: 'vote', name: 'Mais Votados' },
+  { code: 'mine', name: 'Meus prompts' },
 ];
 // eslint-disable-next-line no-unused-vars
-const gizmoSortByList = [
-  { code: 'recent', name: 'Recently updated' },
-  { code: 'popular', name: 'Most popular' },
+const listaOrdenarGizmo = [
+  { code: 'recent', name: 'Atualizado recentemente' },
+  { code: 'popular', name: 'Mais popular' },
 ];

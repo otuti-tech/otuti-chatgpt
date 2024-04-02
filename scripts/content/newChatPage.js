@@ -266,7 +266,7 @@ function customInstructionSettingsElement() {
   customInstructionSettings.appendChild(customInstructionSettingsLeft);
   customInstructionSettings.appendChild(customInstructionSettingsRight);
   getUserSystemMessage().then((systemMessage) => {
-    const customInstructionSwitch = createSwitch('<span style="color:#8e8ea0 !important;">Custom Instruction</span>', '<div class="text-left"><a href="https://www.youtube.com/watch?v=5IzCehR0Hok&ab_channel=Superpower" target="_blank" class="underline" rel="noreferrer">Learn more</a> about Custom instructions and how they’re used to help ChatGPT provide better responses.</div>', null, systemMessage.enabled, toggleCustomInstructionSettings);
+    const customInstructionSwitch = createSwitch('<span style="color:#8e8ea0 !important;">Instrução Personalizada</span>', '<div class="text-left"><a href="https://www.youtube.com/" target="_blank" class="underline" rel="noreferrer">Saiba mais</a> sobre instruções personalizadas e como elas são usadas para ajudar o ChatGPT a fornecer respostas melhores.</div>', null, systemMessage.enabled, toggleCustomInstructionSettings);
     customInstructionSettingsLeft.appendChild(customInstructionSwitch);
     chrome.storage.local.get(['customInstructionProfiles'], (result) => {
       const { customInstructionProfiles, customInstructionProfileIsEnabled } = result;

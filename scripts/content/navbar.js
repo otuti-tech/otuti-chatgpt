@@ -131,9 +131,9 @@ function addNavbar(conversation = null) {
             addGizmoMenuEventListeners(gizmoData);
           });
         }
-        addDropdownEventListener('Tone', toneList);
-        addDropdownEventListener('Writing-Style', writingStyleList);
-        addDropdownEventListener('Language', languageList);
+        addDropdownEventListener('Tom', toneList);
+        addDropdownEventListener('Estilo Escrita', writingStyleList);
+        addDropdownEventListener('Idioma', languageList);
       });
     });
   });

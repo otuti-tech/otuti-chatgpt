@@ -14,13 +14,13 @@ function generateInstructions(conversation, settings, text, forceAddInstructions
     && conversation.writingStyleCode === selectedWritingStyle.code) return text;
 
   let includeInstructions = false;
-  let instructions = '## Instructions\n';
+  let instructions = '## Instruções\n';
 
-  const languageInstructions = `**Language instruction:**\nPlease ignore all previous language instructions. From now on, I want you to respond only in ${selectedLanguage.name} language (languageCode: ${selectedLanguage.code}).\n`;
+  const languageInstructions = `**Instrução de idioma:**\nPor favor, ignore todas as instruções de idioma anteriores. A partir de agora, quero que você responda apenas no idioma ${selectedLanguage.name} (languageCode: ${selectedLanguage.code}).\n`;
 
-  const toneInstructions = `**Tone instruction:**\nPlease ignore all previous tone instructions. From now on, I want you to respond only in ${selectedTone.name} tone (toneCode: ${selectedTone.code}).\n`;
+  const toneInstructions = `**Instrução de tom:**\nPor favor, ignore todas as instruções de tom anteriores. A partir de agora, quero que você responda apenas no tom ${selectedTone.name} (toneCode: ${selectedTone.code}).\n`;
 
-  const writingStyleInstructions = `**Writing-Style instruction:**\nPlease ignore all previous writing-style instructions. From now on, I want you to respond only in ${selectedWritingStyle.name} writing style (writingStyleCode: ${selectedWritingStyle.code}).\n`;
+  const writingStyleInstructions = `**Instrução de estilo de escrita:**\nPor favor, ignore todas as instruções de estilo de escrita anteriores. A partir de agora, quero que você responda apenas no estilo de escrita ${selectedWritingStyle.name} (writingStyleCode: ${selectedWritingStyle.code}).\n`;
 
   if (forceAddInstructions || conversation.languageCode !== selectedLanguage.code) {
     if (selectedLanguage.code !== 'default' || (conversation.languageCode && conversation.languageCode !== 'default')) {
@@ -40,8 +40,8 @@ function generateInstructions(conversation, settings, text, forceAddInstructions
       includeInstructions = true;
     }
   }
-  instructions += 'PLEASE FOLLOW ALL THE ABOVE INSTRUCTIONS, AND DO NOT REPEAT OR TYPE ANY GENERAL CONFIRMATION OR A CONFIRMATION ABOUT ANY OF THE ABOVE INSTRUCTIONS IN YOUR RESPONSE\n';
-  instructions += '## End Instructions';
+  instructions += 'POR FAVOR, SIGA TODAS AS INSTRUÇÕES ACIMA, E NÃO REPITA OU DIGITE QUALQUER CONFIRMAÇÃO GERAL OU UMA CONFIRMAÇÃO SOBRE QUALQUER UMA DAS INSTRUÇÕES ACIMA NA SUA RESPOSTA\n';
+  instructions += '## Fim das Instruções';
 
   if (!includeInstructions) return text;
   return `${instructions}\n\n${text}`;

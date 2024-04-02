@@ -25,7 +25,7 @@ function rowUser(conversation, node, childIndex, childCount, name, avatar, setti
   });
 
   // remove any text between ## Instructions and ## End Instructions\n\n including the instructions
-  const messageContent = messageText.replace(/## Instructions[\s\S]*## End Instructions\n\n/, '');
+  const messageContent = messageText.replace(/## Instruções[\s\S]*## Final Instruções\n\n/, '');
   const highlightedMessageContent = escapeHtml(messageContent);
   const languageCode = messageText.match(/\(languageCode: (.*)\)/)?.[1];
   const toneCode = messageText.match(/\(toneCode: (.*)\)/)?.[1];
@@ -47,7 +47,7 @@ function rowUser(conversation, node, childIndex, childCount, name, avatar, setti
     <div class="relative flex flex-col" style="width: calc(100% - 80px);">
     <div class="font-semibold select-none">You</div>
       <div class="flex flex-grow flex-col gap-1">
-        ${replyToText ? `<div id="message-reply-to-preview-${id}" class="mt-2 flex flex-col text-token-text-primary"><div class="text-sm text-token-text-tertiary">Replying to:</div><div class="mt-2 overflow-y-auto whitespace-pre-wrap break-words border-l-2 border-token-border-heavy px-3">${replyToText}</div></div>` : ''}
+        ${replyToText ? `<div id="message-reply-to-preview-${id}" class="mt-2 flex flex-col text-token-text-primary"><div class="text-sm text-token-text-tertiary">Respondendo para:</div><div class="mt-2 overflow-y-auto whitespace-pre-wrap break-words border-l-2 border-token-border-heavy px-3">${replyToText}</div></div>` : ''}
         <div id="message-text-${id}" dir="auto" class="min-h-[20px] flex flex-col items-start gap-4 whitespace-pre-wrap" style="overflow-wrap:anywhere;">${assetElements(assets)}${highlightedMessageContent}</div>
         
         <div id="message-edit-wrapper-${id}" class="flex empty:hidden mt-1 justify-start gap-3 lg:flex"><div class="text-token-text-secondary flex self-end lg:self-center lg:justify-start mt-2 mt-0 visible gap-1">
@@ -64,9 +64,9 @@ function rowUser(conversation, node, childIndex, childCount, name, avatar, setti
       </div>
     </div>
     <div class="absolute left-0 flex" style="bottom:-12px;left:16px;">
-      ${languageName ? `<div id="language-code-${id}" title="You changed the response language here. This prompt includes a hidden language instructions" class="h-6 p-2 mr-1 flex items-center justify-center rounded-md border text-xs text-token-text-tertiary border-token-border-light bg-token-main-surface-secondary">Language: &nbsp<b>${languageName}</b></div>` : ''}
-      ${toneName ? `<div id="tone-code-${id}" title="You changed the response tone here. This prompt includes a hidden tone instructions" class="h-6 p-2 mr-1 flex items-center justify-center rounded-md border text-xs text-token-text-tertiary border-token-border-light bg-token-main-surface-secondary">Tone: &nbsp<b>${toneName}</b></div>` : ''}
-      ${writingStyleName ? `<div id="writing-style-code-${id}" title="You changed the response writing style here. This prompt includes a hidden writing style instructions" class="h-6 p-2 mr-1 flex items-center justify-center rounded-md border text-xs text-token-text-tertiary border-token-border-light bg-token-main-surface-secondary">Writing Style: &nbsp<b>${writingStyleName}</b></div>` : ''}
+      ${languageName ? `<div id="language-code-${id}" title="Você mudou o idioma da resposta aqui. Este prompt inclui instruções de idioma ocultas" class="h-6 p-2 mr-1 flex items-center justify-center rounded-md border text-xs text-token-text-tertiary border-token-border-light bg-token-main-surface-secondary">Idioma: &nbsp<b>${languageName}</b></div>` : ''}
+      ${toneName ? `<div id="tone-code-${id}" title="Você mudou o tom da resposta aqui. Este prompt inclui instruções de tom ocultas" class="h-6 p-2 mr-1 flex items-center justify-center rounded-md border text-xs text-token-text-tertiary border-token-border-light bg-token-main-surface-secondary">Tom: &nbsp<b>${toneName}</b></div>` : ''}
+      ${writingStyleName ? `<div id="writing-style-code-${id}" title="Você mudou o estilo de escrita da resposta aqui. Este prompt inclui instruções de estilo de escrita ocultas" class="h-6 p-2 mr-1 flex items-center justify-center rounded-md border text-xs text-token-text-tertiary border-token-border-light bg-token-main-surface-secondary">Estilo de Escrita: &nbsp<b>${writingStyleName}</b></div>` : ''}
     </div>
   </div>
 </div>

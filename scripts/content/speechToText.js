@@ -56,7 +56,7 @@ function startSpeechToText() {
     }
     if (isListening) {
       isListening = false;
-      toast('Stopped listening. ⏸️');
+      toast('Captura encerrada. ⏸️');
     }
     if (e.key === 'Alt' || e.keyCode === 18) {
       chrome.storage.local.get(['settings'], (result) => {
@@ -101,11 +101,11 @@ function startSpeechToText() {
                   // if focus is inside the window, start listening
                   isListening = true;
                   speechRecognition.start();
-                  toast('Started listening... 🔴');
+                  toast('Captura iniciada... 🔴');
                 }
               });
             } else {
-              toast('⚡️ Speech to text requires the Pro Subscription.', 'success', 6000);
+              toast('⚡️ Speech to text precisa de acesso ao Microfone.', 'success', 6000);
             }
           });
         }
@@ -124,7 +124,7 @@ function startSpeechToText() {
       }
       if (isListening) {
         isListening = false;
-        toast('Stopped listening. ⏸️');
+        toast('Captura encerrada. ⏸️');
       }
     }
   });
@@ -143,7 +143,7 @@ function startSpeechToText() {
     }
     if (isListening) {
       isListening = false;
-      toast('Stopped listening. ⏸️');
+      toast('Captura encerrada. ⏸️');
     }
   });
 }

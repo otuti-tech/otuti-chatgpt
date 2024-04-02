@@ -13,7 +13,7 @@ function addSyncBanner() {
   const syncProgressLabel = document.querySelector('#sync-progresslabel');
   const syncPageRefreshButton = navbar.querySelector('#sync-page-refresh-button');
   if (!syncPageRefreshButton) {
-    navbar.innerHTML = `<div>Syncing conversations to your computer. <b>Please wait for Sync to finish before starting a new conversation</b>.${syncProgressLabel.textContent.split('Syncing')[1] || ''}</div>`;
+    navbar.innerHTML = `<div>Sincronizando conversas com o seu computador. <b>Por favor, aguarde a sincronização terminar antes de iniciar uma nova conversa.</b>.${syncProgressLabel.textContent.split('Sync...')[1] || ''}</div>`;
   }
   navWrapper.appendChild(navbar);
   const main = document.querySelector('main');
@@ -23,7 +23,7 @@ function addSyncBanner() {
   const observer = new MutationObserver(() => {
     const curSyncPageRefreshButton = navWrapper.querySelector('#sync-page-refresh-button');
     if (!curSyncPageRefreshButton) {
-      navbar.innerHTML = `<div>Syncing conversations to your computer. <b>Please wait for Sync to finish before starting a new conversation</b>.${syncProgressLabel.textContent.split('Syncing')[1] || ''}</div>`;
+      navbar.innerHTML = `<div>Sincronizando conversas com o seu computador. <b>Por favor, aguarde a sincronização terminar antes de iniciar uma nova conversa.</b>.${syncProgressLabel.textContent.split('Sync...')[1] || ''}</div>`;
     }
   });
   observer.observe(syncProgressLabel, { childList: true, subtree: true });

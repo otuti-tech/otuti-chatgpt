@@ -131,7 +131,7 @@ function updateOrCreateConversation(conversationId, gizmoId, messages, parentId,
           const mapping = Object.values(existingConversation.mapping);
           const userMessages = mapping.filter((m) => (m.message?.role === 'user' || m.message?.author?.role === 'user') && m.message.recipient === 'all');
           const assistantMessages = mapping.filter((m) => (m.message?.role === 'assistant' || m.message?.author?.role === 'assistant') && m.message.recipient === 'all');
-          if (generateTitle && existingConversation.title === 'New chat' && userMessages.length === 1 && assistantMessages.length > 0) { // only one assistant message
+          if (generateTitle && existingConversation.title === 'Novo chat' && userMessages.length === 1 && assistantMessages.length > 0) { // only one assistant message
             if (settings.saveHistory) {
               // find last system message
               const allSystemMessages = mapping.filter((m) => m.message?.role === 'system' || m.message?.author?.role === 'system');
@@ -206,7 +206,7 @@ function updateOrCreateConversation(conversationId, gizmoId, messages, parentId,
       toneCode: settings.selectedTone?.code,
       writingStyleCode: settings.selectedWritingStyle?.code,
       current_node: messages[0].id,
-      title: 'New chat',
+      title: 'Novo chat',
       create_time: (new Date()).getTime(),
       update_time: 'force_copy',
       mapping: {
@@ -262,7 +262,7 @@ function addProgressBar() {
   tooltip.classList = 'flex z-50 text-xs rounded p-2';
   tooltip.style = 'position: absolute; width: 250px; border: solid 1px #8e8ea0; bottom: 20px; right: 4px; background-color: #343541; display:none; margin:0;';
   tooltip.id = 'sync-tooltip';
-  tooltip.innerText = 'You conversations are being backed up in your computer for a faster experience! This can take a while.';
+  tooltip.innerText = 'Suas conversas estão sendo salvas no seu computador para uma experiência mais rápida! Isso pode levar um tempo.';
   progressLabel.addEventListener('mouseover', () => {
     tooltip.style.display = 'block';
   });
@@ -273,7 +273,7 @@ function addProgressBar() {
   refreshButton.id = 'sync-refresh-button';
   refreshButton.classList = 'z-50 text-xs text-token-text-secondary w-3 h-3 m-0';
   refreshButton.style = 'position: absolute; bottom: 6px; left: 8px; cursor: pointer;';
-  refreshButton.title = 'Syncing Conversations';
+  refreshButton.title = 'Sincronizando conversas';
   refreshButton.innerHTML = '<svg class="animate-spin" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="#00aaff" d="M468.9 32.11c13.87 0 27.18 10.77 27.18 27.04v145.9c0 10.59-8.584 19.17-19.17 19.17h-145.7c-16.28 0-27.06-13.32-27.06-27.2c0-6.634 2.461-13.4 7.96-18.9l45.12-45.14c-28.22-23.14-63.85-36.64-101.3-36.64c-88.09 0-159.8 71.69-159.8 159.8S167.8 415.9 255.9 415.9c73.14 0 89.44-38.31 115.1-38.31c18.48 0 31.97 15.04 31.97 31.96c0 35.04-81.59 70.41-147 70.41c-123.4 0-223.9-100.5-223.9-223.9S132.6 32.44 256 32.44c54.6 0 106.2 20.39 146.4 55.26l47.6-47.63C455.5 34.57 462.3 32.11 468.9 32.11z"/></svg>';
   const syncDiv = document.createElement('div');
   syncDiv.classList = 'flex flex-1 flex-col';
@@ -294,11 +294,11 @@ function resetProgressBar() {
     progressBar.classList.remove('animate-pulse');
     progressLabel.innerText = 'Synced';
 
-    tooltip.innerText = 'Your conversations are synced!';
+    tooltip.innerText = 'Encerrrada sincronização das suas conversas!';
   }
   const refreshButton = document.getElementById('sync-refresh-button');
   if (refreshButton) {
-    refreshButton.title = 'Sync Conversations';
+    refreshButton.title = 'Sync Conversas';
     refreshButton.classList.add('cursor-pointer');
     refreshButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="gold" d="M468.9 32.11c13.87 0 27.18 10.77 27.18 27.04v145.9c0 10.59-8.584 19.17-19.17 19.17h-145.7c-16.28 0-27.06-13.32-27.06-27.2c0-6.634 2.461-13.4 7.96-18.9l45.12-45.14c-28.22-23.14-63.85-36.64-101.3-36.64c-88.09 0-159.8 71.69-159.8 159.8S167.8 415.9 255.9 415.9c73.14 0 89.44-38.31 115.1-38.31c18.48 0 31.97 15.04 31.97 31.96c0 35.04-81.59 70.41-147 70.41c-123.4 0-223.9-100.5-223.9-223.9S132.6 32.44 256 32.44c54.6 0 106.2 20.39 146.4 55.26l47.6-47.63C455.5 34.57 462.3 32.11 468.9 32.11z"/></svg>';
     refreshButton.onclick = (e) => {
@@ -360,7 +360,7 @@ function reloadOrAddRefreshButtonToSyncBanner(localConversations, settings, skip
       const pageRefreshButton = document.createElement('button');
       refreshButton.id = 'sync-page-refresh-button';
       pageRefreshButton.style = 'color: gold; cursor: pointer; border: solid 1px gold; padding: 8px; border-radius: 4px; margin-left: 16px;';
-      pageRefreshButton.innerText = 'Refresh page';
+      pageRefreshButton.innerText = 'Atualizar Página';
       pageRefreshButton.addEventListener('click', () => {
         if (shouldReload) {
           window.location.reload();
@@ -370,7 +370,7 @@ function reloadOrAddRefreshButtonToSyncBanner(localConversations, settings, skip
         }
       });
       setTimeout(() => {
-        existingSyncBanner.firstChild.innerHTML = 'Sync is complete! Refresh the page to see enable all features.';
+        existingSyncBanner.firstChild.innerHTML = 'A sincronização está completa! Atualize a página para habilitar todas as funcionalidades.';
         existingSyncBanner.firstChild.appendChild(pageRefreshButton);
       }, 500);
     }
@@ -387,7 +387,7 @@ function updateProgressBar(localConvs, remoteConvs) {
   const progressLabel = document.getElementById('sync-progresslabel');
   if (progressLabel) {
     // eslint-disable-next-line no-loop-func
-    progressLabel.innerText = `Syncing(${inSyncConversations(localConvs, remoteConvs).length}/${Object.keys(remoteConvs).length})`;
+    progressLabel.innerText = `Sincronizando(${inSyncConversations(localConvs, remoteConvs).length}/${Object.keys(remoteConvs).length})`;
     if (remoteConvs.length > 0 && remoteConvs.length - inSyncConversations(localConvs, remoteConvs).length > 5) {
       addSyncBanner();
     }
@@ -490,7 +490,7 @@ function initializeAutoSave(skipFullReload = false, forceRefreshIds = []) {
               delete localConversations[localConvIds[i]];
             }
           } else {
-            localConversations[localConvIds[i]].title = remoteConv?.title || 'New chat';
+            localConversations[localConvIds[i]].title = remoteConv?.title || 'Novo chat';
             if (
               forceRefreshIds.includes(localConvIds[i])
               || localConversations[localConvIds[i]]?.update_time === 'force_copy'

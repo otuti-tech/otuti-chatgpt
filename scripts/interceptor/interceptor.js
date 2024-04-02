@@ -54,12 +54,6 @@ if (!browserIsFirefox) {
         window.dispatchEvent(gizmoNotFoundEvent);
       }
     }
-    if (response && url.includes('public-api/gizmos/discovery')) {
-      if ((window.localStorage.getItem('sp/enhanceGPTStore') || 'true') === 'true' && (window.localStorage.getItem('sp/autoSync' || 'true') === 'true')) {
-        // do nothing
-        return '';
-      }
-    }
     if (response && url.includes('backend-api/accounts/check')) {
       // get authorization header from request
       let accessToken;

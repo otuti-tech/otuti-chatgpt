@@ -12,13 +12,13 @@ let shiftKeyPressed = false;
 const cachedAudios = {};
 
 const defaultPrompts = [
-  { title: 'Continue', text: 'Please continue', isDefault: true },
-  { title: 'Rewrite', text: 'Please rewrite your last response', isDefault: false },
-  { title: 'Paraphrase', text: 'Please paraphrase your last response', isDefault: false },
-  { title: 'Explain', text: 'Please explain your last response', isDefault: false },
-  { title: 'Clarify', text: 'Please clarify your last response', isDefault: false },
-  { title: 'Expand', text: 'Please expand your last response', isDefault: false },
-  { title: 'Summarize', text: 'Please summarize your last response', isDefault: false },
+  { title: 'Continuar', text: 'Por favor, continue', isDefault: true },
+  { title: 'Reescrever', text: 'Por favor, reescreva sua última resposta', isDefault: false },
+  { title: 'Parafrasear', text: 'Por favor, parafraseie sua última resposta', isDefault: false },
+  { title: 'Explicar', text: 'Por favor, explique sua última resposta', isDefault: false },
+  { title: 'Esclarecer', text: 'Por favor, esclareça sua última resposta', isDefault: false },
+  { title: 'Expandir', text: 'Por favor, expanda sua última resposta', isDefault: false },
+  { title: 'Resumir', text: 'Por favor, resuma sua última resposta', isDefault: false },
 ];
 // chrome.storage.onChanged.addListener((changes, namespace) => {
 //   // eslint-disable-next-line no-restricted-syntax
@@ -128,21 +128,21 @@ function initializeStorage() {
       unofficialModels: [
         {
           title: 'gpt-3.5-turbo-1106',
-          description: 'The latest GPT-3.5 Turbo model with improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more.',
+          description: 'O mais recente modelo GPT-3.5 Turbo com melhoria no seguimento de instruções, modo JSON, saídas reproduzíveis, chamadas de função paralelas e mais.',
           slug: 'gpt-3.5-turbo-1106',
-          tags: ['Custom'],
+          tags: ['Personalizado'],
         },
         {
           title: 'gpt-4-1106-preview',
-          description: 'The latest GPT-4 model with improved instruction following, JSON mode, reproducible outputs, parallel function calling, and more.',
+          description: 'O mais recente modelo GPT-4 com melhoria no seguimento de instruções, modo JSON, saídas reproduzíveis, chamadas de função paralelas e mais.',
           slug: 'gpt-4-1106-preview',
-          tags: ['Custom'],
+          tags: ['Personalizado'],
         },
         {
           title: 'gpt-4-32k',
-          description: 'Currently points to gpt-4-32k-0613.',
+          description: 'Atualmente aponta para gpt-4-32k-0613.',
           slug: 'gpt-4-32k',
-          tags: ['Custom'],
+          tags: ['Personalizado'],
         },
       ],
     }, () => crossDeviceSyncGet());
@@ -262,7 +262,7 @@ function showAutoSyncWarning(settings) {
   if (settings?.dontShowAutoSyncWarning) return;
   const existingAutoSyncWarning = document.getElementById('confirm-action-dialog');
   if (existingAutoSyncWarning) return;
-  showConfirmDialog('Auto Sync', 'Turning Auto Sync OFF will disable most of the features of Superpower ChatGPT. It is basically the same as disabling the extension. Remember to turn it back ON when you want to use all the features again.<br/><br/>If you have any questions, please feel free to <b><a target="_blank" style="text-decoration:underline; color:gold;" href="mailto:support@superpowerdaily.com?subject=I have a question">email us</a></b> or join our <b><a target="_blank" style="text-decoration:underline; color:gold;" href="https://discord.gg/superpower-chatgpt-1083455984489476220">Discord</a></b> channel for faster support.<br/><br/>Want to learn more? Check out our <b><a style="text-decoration:underline; color:gold;" href="https://www.youtube.com/@superpowerdaily" target="blank">YouTube</a></b> channel where you can find lots of useful guides on how to use SUperpower ChatGPT<br/><br/>', '⚡️ Enable AutoSync', null, () => confirmAutoSync(settings), 'green', true, (checked) => doNotShowAutoSyncWarningAgainCallback(settings, checked));
+  showConfirmDialog('Auto Sync', 'Desativar a Sincronização Automática desabilitará a maioria das funcionalidades do Superpower ChatGPT. É basicamente o mesmo que desativar a extensão. Lembre-se de ativá-la novamente quando quiser usar todas as funcionalidades novamente.<br/><br/>', '⚡️ Ativar AutoSync', null, () => confirmAutoSync(settings), 'green', true, (checked) => doNotShowAutoSyncWarningAgainCallback(settings, checked));
 }
 function confirmAutoSync(settings) {
   chrome.storage.local.set({ settings: { ...settings, autoSync: true } }, () => {
@@ -577,7 +577,7 @@ function checkVersion() {
       getLatestVersion: true,
     }, (updateCheck) => {
       if (updateCheck?.status === 'update_available') {
-        showConfirmDialog(`New update available (v${updateCheck?.version})`, 'A new version of <b>Superpower ChatGPT</b> is available. Update now to get the latest features and bug fixed.', 'Update now', null, () => {
+        showConfirmDialog(`Nova atualização disponível (v${updateCheck?.version})`, 'Uma nova versão do <b>Superpower ChatGPT</b> está disponível. Atualize agora para obter as últimas funcionalidades e correções de bugs.', 'Atualizar agora', null, () => {
           chrome.runtime.sendMessage({ reloadExtension: true }, () => {
             window.location.reload();
           });

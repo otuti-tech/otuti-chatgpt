@@ -10,7 +10,7 @@ function conversationSettingsMenu(hasSubscription = false, side = 'right', force
   <li class="relative cursor-pointer select-none border-b py-1 px-3 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-export-markdown" role="option" tabindex="-1">
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" stroke="currentColor" fill="currentColor" stroke-width="2" stroke-linejoin="round" class="h-4 w-4 mr-2 top-1" height="1em" width="1em"><path d="M568.1 303l-80-80c-9.375-9.375-24.56-9.375-33.94 0s-9.375 24.56 0 33.94L494.1 296H216C202.8 296 192 306.8 192 320s10.75 24 24 24h278.1l-39.03 39.03C450.3 387.7 448 393.8 448 400s2.344 12.28 7.031 16.97c9.375 9.375 24.56 9.375 33.94 0l80-80C578.3 327.6 578.3 312.4 568.1 303zM360 384c-13.25 0-24 10.74-24 24V448c0 8.836-7.164 16-16 16H64.02c-8.836 0-16-7.164-16-16L48 64.13c0-8.836 7.164-16 16-16h160L224 128c0 17.67 14.33 32 32 32h79.1v72c0 13.25 10.74 24 23.1 24S384 245.3 384 232V138.6c0-16.98-6.742-33.26-18.75-45.26l-74.63-74.64C278.6 6.742 262.3 0 245.4 0H63.1C28.65 0-.002 28.66 0 64l.0065 384c.002 35.34 28.65 64 64 64H320c35.2 0 64-28.8 64-64v-40C384 394.7 373.3 384 360 384z"/></svg>
-    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Export As Markdown </span>
+    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Exportar como Markdown </span>
   </div>
   </li>
 
@@ -18,7 +18,7 @@ function conversationSettingsMenu(hasSubscription = false, side = 'right', force
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" stroke="currentColor" fill="currentColor" stroke-width="2" stroke-linejoin="round" class="h-4 w-4 mr-2 top-1" height="1em" width="1em"><path d="M568.1 303l-80-80c-9.375-9.375-24.56-9.375-33.94 0s-9.375 24.56 0 33.94L494.1 296H216C202.8 296 192 306.8 192 320s10.75 24 24 24h278.1l-39.03 39.03C450.3 387.7 448 393.8 448 400s2.344 12.28 7.031 16.97c9.375 9.375 24.56 9.375 33.94 0l80-80C578.3 327.6 578.3 312.4 568.1 303zM360 384c-13.25 0-24 10.74-24 24V448c0 8.836-7.164 16-16 16H64.02c-8.836 0-16-7.164-16-16L48 64.13c0-8.836 7.164-16 16-16h160L224 128c0 17.67 14.33 32 32 32h79.1v72c0 13.25 10.74 24 23.1 24S384 245.3 384 232V138.6c0-16.98-6.742-33.26-18.75-45.26l-74.63-74.64C278.6 6.742 262.3 0 245.4 0H63.1C28.65 0-.002 28.66 0 64l.0065 384c.002 35.34 28.65 64 64 64H320c35.2 0 64-28.8 64-64v-40C384 394.7 373.3 384 360 384z"/></svg>
 
-    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Export As Text </span>
+    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Exportar como Texto </span>
   </div>
   </li>
 
@@ -26,20 +26,20 @@ function conversationSettingsMenu(hasSubscription = false, side = 'right', force
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" stroke="currentColor" fill="currentColor" stroke-width="2" stroke-linejoin="round" class="h-4 w-4 mr-2 top-1" height="1em" width="1em"><path d="M568.1 303l-80-80c-9.375-9.375-24.56-9.375-33.94 0s-9.375 24.56 0 33.94L494.1 296H216C202.8 296 192 306.8 192 320s10.75 24 24 24h278.1l-39.03 39.03C450.3 387.7 448 393.8 448 400s2.344 12.28 7.031 16.97c9.375 9.375 24.56 9.375 33.94 0l80-80C578.3 327.6 578.3 312.4 568.1 303zM360 384c-13.25 0-24 10.74-24 24V448c0 8.836-7.164 16-16 16H64.02c-8.836 0-16-7.164-16-16L48 64.13c0-8.836 7.164-16 16-16h160L224 128c0 17.67 14.33 32 32 32h79.1v72c0 13.25 10.74 24 23.1 24S384 245.3 384 232V138.6c0-16.98-6.742-33.26-18.75-45.26l-74.63-74.64C278.6 6.742 262.3 0 245.4 0H63.1C28.65 0-.002 28.66 0 64l.0065 384c.002 35.34 28.65 64 64 64H320c35.2 0 64-28.8 64-64v-40C384 394.7 373.3 384 360 384z"/></svg>
 
-    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Export As JSON </span>
+    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Exportar como JSON </span>
   </div>
   </li>
 
   <li class="relative cursor-pointer select-none border-b py-1 px-3 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-share" role="option" tabindex="-1">
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
     <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
-    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Share </span>
+    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Compartilhar </span>
   </div>
 
   <li class="relative cursor-pointer select-none border-b py-1 px-3 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-download-images" role="option" tabindex="-1">
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
   <svg stroke="currentColor" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2"><path fill-rule="evenodd" clip-rule="evenodd" d="M7.70711 10.2929C7.31658 9.90237 6.68342 9.90237 6.29289 10.2929C5.90237 10.6834 5.90237 11.3166 6.29289 11.7071L11.2929 16.7071C11.6834 17.0976 12.3166 17.0976 12.7071 16.7071L17.7071 11.7071C18.0976 11.3166 18.0976 10.6834 17.7071 10.2929C17.3166 9.90237 16.6834 9.90237 16.2929 10.2929L13 13.5858L13 4C13 3.44771 12.5523 3 12 3C11.4477 3 11 3.44771 11 4L11 13.5858L7.70711 10.2929ZM5 19C4.44772 19 4 19.4477 4 20C4 20.5523 4.44772 21 5 21H19C19.5523 21 20 20.5523 20 20C20 19.4477 19.5523 19 19 19L5 19Z" fill="currentColor"></path></svg>
-    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Download images 
+    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Baixar imagens 
     <span role="button" style="background-color: rgb(25, 195, 125); color: black; padding: 0px 4px; border-radius: 8px; font-size: 0.7em; margin-right: 8px;">⚡️ Requires Pro </span>
     </span>
   </div>
@@ -47,20 +47,20 @@ function conversationSettingsMenu(hasSubscription = false, side = 'right', force
   <li class="relative cursor-pointer select-none border-b py-1 px-3 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-move-to-folder" role="option" tabindex="-1">
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
   <svg xmlns="http://www.w3.org/2000/svg" stroke="currentColor" fill="currentColor" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2" height="1em" width="1em" stroke-width="2" viewBox="0 0 512 512"><path d="M448 96h-172.1L226.7 50.75C214.7 38.74 198.5 32 181.5 32H64C28.66 32 0 60.66 0 96v320c0 35.34 28.66 64 64 64h384c35.34 0 64-28.66 64-64V160C512 124.7 483.3 96 448 96zM464 416c0 8.824-7.18 16-16 16H64c-8.82 0-16-7.176-16-16V96c0-8.824 7.18-16 16-16h117.5c4.273 0 8.289 1.664 11.31 4.688L256 144h192c8.82 0 16 7.176 16 16V416zM336 264h-56V207.1C279.1 194.7 269.3 184 256 184S232 194.7 232 207.1V264H175.1C162.7 264 152 274.7 152 288c0 13.26 10.73 23.1 23.1 23.1h56v56C232 381.3 242.7 392 256 392c13.26 0 23.1-10.74 23.1-23.1V311.1h56C349.3 311.1 360 301.3 360 288S349.3 264 336 264z"/></svg>
-    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Move to folder </span>
+    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Mover para a pasta </span>
   </div>
 
   </li>
   <li class="relative cursor-pointer select-none border-b py-1 px-3 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-archive" role="option" tabindex="-1">
   <div class="flex items-center text-token-text-primary" style="margin-bottom:6px;">
   <svg class="h-4 w-4 mr-2" height="1em" width="1em" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" class="icon-md"><path fill-rule="evenodd" clip-rule="evenodd" d="M3.62188 3.07918C3.87597 2.571 4.39537 2.25 4.96353 2.25H13.0365C13.6046 2.25 14.124 2.571 14.3781 3.07918L15.75 5.82295V13.5C15.75 14.7426 14.7426 15.75 13.5 15.75H4.5C3.25736 15.75 2.25 14.7426 2.25 13.5V5.82295L3.62188 3.07918ZM13.0365 3.75H4.96353L4.21353 5.25H13.7865L13.0365 3.75ZM14.25 6.75H3.75V13.5C3.75 13.9142 4.08579 14.25 4.5 14.25H13.5C13.9142 14.25 14.25 13.9142 14.25 13.5V6.75ZM6.75 9C6.75 8.58579 7.08579 8.25 7.5 8.25H10.5C10.9142 8.25 11.25 8.58579 11.25 9C11.25 9.41421 10.9142 9.75 10.5 9.75H7.5C7.08579 9.75 6.75 9.41421 6.75 9Z" fill="currentColor"></path></svg>
-    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Archive chat</span>
+    <span class="font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary">Arquivar conversa</span>
   </div>
   </li>
   <li class="relative text-red-500 cursor-pointer select-none border-b py-1 px-3 last:border-0 border-token-border-light hover:bg-token-main-surface-secondary" id="conversation-setting-menu-option-delete" role="option" tabindex="-1">
   <div class="flex items-center" style="margin-bottom:6px;">
     <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4 mr-2" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-    <span class="font-semibold flex h-6 items-center gap-1 truncate text-red-500">Delete chat</span>
+    <span class="font-semibold flex h-6 items-center gap-1 truncate text-red-500">Excluir conversa</span>
   </div>
   </li>
   </ul>
@@ -116,7 +116,7 @@ function addConversationSettingsMenuEventListener(conversationId, callback = nul
               }
               getSingleConversation(conversationId, exportType);
             }, () => {
-              toast('Error while getting conversation');
+              toast('Erro durante o carregamento da conversa!');
             });
           } else {
             getSingleConversation(conversationId, exportType);
@@ -139,7 +139,7 @@ function addConversationSettingsMenuEventListener(conversationId, callback = nul
           confirmArchiveSelectedConversations([conversationId]);
         }
         if (id === 'delete') {
-          showConfirmDialog('Delete Selected', 'Are you sure you want to delete this conversations?', 'Delete', null, () => confirmDeleteSelectedConversations([conversationId]), 'red', false);
+          showConfirmDialog('Excluir Selecionado', 'Você tem certeza que deseja excluir estas conversas?', 'Excluir', null, () => confirmDeleteSelectedConversations([conversationId]), 'red', false);
         }
       });
     });
@@ -163,7 +163,7 @@ function addMoveToFolderModalEventListener(conversationIds) {
     const folderId = folderWrapper.id.split('move-to-folder-wrapper-folder-')[1];
     folderWrapper.addEventListener('click', () => {
       moveToFolder(folderId, conversationIds);
-      toast('Conversation moved to folder');
+      toast('Conversa movida para a pasta');
       const moveToFolderModal = document.querySelector('#move-to-folder-modal');
       moveToFolderModal?.remove();
     });
@@ -174,7 +174,7 @@ function addMoveToFolderModalEventListener(conversationIds) {
       const { conversationsOrder, settings } = result;
       const newFolder = {
         id: self.crypto.randomUUID(),
-        name: 'New Folder',
+        name: 'Nova Pasta',
         conversationIds: [],
         isOpen: true,
         color: settings.autoColorFolders ? generateRandomDarkColor() : '#40414f',
@@ -189,7 +189,7 @@ function addMoveToFolderModalEventListener(conversationIds) {
         const folderWrapper = document.querySelector(`#move-to-folder-wrapper-folder-${newFolder.id}`);
         folderWrapper.addEventListener('click', () => {
           moveToFolder(newFolder.id, conversationIds);
-          toast('Conversation moved to folder');
+          toast('Conversa movida para a pasta');
           const moveToFolderModal = document.querySelector('#move-to-folder-modal');
           moveToFolderModal?.remove();
         });
@@ -219,7 +219,7 @@ function shareConversation(conversationId) {
       const { conversations } = result;
       const currentNodeId = conversations[conversationId].current_node;
       if (conversations[conversationId]?.saveHistory === false) {
-        toast('Hidden conversations (purple icon) cannot be shared.', 'warning');
+        toast('Conversas ocultas (ícone roxo) não podem ser compartilhadas.', 'warning');
         return;
       }
       createShare(conversationId, currentNodeId).then(async (res) => {
@@ -244,10 +244,10 @@ function confirmArchiveSelectedConversations(conversationIds) {
       // wait for 5 seconds
       const conversationId = conversationIds[i];
       if (conversations[conversationId]?.saveHistory === false) {
-        toast('Hidden conversations (purple icon) cannot be archived.', 'warning');
+        toast('Conversas ocultas (ícone roxo) não podem ser compartilhadas.', 'warning');
         continue;
       }
-      toast('Conversation is archived.');
+      toast('A conversa foi arquivada.');
 
       // eslint-disable-next-line no-await-in-loop
       const response = await archiveConversation(conversationId);
@@ -324,7 +324,7 @@ function getSingleConversation(conversationId, exportType) {
         element.click();
         document.body.removeChild(element);
         navigator.clipboard.writeText(JSON.stringify(conversationJson));
-        toast('Copied to clipboard');
+        toast('Salvo no clipboard (json)');
       }
       // download as .txt file
       if (exportType.toLowerCase() === 'text') {
@@ -332,7 +332,7 @@ function getSingleConversation(conversationId, exportType) {
           const role = m?.author?.role || m?.role;
           const recipient = m?.recipient;
           return role === 'user' || (recipient === 'all' && role === 'assistant');
-        }).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${(m.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
+        }).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${(m.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instruções[\s\S]*## Final das Instruções\n\n/, '')}`).join('\n\n');
         const element = document.createElement('a');
         element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(conversationText)}`);
         element.setAttribute('download', `${filePrefix}-${conversationTitle}.${fileFormatConverter(exportType.toLowerCase())}`);
@@ -341,7 +341,7 @@ function getSingleConversation(conversationId, exportType) {
         element.click();
         document.body.removeChild(element);
         navigator.clipboard.writeText(conversationText);
-        toast('Copied to clipboard');
+        toast('Salvo no clipboard (texto)');
       }
       // download as .md file
       if (exportType.toLowerCase() === 'markdown') {
@@ -349,7 +349,7 @@ function getSingleConversation(conversationId, exportType) {
           const role = m?.author?.role || m?.role;
           const recipient = m?.recipient;
           return role === 'user' || (recipient === 'all' && role === 'assistant');
-        }).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${(m.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`).join('\n\n');
+        }).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${(m.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instruções[\s\S]*## Final das Instruções\n\n/, '')}`).join('\n\n');
         const element = document.createElement('a');
         element.setAttribute('href', `data:text/plain;charset=utf-8,${encodeURIComponent(conversationMarkdown)}`);
         // add timestamp to conversation title to make file name
@@ -359,7 +359,7 @@ function getSingleConversation(conversationId, exportType) {
         element.click();
         document.body.removeChild(element);
         navigator.clipboard.writeText(conversationMarkdown);
-        toast('Copied to clipboard');
+        toast('Salvo no clipboard (markdown)');
       }
     });
   });

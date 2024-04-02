@@ -20,12 +20,12 @@ function replaceTextAreaElement(settings) {
   const presentation = document.querySelector('main > div[role=presentation]');
   const lastMessageWrapper = [...document.querySelectorAll('[id^="message-wrapper-"]')].pop();
 
-  const placeHolderText = `/ for Custom Prompts — # for Prompt Chains${(isFirefox || isOpera) ? '' : ' — Hold down Alt to enable speaking'}`;
+  const placeHolderText = `/ para Custom Prompts — # para Prompt Chains — Alt para ativar o microfone'}`;
   if (!isGenerating && lastMessageWrapper?.dataset?.role === 'user') {
     // add regenerate button event listener
     let regenerateButton = document.querySelector('#conversation-regenerate-button');
     if (!regenerateButton) {
-      const regenerateWrapperHTML = '<div class="w-full pt-2 md:pt-0 border-token-border-light md:border-transparent md:dark:border-transparent md:w-[calc(100%-.5rem)]"><div><div class="mb-3 text-center text-xs">There was an error generating a response</div><div class="flex items-center md:mb-4"><button id="conversation-regenerate-button" class="btn relative btn-primary m-auto" as="button"><div class="flex w-full gap-2 items-center justify-center"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 icon-xs" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>Regenerate</div></button></div></div><div class="relative px-2 py-2 text-center text-xs text-token-text-tertiary md:px-[60px]"><span>ChatGPT can make mistakes. Consider checking important information.</span></div></div>';
+      const regenerateWrapperHTML = '<div class="w-full pt-2 md:pt-0 border-token-border-light md:border-transparent md:dark:border-transparent md:w-[calc(100%-.5rem)]"><div><div class="mb-3 text-center text-xs">Houve um erro na geração da resposta</div><div class="flex items-center md:mb-4"><button id="conversation-regenerate-button" class="btn relative btn-primary m-auto" as="button"><div class="flex w-full gap-2 items-center justify-center"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0 icon-xs" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="1 4 1 10 7 10"></polyline><polyline points="23 20 23 14 17 14"></polyline><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"></path></svg>Repetir</div></button></div></div><div class="relative px-2 py-2 text-center text-xs text-token-text-tertiary md:px-[60px]"><span>O ChatGPT pode cometer erros. Considere verificar informações importantes. Na maior parte do tempo, eu posso ajudar com Links para fontes na web. De qualquer forma, sou um estagiário, mantenha-se responsável!!!</span></div></div>';
       if (presentation.childNodes.length > 1) {
         while (presentation.childNodes.length > 1) {
           presentation.removeChild(presentation.lastChild);
@@ -215,7 +215,7 @@ function addInputCounter() {
   inputCounterElement.id = 'gptx-input-counter';
   inputCounterElement.classList = 'text-token-text-secondary select-none';
   inputCounterElement.style = 'position: absolute; bottom: -15px; right: 0px; font-size: 10px; z-index: 100;';
-  inputCounterElement.innerText = '0 chars / 0 words';
+  inputCounterElement.innerText = '0 chars / 0 palavras';
 
   textAreaElement.parentElement.appendChild(inputCounterElement);
 }
@@ -240,17 +240,17 @@ function updateInputCounter(text) {
     if (charCount > redLimit) {
       curInputCounterElement.style.color = '#ff4a4a';
     }
-    curInputCounterElement.innerText = `${Math.max(charCount, 0)} chars / ${Math.max(wordCount, 0)} words`;
+    curInputCounterElement.innerText = `${Math.max(charCount, 0)} chars / ${Math.max(wordCount, 0)} palavras`;
   }
 }
 function getGPT4CounterMessageCapWindow(messageCapWindow) {
-  if (messageCapWindow < 60) return messageCapWindow < 2 ? 'minute' : ''.concat(messageCapWindow, ' minutes');
+  if (messageCapWindow < 60) return messageCapWindow < 2 ? 'minuto' : ''.concat(messageCapWindow, ' minutos');
   const n = Math.floor(messageCapWindow / 60);
-  if (n < 24) return n < 2 ? 'hour' : ''.concat(n, ' hours');
+  if (n < 24) return n < 2 ? 'hora' : ''.concat(n, ' horas');
   const t = Math.floor(n / 24);
-  if (t < 7) return t < 2 ? 'day' : ''.concat(t, ' days');
+  if (t < 7) return t < 2 ? 'dia' : ''.concat(t, ' dias');
   const r = Math.floor(t / 7);
-  return r < 2 ? 'week' : ''.concat(r, ' weeks');
+  return r < 2 ? 'semana' : ''.concat(r, ' semanas');
 }
 function addGpt4Counter() {
   const textAreaElement = document.querySelector('#prompt-textarea');
@@ -274,7 +274,7 @@ function addGpt4Counter() {
     const timestampsInCapWindow = gpt4Timestamps.filter((timestamp) => now - timestamp < (messageCapWindow / 60) * 60 * 60 * 1000);
     // const resetTimeText = timestampsInCapWindow.length > 0 ? `New message available at: ${new Date(timestampsInCapWindow[0] + (messageCapWindow / 60) * 60 * 60 * 1000).toLocaleString()}` : '';
     const gpt4counter = timestampsInCapWindow.length;
-    const capExpiresAtTimeString = result.capExpiresAt ? `(Cap Expires At: ${result.capExpiresAt})` : '';
+    const capExpiresAtTimeString = result.capExpiresAt ? `(Cap Renova às: ${result.capExpiresAt})` : '';
     // earliest timestamp in the last 3 hours
     const firstTimestamp = gpt4Timestamps[0];
     // find difference between 3 hours ago to first timestamp
@@ -283,17 +283,17 @@ function addGpt4Counter() {
     let countdownTimerText = '';
 
     if (countdownTimer > 0) {
-      countdownTimerText = ` (New request available in ${Math.floor(countdownTimer / 1000 / 60)} minutes)`;
-      gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4counter}/${messageCap} ${countdownTimerText} ${capExpiresAtTimeString}`;
+      countdownTimerText = ` (Novas requisições disponíveis em ${Math.floor(countdownTimer / 1000 / 60)} minutos)`;
+      gpt4CounterElement.innerText = `Uso do GPT-4 (últimas ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4counter}/${messageCap} ${countdownTimerText} ${capExpiresAtTimeString}`;
       setTimeout(() => {
         addGpt4Counter();
       }, 30000);
       return;
     }
     if (gpt4counter) {
-      gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4counter}/${messageCap} ${capExpiresAtTimeString}`;
+      gpt4CounterElement.innerText = `Uso do GPT-4 (últimas ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4counter}/${messageCap} ${capExpiresAtTimeString}`;
     } else {
-      gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 0/${messageCap}`;
+      gpt4CounterElement.innerText = `Uso do GPT-4 (últimas ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 0/${messageCap}`;
     }
   });
 

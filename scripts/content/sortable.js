@@ -1,7 +1,7 @@
 const list = document.getElementById('list');
 let base; let randomized; let dragging; let
   draggedOver;
-let isRight = 'Not In Order!';
+let isRight = 'Desordenado!';
 
 const genRandom = (array) => {
   base = array.slice();
@@ -38,7 +38,7 @@ const compare = (e) => {
   randomized.splice(index2, 0, dragging);
 
   isRight = randomized.join('') === base.join('')
-    ? 'In Order!' : 'Not In Order!';
+    ? 'Ordenado!' : 'Desordenado!';
 
   renderItems(randomized);
 };

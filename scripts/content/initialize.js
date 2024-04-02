@@ -21,9 +21,9 @@ function observeAll() {
         if (document.querySelector('grammarly-extension')) {
           removeGrammerly();
         }
-        if (document.querySelector('body')?.innerText.includes('Oops, an error occurred!') && document.querySelector('body')?.innerText.includes('Try again')) {
+        if (document.querySelector('body')?.innerText.includes('Oops, parece que deu ruim!') && document.querySelector('body')?.innerText.includes('Tentar Novamente')) {
           const tryAgainButton = document.querySelector('body')?.querySelector('button');
-          if (tryAgainButton) {
+          if (true) {
             const tryAgainButtonClone = tryAgainButton.cloneNode(true);
             tryAgainButton.parentNode.replaceChild(tryAgainButtonClone, tryAgainButton);
             tryAgainButtonClone.addEventListener('click', () => {
@@ -48,9 +48,9 @@ function initialize() {
   const settingsButton = document.querySelector('#settings-button');
   if (settingsButton) return;
   chrome.runtime.sendMessage({
-    checkHasSubscription: true,
+    checkHasSubscription: false,
     detail: {
-      forceRefresh: true,
+      forceRefresh: false,
     },
   }, (hasSubscription) => {
     setTimeout(() => {
@@ -59,16 +59,16 @@ function initialize() {
         detail: {},
       }, (remoteSettings) => {
         if (remoteSettings?.syncOldImages) {
-          if (hasSubscription || Math.random() > 0.75) {
+          if (hasSubscription || Math.random() > 0.01) {
             syncImages(hasSubscription);
           }
         }
         // get arkose triggers from remote settings
         // get all script element with data-callback starting witn useArkoseSetupEnforcement
-        const arkoseScripts = document.querySelectorAll('script[data-callback^="useArkoseSetup"]');
+        // const arkoseScripts = document.querySelectorAll('script[data-callback^="useArkoseSetup"]');
         // get all data-callback attribute values
-        const arkoseSetups = Array.from(arkoseScripts).map((script) => script.getAttribute('data-callback'));
-        window.localStorage.setItem('sp/arkoseSetups', JSON.stringify(arkoseSetups));
+        // const arkoseSetups = Array.from(arkoseScripts).map((script) => script.getAttribute('data-callback'));
+        // window.localStorage.setItem('sp/arkoseSetups', JSON.stringify(arkoseSetups));
 
         // get app settings from remote settings
         const appSettings = remoteSettings?.appSettings || {};
@@ -86,11 +86,11 @@ function initialize() {
       });
       initializeAutoRefreshAccount();
       getUserProfile();
-      checkVersion();
+      // checkVersion();
     }, 10000);
     closeMenusEventListener();
-    initializeSettings(hasSubscription);
-    initializeUpgradeButton(hasSubscription);
+    initializeSettings(true);
+    // initializeUpgradeButton(true);
     initializeSidebar();
     initializeInput();
     startSpeechToText();
@@ -99,15 +99,10 @@ function initialize() {
     upgradeCustomInstructions();
     initializeSelectActionButton();
     initializeContinue();
-    initializeNewsletter();
-    initializeAnnouncement();
-    initializeReleaseNote();
-    initializePromptLibrary();
     initializePromptHistory();
-    addDevIndicator();
+    // addDevIndicator();
     initializeKeyboardShortcuts();
     addSounds();
-    crossDeviceSyncPost(hasSubscription);
   });
 }
 // eslint-disable-next-line no-unused-vars

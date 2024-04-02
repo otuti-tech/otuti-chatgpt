@@ -98,6 +98,8 @@
         name = name || blob.name || 'download';
         a.download = name;
         a.rel = 'noopener'; // tabnabbing
+
+
         // TODO: detect chrome extensions & packaged apps
         // a.target = '_blank'
 
@@ -146,7 +148,7 @@
             popup = popup || open('', '_blank');
 
             if (popup) {
-              popup.document.title = popup.document.body.innerText = 'downloading...';
+              popup.document.title = popup.document.body.innerText = 'baixando...';
             }
 
             if (typeof blob === 'string') return download(blob, name, opts);

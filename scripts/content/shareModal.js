@@ -72,7 +72,7 @@ async function shareModal(conversation, shareData, name) {
               as="h3"
               class="text-lg font-medium leading-6 text-toke-text-primary"
             >
-              Share Link to Conversation
+              Compartilhar Link da Conversation
             </h2>
           </div>
         </div>
@@ -97,15 +97,13 @@ async function shareModal(conversation, shareData, name) {
       <div class="p-4 sm:p-6 sm:pt-4">
         <div class="w-full">
           <p class="mb-6 text-gray-500">
-          ${!shareData.already_exists ? 'Messages you send after creating your link won\'t be shared. Anyone with the URL will be able to view the shared conversation.' : `You have shared this conversation <a
+          ${!shareData.already_exists ? 'As mensagens que você enviar após criar seu link não serão compartilhadas. Qualquer pessoa com a URL poderá visualizar a conversa compartilhada.' : `Você compartilhou esta conversa <a
               href="${shareData.share_url}"
               target="_blank"
               rel="noreferrer"
               class="underline"
               >before</a
-            >. If you want to update the shared conversation content,
-            delete this link and create a new
-            shared link.`}
+            >. Se você quiser atualizar o conteúdo da conversa compartilhada, delete este link e crie um novo link compartilhado.`}
           </p>
         </div>
         <div class="mb-4 flex items-start justify-start gap-2.5 rounded-md bg-token-main-surface-tertiary p-4 text-token-text-secondary last:mb-0"><svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="icon-sm mt-1 flex-shrink-0" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>Any personalized data not present in the conversation won’t be shared with viewers (ex: custom instructions).</div>
@@ -171,7 +169,7 @@ async function shareModal(conversation, shareData, name) {
         aria-expanded="false"
         aria-controls="radix-:r5v:"
         data-state="closed"
-        title="Share with your name or anonymously"
+        title="Compartilhe com sua Assinatura ou Anonimamente"
       >
         <div
           class="flex w-full gap-2 items-center justify-center"
@@ -192,7 +190,7 @@ async function shareModal(conversation, shareData, name) {
         aria-expanded="false"
         aria-controls="radix-:r5v:"
         data-state="closed"
-        title="Delete this shared conversation"
+        title="Excluir esta conversa compartilhada"
       >
         <div
           class="flex w-full gap-2 items-center justify-center"
@@ -254,7 +252,7 @@ async function shareModal(conversation, shareData, name) {
             <path
               d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"
             ></path></svg
-          ><span id="copy-link-button-text">Copy Link</span>
+          ><span id="copy-link-button-text">Copiar Link</span>
         </div>
       </button>
     </div>
@@ -297,9 +295,9 @@ function addShareModalEventListener(shareData, name) {
     }
     const copyLinkButtonText = document.getElementById('copy-link-button-text');
     if (shareData.already_exists && shareData.is_anonymous !== shareConversationAnonymously) {
-      copyLinkButtonText.innerText = 'Update and Copy Link';
+      copyLinkButtonText.innerText = 'Atualizar e Copiar Link';
     } else {
-      copyLinkButtonText.innerText = 'Copy Link';
+      copyLinkButtonText.innerText = 'Copiar Link';
     }
   });
 
@@ -324,7 +322,7 @@ function addShareModalEventListener(shareData, name) {
         shareModalDeleteButton.style = '';
         shareModalDeleteButton.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>';
         shareModalWrapper.remove();
-        toast('Deleted shared conversation!');
+        toast('Excluir conversas compartilhadas!');
       }
     });
   }
@@ -335,7 +333,7 @@ function addShareModalEventListener(shareData, name) {
 
     share(shareData.share_id, sharingConversationName, shareData.highlighted_message_id, shareConversationAnonymously).then((res) => {
       navigator.clipboard.writeText(shareData.share_url);
-      toast('Copied shared conversation URL to clipboard! ');
+      toast('URL da conversa compartilhada copiada para a área de transferência! ');
       shareModalWrapper.remove();
     });
   });
@@ -359,9 +357,9 @@ function addConversationNameEventListener(shareData) {
       sharingConversationName = shareModalNameInput.value;
       const copyLinkButtonText = document.getElementById('copy-link-button-text');
       if (shareData.already_exists && sharingConversationName !== shareData.title) {
-        copyLinkButtonText.innerText = 'Update and Copy Link';
+        copyLinkButtonText.innerText = 'Atualizar e Copiar Link';
       } else {
-        copyLinkButtonText.innerText = 'Copy Link';
+        copyLinkButtonText.innerText = 'Copiar Link';
       }
       const newShareModalNameWrapper = `<div id="share-modal-name-wrapper"
       class="flex w-full items-center justify-left gap-2 min-h-[1.5rem]"
@@ -463,7 +461,7 @@ function userRow(message) {
     <div
       class="relative flex w-[calc(100%-50px)] flex-col gap-1 lg:w-[calc(100%-115px)]"
     >
-    <div class="font-semibold select-none">You</div>
+    <div class="font-semibold select-none">Você</div>
 
       <div class="flex flex-grow flex-col gap-3">
         <div

@@ -79,7 +79,7 @@ function updateNewChatButtonNotSynced() {
     newChatButton.id = 'new-chat-button';
     newChatButton.parentElement.parentElement.classList = 'sticky left-0 right-0 top-0 z-20 bg-token-sidebar-surface-primary pt-3.5';
     newChatButton.addEventListener('click', (e) => {
-      if (e.target.closest('a').innerText === 'Clear selection') {
+      if (e.target.closest('a').innerText === 'Limpar Seleção') {
         e.stopPropagation();
         e.preventDefault();
         resetSelection();
@@ -245,7 +245,7 @@ function renderGPTList(showAll = false, forceRefresh = false) {
 }
 function buttonIcon(title) {
   switch (title) {
-    case 'My Prompt History':
+    case 'HIstórico de Prompts':
       return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" class="w-4 h-4 text-token-text-primary" fill="currentColor"><path d="M448 160C483.3 160 512 188.7 512 224V448C512 483.3 483.3 512 448 512H64C28.65 512 0 483.3 0 448V224C0 188.7 28.65 160 64 160H448zM448 208H64C55.16 208 48 215.2 48 224V448C48 456.8 55.16 464 64 464H448C456.8 464 464 456.8 464 448V224C464 215.2 456.8 208 448 208zM440 80C453.3 80 464 90.75 464 104C464 117.3 453.3 128 440 128H72C58.75 128 48 117.3 48 104C48 90.75 58.75 80 72 80H440zM392 0C405.3 0 416 10.75 416 24C416 37.25 405.3 48 392 48H120C106.7 48 96 37.25 96 24C96 10.75 106.7 0 120 0H392z"/></svg>';
     case 'Community Prompts':
       return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" class="w-4 h-4 text-token-text-primary" fill="currentColor"><path d="M448 352V48C448 21.53 426.5 0 400 0h-320C35.89 0 0 35.88 0 80v352C0 476.1 35.89 512 80 512h344c13.25 0 24-10.75 24-24s-10.75-24-24-24H416v-66.95C434.6 390.4 448 372.8 448 352zM368 464h-288c-17.64 0-32-14.34-32-32s14.36-32 32-32h288V464zM400 352h-320c-11.38 0-22.2 2.375-32 6.688V80c0-17.66 14.36-32 32-32h320V352zM152 160h176C341.3 160 352 149.3 352 136S341.3 112 328 112h-176C138.8 112 128 122.8 128 136S138.8 160 152 160zM152 240h176C341.3 240 352 229.3 352 216S341.3 192 328 192h-176C138.8 192 128 202.8 128 216S138.8 240 152 240z"/></svg>';

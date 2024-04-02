@@ -8,7 +8,7 @@ function createTemplateWordsModal(templateWords) {
   const uniqueTemplateWords = [...new Set(templateWords)];
   const bodyContent = templateWordsModalContent(uniqueTemplateWords);
   const actionsBarContent = templateWordsModalActions(templateWords);
-  createModal('Template words', 'Please replace the template words', bodyContent, actionsBarContent, true);
+  createModal('Palavras do modelo', 'Por favor, substitua as palavras do modelo', bodyContent, actionsBarContent, true);
 }
 
 function templateWordsModalContent(templateWords) {
@@ -20,7 +20,7 @@ function templateWordsModalContent(templateWords) {
 
   const promptPreviewTitle = document.createElement('div');
   promptPreviewTitle.style = 'width: 100%;color:white;text-transform: capitalize;margin-bottom: 8px; font-size: 20px; font-weight: bold; color: #bbb;';
-  promptPreviewTitle.innerHTML = 'Prompt preview';
+  promptPreviewTitle.innerHTML = 'Prévia do Prompt';
   content.appendChild(promptPreviewTitle);
 
   const promptPreview = document.createElement('div');
@@ -54,7 +54,7 @@ function templateWordsModalActions(templateWords) {
   actionBar.style = 'display: flex; flex-wrap:wrap;justify-content: end; align-items: center;width: 100%; font-size: 12px;';
   const submitButton = document.createElement('button');
   submitButton.style = 'background-color: #565869; color: #eee; border: 1px solid #565869; border-radius: 4px; padding: 4px 8px; margin: 8px 0; width: 60px; height: 30px;';
-  submitButton.innerHTML = 'Submit';
+  submitButton.innerHTML = 'Enviar';
   submitButton.id = 'modal-submit-button';
 
   submitButton.addEventListener('click', (e) => {

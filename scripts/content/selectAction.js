@@ -48,11 +48,11 @@ function addSelectActionButtonEventListeners() {
   archiveSelectedButton?.addEventListener('click', (e) => {
     chrome.storage.local.get(['selectedConversations'], (result) => {
       const { selectedConversations } = result;
-      if (e.target.textContent === 'Archive all chats' && selectedConversations && selectedConversations?.length === 0) {
-        showConfirmDialog('Archive All', 'Are you sure you want to archive all conversations? Archived conversations can be restored later.', 'Archive All Chats', null, () => archiveAllConversations(), 'orange', true);
+      if (e.target.textContent === 'Arquivar todas as conversas' && selectedConversations && selectedConversations?.length === 0) {
+        showConfirmDialog('Arquivar Tudo', 'Você tem certeza de que quer arquivar todas as conversas? Conversas arquivadas podem ser restauradas mais tarde.', 'Arquivar Todas as Conversas', null, () => archiveAllConversations(), 'orange', true);
       } else {
         const selectedConversationIds = selectedConversations.map((conv) => conv.id);
-        showConfirmDialog('Archive Selected', 'Are you sure you want to archive the selected conversations? Archived conversations can be restored later.', `Archive ${selectedConversations?.length} Chats`, null, () => confirmArchiveSelectedConversations(selectedConversationIds), 'orange', false);
+        showConfirmDialog('Arquivar Selecionadas', 'Você tem certeza de que quer arquivar as conversas selecionadas? Conversas arquivadas podem ser restauradas mais tarde.', `Arquivar ${selectedConversations?.length} Conversas`, null, () => confirmArchiveSelectedConversations(selectedConversationIds), 'orange', false);
       }
     });
   });
@@ -72,10 +72,10 @@ function addSelectActionButtonEventListeners() {
       const { selectedConversations } = result;
 
       if (e.target.textContent === 'Delete all chats' && selectedConversations && selectedConversations?.length === 0) {
-        showConfirmDialog('Delete all chats', 'Are you sure you want to delete all conversations?', 'Delete All Chats', null, confirmDeleteAllConversations, 'red', true);
+        showConfirmDialog('Excluir Tudo', 'Você tem certeza de que quer excluir todas as conversas? Conversas excluídas NÃO podem ser restauradas mais tarde.', 'Excluir Todas as Conversas', null, confirmDeleteAllConversations, 'red', true);
       } else {
         const selectedConversationIds = selectedConversations.map((conv) => conv.id);
-        showConfirmDialog('Delete selected chats', 'Are you sure you want to delete the selected conversations?', `Delete ${selectedConversations?.length} Chats`, null, () => confirmDeleteSelectedConversations(selectedConversationIds), 'red', false);
+        showConfirmDialog('Excluir Selecionadas', 'Você tem certeza de que quer excluir as conversas selecionadas? Conversas excluídas NÃO podem ser restauradas mais tarde.', `Excluir ${selectedConversations?.length} Conversas`, null, () => confirmDeleteSelectedConversations(selectedConversationIds), 'red', false);
       }
     });
   });

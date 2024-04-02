@@ -36,7 +36,7 @@ function profileDropdown(customInstructionProfiles, customInstructionProfileIsEn
   dropdown.setAttribute('aria-labelledby', `custom-instructions-profile-dropdown-button-${placement}`);
   dropdown.setAttribute('tabindex', '-1');
   const newCustomInstructionProfiles = [...customInstructionProfiles, {
-    name: '+ Add new profile', aboutUser: '', aboutModel: '', isSelected: false,
+    name: '+ Criar novo Perfil', aboutUser: '', aboutModel: '', isSelected: false,
   }];
   for (let i = 0; i < newCustomInstructionProfiles.length; i += 1) {
     const profileId = newCustomInstructionProfiles[i].id;
@@ -73,10 +73,10 @@ function profileDropdown(customInstructionProfiles, customInstructionProfileIsEn
     });
     dropdownItem.addEventListener('click', () => {
       const customInstructionsDialog = document.querySelector('[role="dialog"][data-state="open"][tabindex="-1"]');
-      if (placement === 'new-page' && profileName !== '+ Add new profile') {
+      if (placement === 'new-page' && profileName !== '+ Criar novo Perfil') {
         setUserSystemMessage(profileAboutUser, profileAboutModel, true);
       }
-      if (profileName === '+ Add new profile' && !customInstructionsDialog) {
+      if (profileName === '+ Criar novo Perfil' && !customInstructionsDialog) {
         // press CMd/CTRL + SHIFT + i
         const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
@@ -100,7 +100,7 @@ function profileDropdown(customInstructionProfiles, customInstructionProfileIsEn
 
       if (customInstructionsDialog && customInstructionsDialog?.innerText?.includes('ChatGPT') && textAreaFields.length === 2) {
         const toggleButton = customInstructionsDialog.querySelector('[role="switch"]');
-        if (profileName === '+ Add new profile') {
+        if (profileName === '+ Criar novo Perfil') {
           if (toggleButton.getAttribute('aria-checked') === 'false') {
             toggleButton.click();
           }
@@ -108,7 +108,7 @@ function profileDropdown(customInstructionProfiles, customInstructionProfileIsEn
           toggleButton.click();
         }
         const nameInput = customInstructionsDialog.querySelector('#custom-instructions-name-input');
-        nameInput.value = profileName !== '+ Add new profile' ? profileName : '';
+        nameInput.value = profileName !== '+ Criar novo Perfil' ? profileName : '';
         const aboutUserInput = textAreaFields[0];
         const aboutModelInput = textAreaFields[1];
         aboutUserInput.value = profileAboutUser;
@@ -178,12 +178,12 @@ function profileDropdownButton(customInstructionProfiles, placement) {
   const selectedProfile = customInstructionProfiles.find((p) => p.isSelected);
   const button = document.createElement('button');
   button.id = `custom-instructions-profile-dropdown-button-${placement}`;
-  button.title = 'Change the custom instructions profile';
+  button.title = 'Alterar Perfil de Instruções Custom';
   button.classList = 'w-full relative cursor-pointer rounded-md border pt-1 pl-3 pr-10 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 border-token-border-light bg-token-main-surface-primary sm:text-sm';
   button.type = 'button';
   const label = document.createElement('label');
   label.classList = 'block text-xs text-token-text-tertiary';
-  label.textContent = 'Profile';
+  label.textContent = 'Perfil';
   button.appendChild(label);
   const span = document.createElement('span');
   span.classList = 'inline-flex w-full truncate font-semibold text-token-text-primary';
@@ -194,7 +194,7 @@ function profileDropdownButton(customInstructionProfiles, placement) {
   const span3 = document.createElement('span');
   span3.classList = 'font-semibold truncate';
   span3.id = `custom-instructions-selected-profile-title-${placement}-${selectedProfile?.id}`;
-  span3.textContent = selectedProfile?.name || customInstructionProfiles[0]?.name || 'No saved profile';
+  span3.textContent = selectedProfile?.name || customInstructionProfiles[0]?.name || 'Nenhum Perfil Salvo';
   span2.appendChild(span3);
   const span4 = document.createElement('span');
   span4.classList = 'pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2';
@@ -254,10 +254,10 @@ function upgradeCustomInstructions() {
               const body = customInstructionsDialog.children[1];
               const nameLabel = document.createElement('label');
               nameLabel.classList = 'block text-xs text-token-text-primary mb-2';
-              nameLabel.textContent = 'Name';
+              nameLabel.textContent = 'Nome';
               const nameInput = document.createElement('input');
               nameInput.id = 'custom-instructions-name-input';
-              nameInput.placeholder = 'Profile Name';
+              nameInput.placeholder = 'Nome do Perfil';
               nameInput.value = selectedProfile?.name || '';
               nameInput.classList = 'w-full rounded p-2 mb-6 border bg-token-main-surface-primary border-gray-100 focus:border-brand-green focus:ring-0 focus-visible:ring-0 outline-none focus-visible:outline-none';
               if (textAreaFields[0].disabled) {
@@ -372,7 +372,7 @@ function upgradeCustomInstructions() {
                         name: curNameInput.value, aboutUser: curAboutUserInput.value, aboutModel: curAboutModelInput.value, isSelected: true, id: self.crypto.randomUUID(),
                       }];
                       chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
-                        toast('Profile saved');
+                        toast('Perfil salvo!');
                         reloadCustomInstructionSettings();
                       });
                     } else {
@@ -385,7 +385,7 @@ function upgradeCustomInstructions() {
                         return { ...p, isSelected: false };
                       });
                       chrome.storage.local.set({ customInstructionProfiles: newCip }, () => {
-                        toast('Profile updated');
+                        toast('Perfil atulizado!');
                         reloadCustomInstructionSettings();
                       });
                     }

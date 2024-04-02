@@ -88,7 +88,7 @@ function addConversationElementMenuEventListeners(conversationId) {
     document.getElementById('conversation-element-menu').remove();
     chrome.storage.local.get(['conversationsOrder', 'conversations'], (res) => {
       const { conversations } = res;
-      showConfirmDialog('Delete chat?', `This will delete <strong>${conversations[conversationId].title}</strong>`, 'Delete', null, () => confirmDeleteSelectedConversations([conversationId]));
+      showConfirmDialog('Excluir conversa?', `Confirmar está ação irá excluir permanentemente <strong>${conversations[conversationId].title}</strong>`, 'EXCLUIR', null, () => confirmDeleteSelectedConversations([conversationId]));
     });
   });
 }

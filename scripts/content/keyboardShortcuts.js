@@ -5,7 +5,7 @@
 function createKeyboardShortcutsModal(version) {
   const bodyContent = keyboardShortcutsModalContent(version);
   const actionsBarContent = keyboardShortcutsModalActions();
-  createModal('Keyboard Shortcuts', 'Some shortkeys only work when Auto-Sync is ON. Having issues? see our <a href="https://ezi.notion.site/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24" target="_blank" rel="noopener noreferrer" style="color:gold;">FAQ</a>', bodyContent, actionsBarContent);
+  createModal('Atalhos de Teclado', 'Alguns atalhos funcionam apenas quando a Sincronização Automática está ATIVA', bodyContent, actionsBarContent);
 }
 function buttonGenerator(buttonTexts) {
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -38,95 +38,95 @@ function keyboardShortcutsModalContent() {
 
   keyboardShortcutsText.innerHTML = `
   <table style="width:100%; color: white !important;">
-    <tr>
-      <th>Shortcut</th>
-      <th>Action</th>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'F'])}</td>
-      <td>Search Chats/Custom GPTs (To use browser search, press twice)</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', '.'])}</td>
-      <td>Open Settings</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', '⌫'])}</td>
-      <td>Delete Current Conversation</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', 'S'])}</td>
-      <td>Toggle Sidebar</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', '⌥', 'Y'])}</td>
-      <td>Open Gallery</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', 'L'])}</td>
-      <td>Open Newsletter Archive</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', 'X'])}</td>
-      <td>Open Prompt Chain List (or SHIFT + Click on New Prompt Chain button <span style="display:inline-block;width:32px;height:24px;"><img src="${chrome.runtime.getURL('icons/new-prompt-chain.png')}"></span>)</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', '⌥', 'C'])}</td>
-      <td>Open New Prompt Chain Modal</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', 'K'])}</td>
-      <td>Open Keyboard Shortcut Modal</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', '⌥', 'H'])}</td>
-      <td>Hide/Show the Sidebar</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', '⌥', 'S'])}</td>
-      <td>Enable/Disable Auto Splitter</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', '⌥', 'A'])}</td>
-      <td>Enable/Disable Auto-Sync</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', `<span class="text-sm flex items-center justify-center" style="min-width:100px;">Click on <span style="display:inline-block;margin-left:8px;"><img class="w-4 h-4" src="${chrome.runtime.getURL('icons/new-folder.png')}"></span></span>`])}</td>
-      <td>Reset the order of chats from newest to oldest (removes all folders)</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', `<span class="text-sm flex items-center justify-center" style="min-width:100px;">Click on <span style="display: inline-block;width:12px;height:12px;margin-left:8px;">${refreshButton}</span></span>`])}</td>
-      <td>Reset Auto Sync</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌥', 'Shift', 'N'])}</td>
-      <td>Open New Chat Page</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', 'C'])}</td>
-      <td>Copy last response</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', '⌥', 'C'])}</td>
-      <td>Copy last response (HTML)</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['⌘', 'Shift', 'M'])}</td>
-      <td>Copy last response (Markdown)</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['Home'])}</td>
-      <td>Scroll to top</td>
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['End'])}</td>
-      <td>Scroll to Bottom</td> 
-    </tr>
-    <tr>
-      <td>${buttonGenerator(['Esc'])}</td>
-      <td>Close Modals/Stop Generating</td>
-    </tr>
-  </table>
+  <tr>
+    <th>Atalho</th>
+    <th>Ação</th>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'F'])}</td>
+    <td>Pesquisar Chats/GPTs personalizados (Para usar a pesquisa do navegador, pressione duas vezes)</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'Shift', '.'])}</td>
+    <td>Abrir Configurações</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'Shift', '⌫'])}</td>
+    <td>Excluir Conversa Atual</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'Shift', 'S'])}</td>
+    <td>Alternar Barra Lateral</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', '⌥', 'Y'])}</td>
+    <td>Abrir Galeria</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'Shift', 'L'])}</td>
+    <td>Abrir Arquivo de Newsletter</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'Shift', 'X'])}</td>
+    <td>Abrir Lista de Cadeias de Prompt (ou SHIFT + Clique no botão Nova Cadeia de Prompt <span style="display:inline-block;width:32px;height:24px;"><img src="${chrome.runtime.getURL('icons/new-prompt-chain.png')}"></span>)</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', '⌥', 'C'])}</td>
+    <td>Abrir Modal de Nova Cadeia de Prompt</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'Shift', 'K'])}</td>
+    <td>Abrir Modal de Atalhos de Teclado</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', '⌥', 'H'])}</td>
+    <td>Ocultar/Mostrar a Barra Lateral</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', '⌥', 'S'])}</td>
+    <td>Ativar/Desativar Divisor Automático</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', '⌥', 'A'])}</td>
+    <td>Ativar/Desativar Sincronização Automática</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'Shift', `<span class="text-sm flex items-center justify-center" style="min-width:100px;">Clique em <span style="display:inline-block;margin-left:8px;"><img class="w-4 h-4" src="${chrome.runtime.getURL('icons/new-folder.png')}"></span></span>`])}</td>
+    <td>Reiniciar a ordem dos chats de mais novo para mais antigo (remove todas as pastas)</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'Shift', `<span class="text-sm flex items-center justify-center" style="min-width:100px;">Clique em <span style="display: inline-block;width:12px;height:12px;margin-left:8px;">${refreshButton}</span></span>`])}</td>
+    <td>Reiniciar Sincronização Automática</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌥', 'Shift', 'N'])}</td>
+    <td>Abrir Nova Página de Chat</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'Shift', 'C'])}</td>
+    <td>Copiar última resposta</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'Shift', '⌥', 'C'])}</td>
+    <td>Copiar última resposta (HTML)</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['⌘', 'Shift', 'M'])}</td>
+    <td>Copiar última resposta (Markdown)</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['Home'])}</td>
+    <td>Rolar para o topo</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['End'])}</td>
+    <td>Rolar para o Fundo</td>
+  </tr>
+  <tr>
+    <td>${buttonGenerator(['Esc'])}</td>
+    <td>Fechar Modais/Parar Geração</td>
+  </tr>
+</table>
   `;
   content.appendChild(keyboardShortcutsText);
   return content;
@@ -257,7 +257,7 @@ function registerShortkeys() {
           const copyButtons = document.querySelectorAll('[id^=result-html-copy-button-]');
           if (copyButtons.length > 0) {
             copyButtons[copyButtons.length - 1].click();
-            toast('Last response copied to clipboard (HTML)');
+            toast('Última resposta adicionada ao clipboard (HTML)');
           }
         }
       });
@@ -272,7 +272,7 @@ function registerShortkeys() {
           const copyButtons = document.querySelectorAll('[id^=result-markdown-copy-button-]');
           if (copyButtons.length > 0) {
             copyButtons[copyButtons.length - 1].click();
-            toast('Last response copied to clipboard (Markdown)');
+            toast('Última resposta adicionada ao clipboard (Markdown)');
           }
         }
       });
@@ -320,7 +320,7 @@ function registerShortkeys() {
         const { settings } = result;
         settings.autoSplit = !settings.autoSplit;
         settings.autoSummarize = false;
-        toast(`Auto-split is now ${settings.autoSplit ? 'ON' : 'OFF'}`);
+        toast(`O Auto-split está ${settings.autoSplit ? 'ON' : 'OFF'}`);
         chrome.storage.local.set({ settings });
       });
     }

@@ -183,7 +183,7 @@ function createSearchBox() {
       resetSelection();
       if (searchValue.length) {
         filteredConversations = allConversations?.filter((c) => (
-          [c.title, ...Object.values(c.mapping).map((m) => (m?.message?.content?.parts || [])?.filter((p) => typeof p === 'string')?.join(' ')?.replace(/## Instructions[\s\S]*## End Instructions\n\n/, ''))]
+          [c.title, ...Object.values(c.mapping).map((m) => (m?.message?.content?.parts || [])?.filter((p) => typeof p === 'string')?.join(' ')?.replace(/## Instruções[\s\S]*## Final Instruções\n\n/, ''))]
             .join(' ')?.toLowerCase()
             .includes(searchValue.toLowerCase())));
         filteredConversationIds = filteredConversations.map((c) => c?.id);
@@ -214,7 +214,7 @@ function createSearchBox() {
       const { conversationsOrder, settings } = result;
       const newFolder = {
         id: self.crypto.randomUUID(),
-        name: 'New Folder',
+        name: 'Nova Pasta',
         conversationIds: [],
         isOpen: true,
         color: settings.autoColorFolders ? generateRandomDarkColor() : '#40414f',
@@ -237,7 +237,7 @@ function addHistorySyncingMessage() {
   const historySyncMessage = document.createElement('div');
   historySyncMessage.id = 'history-sync-message';
   historySyncMessage.classList = 'flex items-center justify-center w-full my-4 text-sm text-token-text-secondary';
-  historySyncMessage.innerHTML = 'Syncing conversations...';
+  historySyncMessage.innerHTML = 'Sincronizando conversas...';
   conversationList?.append(historySyncMessage);
 }
 // eslint-disable-next-line no-unused-vars
@@ -473,7 +473,7 @@ function loadFilteredConversations(conversationIds) {
       const noResult = document.createElement('div');
       noResult.id = 'search-no-result';
       noResult.classList = 'text-token-text-tertiary text-center';
-      noResult.innerHTML = 'No results';
+      noResult.innerHTML = 'Nenhum resultado';
       noResult.style.height = '500px';
       conversationList.appendChild(noResult);
     }
@@ -545,7 +545,7 @@ function loadStorageConversations(conversations, conversationsOrder = [], filter
       const noResult = document.createElement('div');
       noResult.id = 'search-no-result';
       noResult.classList = 'text-token-text-tertiary text-center';
-      noResult.innerHTML = 'No results';
+      noResult.innerHTML = 'Nenhum resultado';
       noResult.style.height = '500px';
       conversationList.appendChild(noResult);
       showNewChatPage(null, false);
@@ -553,13 +553,13 @@ function loadStorageConversations(conversations, conversationsOrder = [], filter
   } else {
     chrome.storage.local.get(['settings', 'totalConversations'], (result) => {
       const { settings, totalConversations } = result;
-      if (parseInt(settings.autoSyncCount, 10) < totalConversations && !conversationList.innerText.includes('Syncing conversations...')) {
+      if (parseInt(settings.autoSyncCount, 10) < totalConversations && !conversationList.innerText.includes('Sincronizando conversas...')) {
         const loadMoreConversationsButton = document.createElement('button');
         loadMoreConversationsButton.id = 'load-more-conversations-button';
         loadMoreConversationsButton.classList = 'w-full py-3 text-sm text-center text-token-text-tertiary cursor-pointer hover:text-token-text-primary';
-        loadMoreConversationsButton.innerHTML = 'Load more conversations ➜';
+        loadMoreConversationsButton.innerHTML = 'Carregar mais conversas ➜';
         loadMoreConversationsButton.addEventListener('click', () => {
-          toast('Increase Auto Sync Count to load more conversations', 'info', 7000);
+          toast('Aumente o limite de conversas nas configurações de Auto-Sync', 'info', 7000);
           createSettingsModal(1);
         });
         conversationList.appendChild(loadMoreConversationsButton);
@@ -882,17 +882,17 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
                         // show a countdown time if countdownTimer is greater than 0
                         let countdownTimerText = '';
                         if (countdownTimer > 0) {
-                          countdownTimerText = ` (New request available in ${Math.floor(countdownTimer / 1000 / 60)} minutes)`;
+                          countdownTimerText = ` (Nvoas requisições disponíveis em ${Math.floor(countdownTimer / 1000 / 60)} minutos)`;
                         }
 
                         chrome.storage.local.set({ gpt4Timestamps: gpt4TimestampsFiltered, capExpiresAt: '' });
                         if (gpt4CounterElement) {
-                          gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap} ${countdownTimerText}`;
+                          gpt4CounterElement.innerText = `Uso do GPT-4 (últimas ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap} ${countdownTimerText}`;
                         }
                       } else {
                         chrome.storage.local.set({ gpt4Timestamps: [now] });
                         if (gpt4CounterElement) {
-                          gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 1/${messageCap} (New request available in 180 minutes)`;
+                          gpt4CounterElement.innerText = `Uso do GPT-4 (últimas ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 1/${messageCap} (Novas requisições em 180 minutos)`;
                         }
                       }
                     });
@@ -1079,7 +1079,7 @@ function submitChatStream(userInput, conversation, messageId, parentId, settings
                   const minuteDisplay = minute < 10 ? `0${minute}` : minute;
                   const capExpiresAt = `${hour12Display}:${minuteDisplay}${ampm}`;
                   chrome.storage.local.set({ capExpiresAt });
-                  errorMessage = `You've reached the current usage cap for this model. You can continue with the default model now, or try again after ${capExpiresAt}.`;
+                  errorMessage = `Você atingiu o limite de uso atual para este modelo. Você pode continuar com o modelo padrão agora ou tentar novamente em ${capExpiresAt}.`;
                 } else {
                   replaceTextAreaElement(settings);
                   chrome.storage.local.set({ capExpiresAt: '' });
@@ -1346,17 +1346,17 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
                         // show a countdown time if countdownTimer is greater than 0
                         let countdownTimerText = '';
                         if (countdownTimer > 0) {
-                          countdownTimerText = ` (New request available in ${Math.floor(countdownTimer / 1000 / 60)} minutes)`;
+                          countdownTimerText = ` (Novas requisições disponíveis em  ${Math.floor(countdownTimer / 1000 / 60)} minutos)`;
                         }
 
                         chrome.storage.local.set({ gpt4Timestamps: gpt4TimestampsFiltered, capExpiresAt: '' });
                         if (gpt4CounterElement) {
-                          gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap} ${countdownTimerText}`;
+                          gpt4CounterElement.innerText = `Uso do GPT-4 (últimas ${getGPT4CounterMessageCapWindow(messageCapWindow)}): ${gpt4TimestampsFiltered.length}/${messageCap} ${countdownTimerText}`;
                         }
                       } else {
                         chrome.storage.local.set({ gpt4Timestamps: [now] });
                         if (gpt4CounterElement) {
-                          gpt4CounterElement.innerText = `GPT-4 requests (last ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 1/${messageCap} (New request available in 180 minutes)`;
+                          gpt4CounterElement.innerText = `Uso do GPT-4 (últimas ${getGPT4CounterMessageCapWindow(messageCapWindow)}): 1/${messageCap} (Novas requisições em 180 minutos)`;
                         }
                       }
                     });
@@ -1549,7 +1549,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
                   const minuteDisplay = minute < 10 ? `0${minute}` : minute;
                   const capExpiresAt = `${hour12Display}:${minuteDisplay}${ampm}`;
                   chrome.storage.local.set({ capExpiresAt });
-                  errorMessage = `You've reached the current usage cap for this model. You can continue with the default model now, or try again after ${capExpiresAt}.`;
+                  errorMessage = `Você atingiu o limite de uso atual para este modelo. Você pode continuar com o modelo padrão agora ou tentar novamente em ${capExpiresAt}.`;
                 } else {
                   replaceTextAreaElement(settings);
                   chrome.storage.local.set({ capExpiresAt: '' });
@@ -1612,7 +1612,7 @@ function submitChatWS(userInput, conversation, messageId, parentId, settings, ac
                   const minuteDisplay = minute < 10 ? `0${minute}` : minute;
                   const capExpiresAt = `${hour12Display}:${minuteDisplay}${ampm}`;
                   chrome.storage.local.set({ capExpiresAt });
-                  errorMessage = `You've reached the current usage cap for this model. You can continue with the default model now, or try again after ${capExpiresAt}.`;
+                  errorMessage = `Você atingiu o limite de uso atual para este modelo. Você pode continuar com o modelo padrão agora ou tentar novamente em ${capExpiresAt}.`;
                 } else {
                   replaceTextAreaElement(settings);
                   chrome.storage.local.set({ capExpiresAt: '' });
@@ -1643,9 +1643,9 @@ function submitFinalSummary() {
   const textAreaElement = document.querySelector('#prompt-textarea');
   if (!textAreaElement) return;
 
-  textAreaElement.value = `Here's the final summary of our conversation:
-${finalSummary}
-Reply with OK: [Summary is received!]. Don't reply with anything else!`;
+  textAreaElement.value = `Aqui está o resumo final da nossa conversa:
+  ${finalSummary}
+  Responda com OK: [Resumo recebido!]. Não responda com mais nada!`;
   shouldSubmitFinalSummary = false;
   finalSummary = '';
   textAreaElement.focus();
@@ -1678,9 +1678,9 @@ function insertNextChunk(settings, previousMessage) {
   if (!submitButton) return;
   const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > remainingText.length ? settings.autoSplitLimit : getLastIndexOf(remainingText, settings.autoSplitLimit);
 
-  textAreaElement.value = `[START CHUNK ${chunkNumber}/${totalChunks}]
+  textAreaElement.value = `[INÍCIO CHUNK ${chunkNumber}/${totalChunks}]
 ${remainingText.slice(0, lastNewLineIndexBeforeLimit)}
-[END CHUNK ${chunkNumber}/${totalChunks}]
+[FINAL CHUNK ${chunkNumber}/${totalChunks}]
 ${settings.autoSplitChunkPrompt}`;
   textAreaElement.focus();
   textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
@@ -1728,7 +1728,7 @@ function overrideSubmitForm() {
         if (uploadFileButton) {
           uploadFileButton.click();
         } else {
-          toast('Did you mean to use {{files}} to upload a file? Please select a GPT-4 model.', 'success', 6000);
+          toast('Você quis dizer usar {{files}} para fazer upload de um arquivo? Por favor, selecione um modelo GPT-4.', 'success', 6000);
         }
       } else if (settings.promptTemplate && templateWords?.length > 0) {
         // open template words modal and wait for user to select a word. the when user submit, submit the input form with the replacement
@@ -1746,7 +1746,7 @@ function overrideSubmitForm() {
 
         if (templateWords?.length > 0) {
           if (!window.localStorage.getItem('seenPromptTemplateToast')) {
-            toast('Did you mean to use {{prompt templates}}? If yes, first turn it on in the Settings menu', 'success', 6000);
+            toast('Você quis dizer usar {{prompt templates}}? Se sim, primeiro ative isso no menu de Configurações.', 'success', 6000);
             window.localStorage.setItem('seenPromptTemplateToast', 'true');
           }
         }
@@ -1770,9 +1770,9 @@ function overrideSubmitForm() {
                 totalChunks = Math.ceil(textAreaValue.length / settings.autoSplitLimit);
                 const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > textAreaValue.length ? settings.autoSplitLimit : getLastIndexOf(textAreaValue, settings.autoSplitLimit);
                 remainingText = textAreaValue.substring(lastNewLineIndexBeforeLimit);
-                textAreaValue = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
+                textAreaValue = `${settings.autoSplitInitialPrompt}[INÍCIO CHUNK ${chunkNumber}/${totalChunks}]
 ${textAreaValue.substring(0, lastNewLineIndexBeforeLimit)}
-[END CHUNK ${chunkNumber}/${totalChunks}]
+[FINAL CHUNK ${chunkNumber}/${totalChunks}]
 ${settings.autoSplitChunkPrompt}`;
                 chunkNumber += 1;
               } else {
@@ -1852,9 +1852,9 @@ ${settings.autoSplitChunkPrompt}`;
                   totalChunks = Math.ceil(textAreaValue.length / settings.autoSplitLimit);
                   const lastNewLineIndexBeforeLimit = settings.autoSplitLimit > textAreaValue.length ? settings.autoSplitLimit : getLastIndexOf(textAreaValue, settings.autoSplitLimit);
                   remainingText = textAreaValue.substring(lastNewLineIndexBeforeLimit);
-                  textAreaValue = `${settings.autoSplitInitialPrompt}[START CHUNK ${chunkNumber}/${totalChunks}]
+                  textAreaValue = `${settings.autoSplitInitialPrompt}[INÍCIO CHUNK ${chunkNumber}/${totalChunks}]
 ${textAreaValue.substring(0, lastNewLineIndexBeforeLimit)}
-[END CHUNK ${chunkNumber}/${totalChunks}]
+[FINAL CHUNK ${chunkNumber}/${totalChunks}]
 ${settings.autoSplitChunkPrompt}`;
                   chunkNumber += 1;
                 } else {
@@ -1908,7 +1908,7 @@ ${settings.autoSplitChunkPrompt}`;
               const userRow = rowUser({}, node, 1, 1, result.name, result.avatar, settings);
               replaceAllConfimationWrappersWithActionStopped();
               conversationDiv.innerHTML = userRow;
-              const topDiv = `<div id="conversation-top" class="w-full flex relative items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-token-text-primary group ${settings.alternateMainColors ? 'bg-token-main-surface-tertiary' : 'bg-token-main-surface-primary'}" style="min-height:56px;"><span id="conversation-top-title" class="flex">New Chat</span>${conversationSettingsMenu(hasSubscription)}</div>`;
+              const topDiv = `<div id="conversation-top" class="w-full flex relative items-center justify-center border-b border-black/10 dark:border-gray-900/50 text-token-text-primary group ${settings.alternateMainColors ? 'bg-token-main-surface-tertiary' : 'bg-token-main-surface-primary'}" style="min-height:56px;"><span id="conversation-top-title" class="flex">Novo Chat</span>${conversationSettingsMenu(hasSubscription)}</div>`;
               conversationDiv.insertAdjacentHTML('afterbegin', topDiv);
 
               const bottomDiv = document.createElement('div');

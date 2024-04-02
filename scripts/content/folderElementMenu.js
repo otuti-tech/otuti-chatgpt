@@ -87,7 +87,7 @@ function deleteFolder(folderId) {
   chrome.storage.local.get(['conversationsOrder'], (result) => {
     const { conversationsOrder } = result;
     const folder = conversationsOrder.find((conv) => conv?.id === folderId);
-    showConfirmDialog('Delete Folder', 'Are you sure you want to delete this folder? All conversations inside the folder will be deleted too.', 'Delete Folder', cancelDeleteFolder, () => confirmDeleteFolder(folder), 'red', false);
+    showConfirmDialog('Excluir Pasta', 'Você tem certeza que deseja excluir esta pasta?', 'Excluir', cancelDeleteFolder, () => confirmDeleteFolder(folder), 'red', false);
   });
 }
 function cancelDeleteFolder() {

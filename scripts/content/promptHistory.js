@@ -5,7 +5,7 @@ function createPromptHistoryModal() {
     const { historyFilter } = settings;
     const bodyContent = promptHistoryModalContent(userInputValueHistory, historyFilter);
     const actionsBarContent = historyModalActions();
-    createModal('My Prompt History', 'All your personal and favorite prompts are saved here.', bodyContent, actionsBarContent);
+    createModal('Meu Histórico de Prompts', 'Todos os seus prompts pessoais são salvos aqui, com destaque as favoritados.', bodyContent, actionsBarContent);
     const historySearchInput = document.getElementById('history-search-input');
     historySearchInput.focus();
     updateHistoryList();
@@ -33,8 +33,8 @@ function emptyHistory() {
     const { historyFilter } = settings;
     const searchValue = document.querySelector('input[id="history-search-input"]').value;
     historyListEmpty.innerHTML = historyFilter === 'favorites'
-      ? `No favorite found. ${searchValue ? 'Adjust your search' : `<span style="text-align:center;max-width:500px;">You can mark any prompt in your history as favorite. Click on the <span style="text-decoration: underline;">All</span> tab above and then mark any prompt as favorite by clicking on the bookmark icon next to it <img src=${chrome.runtime.getURL('icons/bookmark-off.png')} style="min-width: 24px; height: 32px; transform: rotate(90deg); position: relative; right: -10px; top: 2px;margin:auto;">`}</span>`
-      : `No history found. ${searchValue ? 'Adjust your search' : 'Start using the chat to see your prompt history here'}`;
+      ? `Nenhum favorito encontrado. ${searchValue ? 'Ajuste sua busca' : `<span style="text-align:center;max-width:500px;">Você pode marcar qualquer prompt em seu histórico como favorito. Clique na aba <span style="text-decoration: underline;">Todos</span> acima e depois marque qualquer prompt como favorito clicando no ícone de favorito ao lado <img src=${chrome.runtime.getURL('icons/bookmark-off.png')} style="min-width: 24px; height: 32px; transform: rotate(90deg); position: relative; right: -10px; top: 2px;margin:auto;">`}</span>`
+      : `Nenhum histórico encontrado. ${searchValue ? 'Ajuste sua busca' : 'Explore suas primeiras conversas e volte a consultar'}`;
   });
   return historyListEmpty;
 }
@@ -81,7 +81,7 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
       const historyItemSubmitButton = document.createElement('button');
       historyItemSubmitButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
       historyItemSubmitButton.style = 'font-size:0.7em; padding:4px 8px; margin-left:8px;color:lightgray;';
-      historyItemSubmitButton.textContent = 'Share in Community Prompts';
+      historyItemSubmitButton.textContent = 'Compartilhar';
       historyItemSubmitButton.addEventListener('click', () => {
         // close history modal
         // document.querySelector('button[id="modal-close-button-prompt-history"]').click();
@@ -92,9 +92,9 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
       const historyItemDeleteButton = document.createElement('button');
       historyItemDeleteButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
       historyItemDeleteButton.style = 'font-size:0.7em; padding:4px 8px; margin-left:8px;width:60px;color:lightgray;';
-      historyItemDeleteButton.textContent = 'Delete';
+      historyItemDeleteButton.textContent = 'Excluir';
       historyItemDeleteButton.addEventListener('click', (e) => {
-        if (e.target.textContent === 'Confirm') {
+        if (e.target.textContent === 'Confirmar') {
           chrome.storage.local.get(['userInputValueHistory'], (res) => {
             const newHistory = res.userInputValueHistory.filter((item) => item.inputValue !== userInputValue.inputValue);
             chrome.storage.local.set({ userInputValueHistory: newHistory }, () => {
@@ -103,12 +103,12 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
             });
           });
         } else {
-          e.target.textContent = 'Confirm';
+          e.target.textContent = 'Confirmar';
           e.target.style.backgroundColor = '#864e6140';
           e.target.style.color = '#ff4a4a';
           e.target.style.borderColor = '#ff4a4a';
           setTimeout(() => {
-            e.target.textContent = 'Delete';
+            e.target.textContent = 'Excluir';
             e.target.style.backgroundColor = '#343541';
             e.target.style.color = 'lightgray';
             e.target.style.borderColor = '#565869';
@@ -119,11 +119,11 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
       // use button
       const historyItemUseButton = document.createElement('button');
       const shiftClickText = document.createElement('div');
-      shiftClickText.textContent = 'Shift + Click to run the prompt without editing';
+      shiftClickText.textContent = 'Shift + Click para executar o prompt sem editar';
       shiftClickText.style = 'font-size:10px;position:absolute;right:32px;bottom:36px;display:none;color:lightslategray;';
       historyItemUseButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
       historyItemUseButton.style = 'font-size:0.7em; padding:4px 8px; margin-left:8px;width:60px;color:lightgray;';
-      historyItemUseButton.textContent = 'Use';
+      historyItemUseButton.textContent = 'Utilizar';
       // add hover style to button
       historyItemUseButton.addEventListener('mouseover', () => {
         shiftClickText.style = 'font-size:10px;position:absolute;right:32px;bottom:36px;color:lightslategray;';
@@ -158,7 +158,7 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
       const historyItemFavoriteButtonIcon = document.createElement('img');
       historyItemFavoriteButtonIcon.style = 'min-width: 24px;height: 32px;transform: rotate(90deg);position: relative;right: -10px;top:2px;filter: drop-shadow(2px 4px 6px black);';
       historyItemFavoriteButtonIcon.src = chrome.runtime.getURL(`icons/${userInputValue.isFavorite ? 'bookmark-on' : 'bookmark-off'}.png`);
-      historyItemBookmarkButton.title = userInputValue.isFavorite ? 'Remove from favorites' : 'Add to favorites';
+      historyItemBookmarkButton.title = userInputValue.isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
       historyItemBookmarkButton.appendChild(historyItemFavoriteButtonIcon);
       historyItemBookmarkButton.addEventListener('click', () => {
         chrome.storage.local.get(['userInputValueHistory', 'settings'], (res) => {
@@ -172,11 +172,11 @@ function promptHistoryList(userInputValueHistory, historyFilter) {
             const curHistoryItem = document.querySelector(`#history-item-${index}`);
             if (curHistoryItem.getAttribute('data-favorite') === 'false') {
               historyItemFavoriteButtonIcon.src = chrome.runtime.getURL('icons/bookmark-on.png');
-              historyItemBookmarkButton.title = 'Remove from favorites';
+              historyItemBookmarkButton.title = 'Remover dos favoritos';
               curHistoryItem.setAttribute('data-favorite', 'true');
             } else {
               historyItemFavoriteButtonIcon.src = chrome.runtime.getURL('icons/bookmark-off.png');
-              historyItemBookmarkButton.title = 'Add to favorites';
+              historyItemBookmarkButton.title = 'Adicionar aos favoritos';
               curHistoryItem.setAttribute('data-favorite', 'false');
               if (res.settings.historyFilter === 'favorites') {
                 curHistoryItem.style.display = 'none';
@@ -209,12 +209,12 @@ function historyFilterButtonsContent(historyFilter) {
   const historyFilterFavoritesButton = document.createElement('button');
   historyFilterFavoritesButton.id = 'history-filter-favorites-button';
   historyFilterFavoritesButton.style = `${historyFilter === 'favorites' ? 'background-color: gold; color: rgb(31, 33, 35);' : 'background-color: rgb(31, 33, 35); color: lightslategray;'} font-size:0.8em; cursor: pointer;border-top-left-radius: 4px; border-bottom-left-radius: 4px; border: 1px solid lightslategray;border-right:none; padding:4px 8px; width: 70px;height:34px;`;
-  historyFilterFavoritesButton.textContent = 'Favorites';
+  historyFilterFavoritesButton.textContent = 'Favoritos';
 
   const historyFilterAllButton = document.createElement('button');
   historyFilterAllButton.id = 'history-filter-all-button';
   historyFilterAllButton.style = `${historyFilter === 'all' ? 'background-color: gold; color: rgb(31, 33, 35);' : 'background-color: rgb(31, 33, 35); color: lightslategray;'} font-size:0.8em; cursor: pointer;border-top-right-radius: 4px; border-bottom-right-radius: 4px; border: 1px solid lightslategray; padding:4px 8px; width: 70px;height:34px;`;
-  historyFilterAllButton.textContent = 'All';
+  historyFilterAllButton.textContent = 'Mostrar todos';
 
   historyFilterFavoritesButton.addEventListener('click', () => {
     chrome.storage.local.get(['settings'], (result) => {
@@ -227,7 +227,7 @@ function historyFilterButtonsContent(historyFilter) {
         const historyItems = document.querySelectorAll('div[id^=history-item]');
         const searchValue = document.querySelector('input[id="history-search-input"]').value;
         const exportHistoryButton = document.querySelector('button[id="export-history-button"]');
-        exportHistoryButton.textContent = 'Export Favorites';
+        exportHistoryButton.textContent = 'Exportar Favoritos';
         historyItems.forEach((historyItem) => {
           const historyItemText = historyItem.querySelector('pre[id^=text-history-item-]');
           historyItemText.innerHTML = historyItemText.textContent;
@@ -263,7 +263,7 @@ function historyFilterButtonsContent(historyFilter) {
         const historyItems = document.querySelectorAll('div[id^=history-item]');
         const searchValue = document.querySelector('input[id="history-search-input"]').value;
         const exportHistoryButton = document.querySelector('button[id="export-history-button"]');
-        exportHistoryButton.textContent = 'Export All';
+        exportHistoryButton.textContent = 'Exportar Todos';
         historyItems.forEach((historyItem) => {
           const historyItemText = historyItem.querySelector('pre[id^=text-history-item-]');
 
@@ -290,7 +290,7 @@ function historyFilterButtonsContent(historyFilter) {
   historySearchInput.id = 'history-search-input';
   historySearchInput.type = 'search';
   historySearchInput.style = 'background-color: #1f2123; color: lightslategray; font-size:0.8em; border-radius: 4px; border: 1px solid lightslategray; padding:4px 8px; width: 100%;margin-left:8px;';
-  historySearchInput.placeholder = 'Search';
+  historySearchInput.placeholder = 'Pesquisar';
   historySearchInput.autocomplete = 'off';
   historySearchInput.addEventListener('input', (e) => {
     chrome.storage.local.get(['settings'], (result) => {
@@ -304,11 +304,11 @@ function historyFilterButtonsContent(historyFilter) {
         const readMoreButton = item.querySelector(`div[id="read-more-history-item-${item.id.split('history-item-')[1]}"]`);
         if (itemText.textContent.toLowerCase().includes(value.toLowerCase()) || value.trim().length === 0) {
           itemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;';
-          if (readMoreButton) readMoreButton.textContent = 'Show less';
+          if (readMoreButton) readMoreButton.textContent = 'Colapsar';
           item.style.display = 'flex';
         } else {
           itemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;';
-          if (readMoreButton) readMoreButton.textContent = 'Show more';
+          if (readMoreButton) readMoreButton.textContent = 'Expandir';
           item.style.display = 'none';
         }
       });
@@ -332,14 +332,14 @@ function addReadMoreButtonsToHistory() {
       historyItemReadMore.id = `read-more-history-item-${id}`;
       historyItemReadMore.style = 'color: lightslategray; font-size:0.8em; width: 100%; margin-top: 8px; cursor: pointer;';
 
-      historyItemReadMore.textContent = searchValue ? 'Show less' : 'Show more';
+      historyItemReadMore.textContent = searchValue ? 'Colapsar' : 'Expandir';
       historyItemReadMore.addEventListener('click', () => {
-        if (historyItemReadMore.textContent === 'Show less') {
+        if (historyItemReadMore.textContent === 'Colapsar') {
           historyItemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;';
-          historyItemReadMore.textContent = 'Show more';
+          historyItemReadMore.textContent = 'Expandir';
         } else {
           historyItemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;';
-          historyItemReadMore.textContent = 'Show less';
+          historyItemReadMore.textContent = 'Colapsar';
         }
       });
       historyItemText.insertAdjacentElement('afterend', historyItemReadMore);
@@ -358,7 +358,7 @@ function historyModalActions() {
   exportHistoryButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
   exportHistoryButton.style = 'font-size:0.7em; padding:4px 8px; width:130px;color:lightgray;';
   chrome.storage.local.get(['settings'], (result) => {
-    exportHistoryButton.textContent = `Export ${result.settings.historyFilter === 'favorites' ? 'Favorites' : 'All'}`;
+    exportHistoryButton.textContent = `Exportar ${result.settings.historyFilter === 'favorites' ? 'Favoritados' : 'Todos'}`;
   });
   exportHistoryButton.addEventListener('click', () => {
     chrome.storage.local.get(['userInputValueHistory', 'settings'], (result) => {
@@ -376,7 +376,7 @@ function historyModalActions() {
       element.click();
       document.body.removeChild(element);
       navigator.clipboard.writeText(JSON.stringify(sortedHistoryItems));
-      toast('History exported and copied to clipboard');
+      toast('Histórico exportado e adicionado ao clipboard');
     });
   });
 
@@ -384,7 +384,7 @@ function historyModalActions() {
   importHistoryButton.id = 'import-history-button';
   importHistoryButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
   importHistoryButton.style = 'font-size:0.7em; padding:4px 8px; margin-right:8px; width:130px;color:lightgray;';
-  importHistoryButton.textContent = 'Import Prompts';
+  importHistoryButton.textContent = 'Importar Prompts';
   importHistoryButton.addEventListener('click', () => {
     chrome.storage.local.get(['userInputValueHistory'], (result) => {
       // open file picker
@@ -407,7 +407,7 @@ function historyModalActions() {
           });
 
           chrome.storage.local.set({ userInputValueHistory: existingHistory }, () => {
-            toast('Imported prompts');
+            toast('Prompts importados com sucesso!');
             // click on all history button
             const allHistoryButton = document.querySelector('button[id="history-filter-all-button"]');
             allHistoryButton.click();
@@ -431,9 +431,9 @@ function historyModalActions() {
   clearHistoryButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
   clearHistoryButton.style = 'font-size:0.7em; padding:4px 8px; margin-left:8px;width:130px;color:lightgray;';
 
-  clearHistoryButton.textContent = 'Delete non favorites';
+  clearHistoryButton.textContent = 'Excluir não favoritados';
   clearHistoryButton.addEventListener('click', (e) => {
-    if (e.target.textContent === 'Confirm delete') {
+    if (e.target.textContent === 'Confirmar EXCLUSÃO EM MASSA?') {
       chrome.storage.local.get(['userInputValueHistory'], (result) => {
         const favariteHistoryItems = result.userInputValueHistory.filter((item) => item.isFavorite);
         chrome.storage.local.set({ userInputValueHistory: favariteHistoryItems }, () => {
@@ -445,19 +445,19 @@ function historyModalActions() {
             }
           });
           updateHistoryList();
-          e.target.textContent = 'Delete non favorites';
+          e.target.textContent = 'Excluir não favoritados';
           e.target.style.backgroundColor = '#343541';
           e.target.style.color = 'lightgray';
           e.target.style.borderColor = '#565869';
         });
       });
     } else {
-      e.target.textContent = 'Confirm delete';
+      e.target.textContent = 'Confirmar EXCLUSÃO EM MASSA?';
       e.target.style.backgroundColor = '#864e6140';
       e.target.style.color = '#ff4a4a';
       e.target.style.borderColor = '#ff4a4a';
       setTimeout(() => {
-        e.target.textContent = 'Delete non favorites';
+        e.target.textContent = 'Excluir não favoritados';
         e.target.style.backgroundColor = '#343541';
         e.target.style.color = 'lightgray';
         e.target.style.borderColor = '#565869';
@@ -783,7 +783,7 @@ function initializePromptHistory() {
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
     if (typeof settings === 'undefined' || settings?.showMyPromptHistory === undefined || settings?.showMyPromptHistory) {
-      addButtonToNavFooter('My Prompt History', () => createPromptHistoryModal());
+      addButtonToNavFooter('Histórico de Prompts', () => createPromptHistoryModal());
     }
   });
 }

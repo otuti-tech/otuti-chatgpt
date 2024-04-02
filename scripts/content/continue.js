@@ -13,7 +13,7 @@ function promptDropdown() {
   chrome.storage.local.get(['customPrompts'], (result) => {
     let { customPrompts } = result;
     if (!customPrompts) customPrompts = defaultPrompts;
-    const allPrompts = [...customPrompts, { title: '+ Add more' }];
+    const allPrompts = [...customPrompts, { title: '+ Novo' }];
     for (let i = 0; i < allPrompts.length; i += 1) {
       const promptTitle = allPrompts[i].title;
       const promptText = allPrompts[i].text;
@@ -26,7 +26,7 @@ function promptDropdown() {
       const dropdownOption = document.createElement('span');
       dropdownOption.classList = 'font-semibold flex h-6 items-center gap-1 truncate text-token-text-primary';
       dropdownOption.style = 'text-transform: capitalize;';
-      if (promptTitle === '+ Add more') {
+      if (promptTitle === '+ Novo') {
         dropdownOption.classList.add('text-token-text-tertiary');
       }
       dropdownOption.innerText = promptTitle;
@@ -37,7 +37,7 @@ function promptDropdown() {
 
       // eslint-disable-next-line no-loop-func
       dropdownItem.addEventListener('click', (e) => {
-        if (promptTitle === '+ Add more') {
+        if (promptTitle === '+ Novo') {
           createSettingsModal(7); // tab 2 is for prompts
           return;
         }
@@ -98,7 +98,7 @@ function createContinueButton() {
       }
     });
     const shiftClickText = document.createElement('div');
-    shiftClickText.textContent = 'Shift + Click to edit before running';
+    shiftClickText.textContent = 'Shift + Click para Editar antes de Executar';
     shiftClickText.style = 'font-size:10px;position:absolute;left:0px;bottom:-15px;display:none;width:200px;';
     shiftClickText.classList = 'text-token-text-tertiary';
     const continueButton = document.createElement('button');
@@ -116,7 +116,7 @@ function createContinueButton() {
       chrome.storage.local.get('customPrompts', ({ customPrompts }) => {
         const textAreaElement = document.querySelector('#prompt-textarea');
         if (!textAreaElement) return;
-        const customPromptText = Array.isArray(customPrompts) ? customPrompts.find((p) => p.isDefault)?.text || '' : 'Continue please';
+        const customPromptText = Array.isArray(customPrompts) ? customPrompts.find((p) => p.isDefault)?.text || '' : 'Continue do exato ponto de parada';
         textAreaElement.value = `${textAreaElement.value.slice(0, continueButtonCursorPositionStart)}${customPromptText} ${textAreaElement.value.slice(continueButtonCursorPositionEnd)}`;
         textAreaElement.focus();
         textAreaElement.dispatchEvent(new Event('input', { bubbles: true }));
@@ -142,7 +142,7 @@ function createContinueButton() {
     autoClickButton.id = 'auto-click-button';
     autoClickButton.type = 'button';
     autoClickButton.style = 'width:38px;border-top-left-radius:0;border-bottom-left-radius:0;border-left:0;z-index:1;padding:0;';
-    autoClickButton.title = `Auto Continue is ${settings.autoClick ? 'ON' : 'OFF'}`;
+    autoClickButton.title = `Auto Continue está ${settings.autoClick ? 'ON' : 'OFF'}`;
     if (settings.autoClick) {
       // autoClickButton.classList.add('btn', 'flex', 'justify-center', 'gap-2', 'btn-primary', 'border');
       autoClickButton.classList = 'btn flex justify-center gap-2 btn-primary border';
@@ -161,7 +161,7 @@ function createContinueButton() {
             autoClickButton.classList.replace('btn-neutral', 'btn-primary');
             autoClickButton.classList.remove('bg-token-sidebar-surface-secondary', 'hover:bg-token-main-surface-tertiary');
           }
-          toast(`Auto Continue is ${result.settings.autoClick ? 'Disabled' : 'Enabled (<a style="text-decoration:underline; color:gold;" href="https://www.notion.so/ezi/Superpower-ChatGPT-FAQ-9d43a8a1c31745c893a4080029d2eb24?pvs=4#ed16d04d414941d4abcb59b6d765008d" target="blank">Learn More</a>)'}`, 'success');
+          toast(`Auto Continue está ${result.settings.autoClick ? 'Desligado' : 'Ligado'}`, 'success');
         });
       });
     });

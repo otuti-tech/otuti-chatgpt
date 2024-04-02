@@ -27,7 +27,7 @@ function createPromptLibraryModal() {
       // create settings modal content
       const bodyContent = promptLibraryModalContent(data);
       const actionsBarContent = promptLibraryModalActions();
-      createModal('Community Prompts', `Find prompts shared by the community, and share your own prompts (${data.count} Prompts)`, bodyContent, actionsBarContent);
+      createModal('Prompts da Comunidade', `Encontre prompts compartilhados pela comunidade e compartilhe seus próprios prompts (${data.count} Prompts)`, bodyContent, actionsBarContent);
       const librarySearchInput = document.getElementById('library-search-input');
       librarySearchInput.focus();
       addReadMoreButtonsToLibrary();
@@ -57,16 +57,15 @@ function addReadMoreButtonsToLibrary() {
         const libraryItemReadMore = document.createElement('span');
         libraryItemReadMore.id = `library-item-read-more-${id}`;
         libraryItemReadMore.style = 'color: lightslategray; font-size:0.8em; width: 100%; margin-top: 8px; cursor: pointer;';
-
-        libraryItemReadMore.textContent = dataHidden ? 'This is a private prompt. Full prompt is hidden by the autor.' : 'Show more';
+        libraryItemReadMore.textContent = dataHidden ? 'Este é um prompt privado. O prompt completo está oculto pelo autor.' : 'Mostrar mais';
         libraryItemReadMore.addEventListener('click', () => {
           if (dataHidden) return;
-          if (libraryItemReadMore.textContent === 'Show less') {
+          if (libraryItemReadMore.textContent === 'Colapsar') {
             libraryItemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;';
-            libraryItemReadMore.textContent = 'Show more';
+            libraryItemReadMore.textContent = 'Expandir';
           } else {
             libraryItemText.style = 'color: #ececf1; font-size:0.8em; width: 100%; white-space: break-spaces; overflow-wrap: break-word;';
-            libraryItemReadMore.textContent = 'Show less';
+            libraryItemReadMore.textContent = 'Colapsar';
           }
         });
         libraryItemText.insertAdjacentElement('afterend', libraryItemReadMore);
@@ -90,7 +89,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     // show loading spinner
     const noResult = document.createElement('div');
     noResult.style = 'display: flex; justify-content: center; align-items: center; height: 340px; width: 100%;color: lightslategray;';
-    noResult.textContent = 'No results found';
+    noResult.textContent = 'Nenhum Prompt encontrado.';
     libraryList.appendChild(noResult);
     return libraryList;
   }
@@ -115,7 +114,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     // flag
     const libraryItemFlag = document.createElement('span');
     libraryItemFlag.id = `library-item-flag-${libraryPrompt.id}`;
-    libraryItemFlag.title = 'Report this prompt';
+    libraryItemFlag.title = 'Denunciar este Prompt';
     libraryItemFlag.style = 'color: lightslategray; font-size:1.2em; margin-right: 8px; cursor: pointer;';
     libraryItemFlag.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="lightslategray" stroke="lightslategray" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" viewBox="0 0 512 512"><path d="M498.5 6.232c-19.76-11.99-38.92-3.226-41.61-1.1c-41.75 19.06-76.02 27.94-107.8 27.94c-28.92 0-51.74-7.321-75.9-15.09C247.5 8.844 220.1 .3094 185.2 .3055C159 .3055 121.3 2.641 32 38.84V16.01c0-8.836-7.164-15.1-16-15.1S0 7.172 0 16.01V496C0 504.8 7.164 512 16 512S32 504.8 32 496v-104.9c14.47-6.441 77.75-38.93 148.8-38.93c36.8 0 67.14 7.713 99.25 15.89c30.74 7.82 62.49 15.9 99.31 15.9c35.46 0 72.08-7.553 111.1-23.09c12.28-4.781 20.38-16.6 20.38-29.78L512 32.35C512 22.01 507.4 11.6 498.5 6.232zM479.7 331c-36.11 14.07-68.93 20.91-100.3 20.91c-32.81 0-61.26-7.238-91.39-14.9C255.4 328.7 221.7 320.2 180.8 320.2c-45.89 0-93.61 11.31-145.9 34.58L32 356.1V73.37l28.01-11.35c49.34-19.98 90.29-29.7 125.2-29.7c30.74 0 53.8 7.406 78.2 15.24c25.44 8.172 51.75 16.62 85.69 16.62c69.43 0 130.9-32.17 130.9-32.17L479.7 331z"/></svg>';
     libraryItemFlag.addEventListener('mouseenter', () => {
@@ -216,7 +215,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     // thumbs up
     const libraryItemThumbsUp = document.createElement('span');
     libraryItemThumbsUp.id = `library-item-thumbs-up-${libraryPrompt.id}`;
-    libraryItemThumbsUp.title = 'Upvote this prompt';
+    libraryItemThumbsUp.title = 'Votar neste Prompt';
     libraryItemThumbsUp.style = 'color: lightslategray; font-size:1.2em; margin-left: 24px; position:relative; bottom:4px; cursor: pointer;';
     libraryItemThumbsUp.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path></svg>';
     libraryItemThumbsUp.addEventListener('mouseenter', () => {
@@ -234,12 +233,12 @@ function promptLibraryListComponent(libraryData, loading = false) {
         },
       }, (data) => {
         if (data.status === 'success') {
-          toast('Prompt upvoted');
+          toast('Prompt votado!');
           const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
           curUpvoteCount.textContent = parseInt(curUpvoteCount.textContent, 10) + 1;
         }
         if (data.status === 'same user') {
-          toast('You have already voted for this prompt');
+          toast('Este Prompt já foi votado!');
         }
       });
       const curLibraryItemActionWrapper = document.getElementById(`library-item-action-wrapper-${libraryPrompt.id}`);
@@ -259,7 +258,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     // thumbs down
     const libraryItemThumbsDown = document.createElement('span');
     libraryItemThumbsDown.id = `library-item-thumbs-down-${libraryPrompt.id}`;
-    libraryItemThumbsDown.title = 'Downvote this prompt';
+    libraryItemThumbsDown.title = 'Rebaixar este Prompt';
     libraryItemThumbsDown.style = 'color: lightslategray; font-size:1.2em; cursor: pointer;';
     libraryItemThumbsDown.innerHTML = '<svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4" height="1em" width="1em" xmlns="http://www.w3.org/2000/svg"> <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"></path></svg>';
     libraryItemThumbsDown.addEventListener('mouseenter', () => {
@@ -277,12 +276,12 @@ function promptLibraryListComponent(libraryData, loading = false) {
         },
       }, (data) => {
         if (data.status === 'success') {
-          toast('Prompt downvoted');
+          toast('Prompt rebaixado!');
           const curUpvoteCount = document.getElementById(`prompt-upvotes-count-${libraryPrompt.id}`);
           curUpvoteCount.textContent = parseInt(curUpvoteCount.textContent, 10) - 1;
         }
         if (data.status === 'same user') {
-          toast('You have already voted for this prompt');
+          toast('Este Prompt já foi rebaixado!');
         }
       });
       const curLibraryItemActionWrapper = document.getElementById(`library-item-action-wrapper-${libraryPrompt.id}`);
@@ -293,7 +292,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     // Share
     const libraryItemShareButton = document.createElement('span');
     libraryItemShareButton.id = `library-item-share-button-${libraryPrompt.id}`;
-    libraryItemShareButton.title = 'Share this prompt';
+    libraryItemShareButton.title = 'Compartilhar este Prompt';
     libraryItemShareButton.style = 'display:flex;color: lightslategray; margin-left: 24px;position: relative;bottom:3px;cursor: pointer;';
     libraryItemShareButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512" stroke="currentColor" fill="currentColor" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-5" height="1em" width="1em"><path d="M173 131.5C229.2 75.27 320.3 75.27 376.5 131.5C430 185 432.9 270.9 383 327.9L377.7 334C368.9 344 353.8 345 343.8 336.3C333.8 327.6 332.8 312.4 341.5 302.4L346.9 296.3C380.1 258.3 378.2 201.1 342.5 165.4C305.1 127.1 244.4 127.1 206.1 165.4L93.63 278.7C56.19 316.2 56.19 376.9 93.63 414.3C129.3 449.1 186.6 451.9 224.5 418.7L230.7 413.3C240.6 404.6 255.8 405.6 264.5 415.6C273.3 425.5 272.2 440.7 262.3 449.4L256.1 454.8C199.1 504.6 113.2 501.8 59.69 448.2C3.505 392.1 3.505 300.1 59.69 244.8L173 131.5zM467 380.5C410.8 436.7 319.7 436.7 263.5 380.5C209.1 326.1 207.1 241.1 256.9 184.1L261.6 178.7C270.3 168.7 285.5 167.7 295.5 176.4C305.5 185.1 306.5 200.3 297.8 210.3L293.1 215.7C259.8 253.7 261.8 310.9 297.4 346.6C334.9 384 395.6 384 433.1 346.6L546.4 233.3C583.8 195.8 583.8 135.1 546.4 97.7C510.7 62.02 453.4 60.11 415.5 93.35L409.3 98.7C399.4 107.4 384.2 106.4 375.5 96.44C366.7 86.47 367.8 71.3 377.7 62.58L383.9 57.22C440.9 7.348 526.8 10.21 580.3 63.76C636.5 119.9 636.5 211 580.3 267.2L467 380.5z"/></svg>';
     libraryItemShareButton.addEventListener('click', () => {
@@ -304,7 +303,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
       el.select();
       document.execCommand('copy');
       document.body.removeChild(el);
-      toast('Copied to clipboard');
+      toast('Adicionado ao clipboard');
     });
     libraryItemShareButton.addEventListener('mouseenter', () => {
       libraryItemShareButton.style.color = '#eee';
@@ -320,13 +319,13 @@ function promptLibraryListComponent(libraryData, loading = false) {
     const libraryItemActionButtons = document.createElement('div');
     libraryItemActionButtons.style = 'display: flex; flex-direction: row; width: 100%; justify-content: end; align-items: end;margin-top:8px;position:relative;';
     const shiftClickText = document.createElement('div');
-    shiftClickText.textContent = 'Shift + Click to run the prompt without editing';
+    shiftClickText.textContent = 'Shift + Click executa o Prompt sem editar.';
     shiftClickText.style = 'font-size:10px;position:absolute;right:0px;bottom:36px;display:none;color:lightslategray;';
     // use button
     const libraryItemUseButton = document.createElement('button');
     libraryItemUseButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
     libraryItemUseButton.style = 'font-size:0.7em; padding:4px 8px; margin-left:8px;width:60px;color:lightgray;';
-    libraryItemUseButton.textContent = 'Use';
+    libraryItemUseButton.textContent = 'Utilizar';
     libraryItemUseButton.addEventListener('mouseover', () => {
       shiftClickText.style = 'font-size:10px;position:absolute;right:0px;bottom:36px;color:lightslategray;';
     });
@@ -360,7 +359,7 @@ function promptLibraryListComponent(libraryData, loading = false) {
     const libraryItemEditButton = document.createElement('button');
     libraryItemEditButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
     libraryItemEditButton.style = 'font-size:0.7em; padding:4px 8px; margin-left:8px;width:60px;color:lightgray;';
-    libraryItemEditButton.textContent = 'Edit';
+    libraryItemEditButton.textContent = 'Editar';
     libraryItemEditButton.addEventListener('click', () => {
       openSubmitPromptModal(libraryPrompt.text, libraryPrompt.model_slug, libraryPrompt.id, libraryPrompt.title, libraryPrompt.categories, libraryPrompt.language, true, libraryPrompt.hide_full_prompt);
     });
@@ -368,9 +367,9 @@ function promptLibraryListComponent(libraryData, loading = false) {
     const libraryItemDeleteButton = document.createElement('button');
     libraryItemDeleteButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
     libraryItemDeleteButton.style = 'font-size:0.7em; padding:4px 8px; margin-left:8px;width:60px;color:lightgray;';
-    libraryItemDeleteButton.textContent = 'Delete';
+    libraryItemDeleteButton.textContent = 'Excluir';
     libraryItemDeleteButton.addEventListener('click', (e) => {
-      if (e.target.textContent === 'Confirm') {
+      if (e.target.textContent === 'Confirmar') {
         chrome.runtime.sendMessage({
           deletePrompt: true,
           detail: {
@@ -381,12 +380,12 @@ function promptLibraryListComponent(libraryData, loading = false) {
         const deletedLibraryItem = document.querySelector(`#library-item-${libraryPrompt.id}`);
         deletedLibraryItem.style.display = 'none';
       } else {
-        e.target.textContent = 'Confirm';
+        e.target.textContent = 'Confirmar';
         e.target.style.backgroundColor = '#864e6140';
         e.target.style.color = '#ff4a4a';
         e.target.style.borderColor = '#ff4a4a';
         setTimeout(() => {
-          e.target.textContent = 'Delete';
+          e.target.textContent = 'Excluir';
           e.target.style.backgroundColor = '#343541';
           e.target.style.color = 'lightgray';
           e.target.style.borderColor = '#565869';
@@ -454,12 +453,12 @@ function openReportPromptModal(libraryPrompt) {
   reportModal.appendChild(reportModalContent);
   const reportModalTitle = document.createElement('div');
   reportModalTitle.style = 'font-size:1.25rem;font-weight:500;';
-  reportModalTitle.textContent = 'Report prompt';
+  reportModalTitle.textContent = 'Denunciar prompt';
   reportModalContent.appendChild(reportModalTitle);
 
   const reportModalResonTitle = document.createElement('div');
   reportModalResonTitle.style = 'font-size:0.875rem;font-weight:500;margin-top:32px;';
-  reportModalResonTitle.textContent = 'Why are you reporting this prompt?';
+  reportModalResonTitle.textContent = 'Categorize o motivo da denuncia deste Prompt?';
   reportModalContent.appendChild(reportModalResonTitle);
   // add dropdown for reasons
   const reasonSelectorWrapper = document.createElement('div');
@@ -474,7 +473,7 @@ function openReportPromptModal(libraryPrompt) {
   const reportModalCancelButton = document.createElement('button');
   reportModalCancelButton.classList = 'btn btn-dark border-0';
   reportModalCancelButton.style = 'font-size:0.875rem;font-weight:500;padding:8px 16px;margin-right:16px;';
-  reportModalCancelButton.textContent = 'Cancel';
+  reportModalCancelButton.textContent = 'Cancelar';
   reportModalCancelButton.addEventListener('click', () => {
     reportModal.remove();
   });
@@ -484,7 +483,7 @@ function openReportPromptModal(libraryPrompt) {
   reportModalSubmitButton.id = 'report-modal-submit-button';
   reportModalSubmitButton.disabled = true;
   reportModalSubmitButton.style = 'font-size:0.875rem;font-weight:500;padding:8px 16px;';
-  reportModalSubmitButton.textContent = 'Submit';
+  reportModalSubmitButton.textContent = 'Enviar';
   reportModalSubmitButton.addEventListener('click', () => {
     chrome.runtime.sendMessage({
       report: true,
@@ -493,10 +492,10 @@ function openReportPromptModal(libraryPrompt) {
       },
     }, (data) => {
       if (data.status === 'success') {
-        toast('Prompt reported');
+        toast('Prompt denunciado!');
       }
       if (data.status === 'same user') {
-        toast('You have already reported this prompt');
+        toast('Este Prompt já foi denunciado!');
       }
     });
     reportModal.remove();
@@ -561,7 +560,7 @@ function promptLibraryModalContent(libraryData) {
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
     const { selectedLibraryLanguage } = settings;
-    const libraryLanguageList = [{ code: 'all', name: 'All' }, ...languageList.slice(1)];
+    const libraryLanguageList = [{ code: 'all', name: 'Todos' }, ...languageList.slice(1)];
     const languageSelectorWrapper = document.createElement('div');
     languageSelectorWrapper.style = 'position:relative;width:150px;z-index:1000;margin-left:8px;';
     languageSelectorWrapper.innerHTML = dropdown('Library-Language', libraryLanguageList, selectedLibraryLanguage, 'right', true);
@@ -575,7 +574,7 @@ function promptLibraryModalContent(libraryData) {
   const pageNumberElement = document.createElement('span');
   pageNumberElement.id = 'library-page-number';
   pageNumberElement.style = 'color: lightslategray; font-size:0.8em; width: 100%; text-align: center;';
-  pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber}`;
+  pageNumberElement.textContent = `Página ${promptLibraryPageNumber} de ${promptLibraryMaxPageNumber}`;
   pageButtonsWrapper.appendChild(pageNumberElement);
 
   const previousPageButton = document.createElement('button');
@@ -585,7 +584,7 @@ function promptLibraryModalContent(libraryData) {
 
   previousPageButton.disabled = true;
 
-  previousPageButton.textContent = 'Previous';
+  previousPageButton.textContent = 'Anterior';
   previousPageButton.addEventListener('click', () => {
     promptLibraryPageNumber = Math.max(promptLibraryPageNumber - 1, 1);
     nextPageButton.disabled = false;
@@ -601,14 +600,14 @@ function promptLibraryModalContent(libraryData) {
       previousPageButton.style.opacity = '1';
     }
     fetchPrompts(promptLibraryPageNumber);
-    pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber}`;
+    pageNumberElement.textContent = `Página ${promptLibraryPageNumber} de ${promptLibraryMaxPageNumber}`;
   });
   pageButtonsWrapper.appendChild(previousPageButton);
   const nextPageButton = document.createElement('button');
   nextPageButton.id = 'library-next-page-button';
   nextPageButton.classList = 'btn flex justify-center gap-2 btn-dark border-0 md:border';
   nextPageButton.style = 'font-size:0.7em; padding:4px 8px; margin-left:8px;width:60px;color:lightgray;';
-  nextPageButton.textContent = 'Next';
+  nextPageButton.textContent = 'Próxima';
   nextPageButton.addEventListener('click', () => {
     promptLibraryPageNumber = Math.min(promptLibraryPageNumber + 1, promptLibraryMaxPageNumber);
     previousPageButton.disabled = false;
@@ -620,7 +619,7 @@ function promptLibraryModalContent(libraryData) {
       nextPageButton.style.opacity = '0.5';
     }
     fetchPrompts(promptLibraryPageNumber);
-    pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber}`;
+    pageNumberElement.textContent = `Página ${promptLibraryPageNumber} de ${promptLibraryMaxPageNumber}`;
   });
   pageButtonsWrapper.appendChild(nextPageButton);
 
@@ -628,7 +627,7 @@ function promptLibraryModalContent(libraryData) {
   const submitPromptButton = document.createElement('button');
   submitPromptButton.classList = 'btn flex justify-center gap-2 btn-primary border-0 md:border';
   submitPromptButton.style = 'font-size:0.8em; padding:4px 8px; margin-left:8px;position: absolute;right: 24px;bottom: 0;';
-  submitPromptButton.textContent = '+ Share a prompt';
+  submitPromptButton.textContent = '+ Compartilhar um Prompt';
   submitPromptButton.addEventListener('click', () => {
     openSubmitPromptModal('', '', null, '', [], '', true);
   });
@@ -661,7 +660,7 @@ function updatePageButtons() {
     nextPageButton.style.opacity = 1;
   }
   const pageNumberElement = document.querySelector('span[id="library-page-number"]');
-  pageNumberElement.textContent = `Page ${promptLibraryPageNumber} of ${promptLibraryMaxPageNumber}`;
+  pageNumberElement.textContent = `Página ${promptLibraryPageNumber} de ${promptLibraryMaxPageNumber}`;
 }
 function promptLibraryModalActions() {
   // add actionbar at the bottom of the content
@@ -677,7 +676,7 @@ function initializePromptLibrary() {
   chrome.storage.local.get(['settings'], (result) => {
     const { settings } = result;
     if (typeof settings === 'undefined' || settings?.showCommunityPrompts === undefined || settings?.showCommunityPrompts) {
-      addButtonToNavFooter('Community Prompts', () => createPromptLibraryModal());
+      addButtonToNavFooter('Prompts da Comunidade', () => createPromptLibraryModal());
     }
   });
 }

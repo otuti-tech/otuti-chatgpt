@@ -4,7 +4,7 @@ function dropdown(title, options, selectedOption, side = 'right', forceDark = fa
   // eslint-disable-next-line prefer-destructuring
   if (!selectedOption) selectedOption = options[0];
   let menuTitle = title.replace('-', ' ');
-  if (menuTitle.startsWith('Library ')) menuTitle = menuTitle.replace('Library ', '');
+  if (menuTitle.startsWith('Biblioteca ')) menuTitle = menuTitle.replace('Biblioteca ', '');
   return `<button id="${title.toLowerCase()}-selector-button" class="relative w-full cursor-pointer rounded-md border bg-token-main-surface-primary border-token-border-light pl-3 pr-6 text-left focus:border-green-600 focus:outline-none focus:ring-1 focus:ring-green-600 sm:text-sm" type="button">
   <label class="relative text-xs text-token-text-tertiary" style="top:-2px;">${menuTitle}</label>
   <span class="inline-flex w-full truncate font-semibold  text-token-text-primary">

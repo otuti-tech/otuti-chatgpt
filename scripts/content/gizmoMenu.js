@@ -108,7 +108,7 @@ function addGizmoMenuEventListeners(gizmoData, callback = null, forceDark = fals
       }
       if (id === 'copy-link') {
         navigator.clipboard.writeText(`https://chat.openai.com/g/${gizmoData?.resource?.gizmo?.short_url}`);
-        toast('Link copied to clipboard');
+        toast('Link salvo no  clipboard');
       }
       // if (id === 'report') {
       //   e.preventDefault();
@@ -143,21 +143,21 @@ function openPrivacySettingsDialog(gizmoResource) {
             <div dir="ltr" data-orientation="vertical" class="flex flex-row gap-6 p-4">
               <div role="tablist" aria-orientation="vertical" class="flex min-w-[180px] max-w-[200px] flex-shrink-0 flex-col gap-2" tabindex="0" data-orientation="vertical" style="outline: none;">
                 <button type="button" role="tab" aria-selected="true" aria-controls="radix-:r26e:-content-actions" data-state="active" id="gizmo-privacy-settings-tab-actions" class="flex rounded-md px-2 py-1.5 text-sm text-token-text-primary radix-state-active:bg-white dark:radix-state-active:bg-token-main-surface-tertiary md:radix-state-active:bg-token-main-surface-tertiary md:radix-state-active:text-token-text-primary" tabindex="0" data-orientation="vertical" data-radix-collection-item="">
-                  <div class="truncate">Actions</div>
+                  <div class="truncate">Ações</div>
                 </button>
                 <button type="button" role="tab" aria-selected="false" aria-controls="radix-:r26e:-content-connected_accounts" data-state="inactive" id="gizmo-privacy-settings-tab-connected-accounts" class="flex rounded-md px-2 py-1.5 text-sm text-token-text-primary radix-state-active:bg-white dark:radix-state-active:bg-token-main-surface-tertiary md:radix-state-active:bg-token-main-surface-tertiary md:radix-state-active:text-token-text-primary" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">
-                  <div class="truncate">Connected accounts</div>
+                  <div class="truncate">Contas conectadas</div>
                 </button>
               </div>
               <div id="gizmo-privacy-settings-tab-content" class="flex-1 text-sm">
-                <div id="gizmo-privacy-settings-tab-actions-content" class="flex flex-col gap-6">Select which 3rd party actions are allowed in conversations with ${gizmoResource.gizmo.display.name}.
+                <div id="gizmo-privacy-settings-tab-actions-content" class="flex flex-col gap-6">Selecione quais ações de terceiros são permitidas nas conversas com ${gizmoResource.gizmo.display.name}.
                 ${gizmoActions.map((gizmoAction) => {
       const userActionSettings = allUserActionSettings.settings.find((actionSetting) => actionSetting.action_id === gizmoAction.metadata?.action_id)?.action_settings;
       return `<div>
                     <div class="flex flex-row justify-between py-3 items-center border-b border-black/10 dark:border-white/10">
                       <div class="flex flex-row space-x-4">
                         <div class="font-medium">${gizmoAction.metadata.domain}</div>
-                        <a href="${gizmoAction.metadata.privacy_policy_url}" target="_blank" rel="noreferrer" class="flex items-center gap-1 text-token-text-tertiary hover:cursor-pointer hover:text-token-text-secondary">Privacy policy
+                        <a href="${gizmoAction.metadata.privacy_policy_url}" target="_blank" rel="noreferrer" class="flex items-center gap-1 text-token-text-tertiary hover:cursor-pointer hover:text-token-text-secondary">Políticas de Privacidade
                           <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em"
                             xmlns="http://www.w3.org/2000/svg">
                             <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
@@ -167,14 +167,14 @@ function openPrivacySettingsDialog(gizmoResource) {
                         </a>
                       </div>
                       <select id="gizmo-privacy-settings-action-${gizmoAction.metadata?.action_id}" class="rounded border-none bg-token-main-surface-primary text-sm">
-                        <option ${userActionSettings?.all === 'always_allow' ? 'selected' : ''} value="always_allow">Always allow</option>
-                        <option ${(userActionSettings?.all === 'unset' || typeof userActionSettings?.all === 'undefined') ? 'selected' : ''} value="unset">Ask</option>
+                        <option ${userActionSettings?.all === 'always_allow' ? 'selected' : ''} value="always_allow">Sempre Permitir</option>
+                        <option ${(userActionSettings?.all === 'unset' || typeof userActionSettings?.all === 'undefined') ? 'selected' : ''} value="unset">Perguntar</option>
                       </select>
                     </div>
                   </div>`;
     }).join('')}
                 </div>
-                <div id="gizmo-privacy-settings-tab-connected-accounts-content" class="flex flex-col gap-6 hidden">Manage which 3rd party accounts can be accessed by ${gizmoResource.gizmo.display.name}.
+                <div id="gizmo-privacy-settings-tab-connected-accounts-content" class="flex flex-col gap-6 hidden">Gerencie quais contas de terceiros podem ser acessadas por ${gizmoResource.gizmo.display.name}.
                   <div>
                   ${gizmoActions.filter((gizmoAction) => gizmoAction.metadata?.auth?.type === 'oauth')?.map((gizmoAction) => `<div class="flex flex-row justify-between py-3 items-center">
                         <div class="font-medium">plugin.scholar-ai.net</div>
@@ -308,7 +308,7 @@ function showGizmoAboutDialog(gizmoResource, showStartChat = false) {
                       <div class="mt-1 flex flex-row items-center space-x-1">
                         <div class="text-sm text-token-text-tertiary">By ${creatorElement}</div>
                         <div>
-                          <div title="The builder of this GPT cannot view your conversations." class="my-2" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:r6f:" data-state="closed">
+                          <div title="O desenvolver deste GPT não tem acesso algum às suas conversas." class="my-2" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="radix-:r6f:" data-state="closed">
                             <div class="flex items-center gap-1 rounded-xl bg-token-main-surface-secondary px-2 py-1">
                               <svg width="24" height="24" viewBox="0 0 20 20" fill="red"
                                 xmlns="http://www.w3.org/2000/svg" class="icon-xs text-token-text-secondary">
@@ -334,7 +334,7 @@ function showGizmoAboutDialog(gizmoResource, showStartChat = false) {
                   </div>` : ''}
                   ${category ? `<div class="flex flex-col justify-center items-center gap-2 border-l border-token-border-heavy first:border-0 w-48 mt-4 px-2">
                     <div class="flex flex-row items-center gap-1.5 pt-1 text-xl font-medium text-center leading-none">${category.category_ranking ? `#${category.category_ranking}` : category.category_str}</div>
-                    <div class="text-xs text-token-text-tertiary">${category.category_ranking ? `in ${category.category_str} ${category.category_locale_str}` : 'Category'}</div>
+                    <div class="text-xs text-token-text-tertiary">${category.category_ranking ? `in ${category.category_str} ${category.category_locale_str}` : 'Categoria'}</div>
                   </div>` : ''}
                   ${conversations ? `<div class="flex flex-col justify-center items-center gap-2 border-l border-token-border-heavy first:border-0 w-48 mt-4 px-2">
                     <div class="flex flex-row items-center gap-1.5 pt-1 text-xl font-medium text-center leading-none">${conversations.title}</div>
@@ -342,7 +342,7 @@ function showGizmoAboutDialog(gizmoResource, showStartChat = false) {
                   </div>` : ''}
                 </div>
                 <div class="flex flex-col">
-                  <div class="font-bold mt-6">Conversation Starters</div>
+                  <div class="font-bold mt-6">Exemplos de início de conversas</div>
                   <div class="mt-4 grid grid-cols-2 gap-x-1.5 gap-y-2">
                     ${conversationStarters.map((conversationStarter) => `<div class="flex" tabindex="0">
                       <a class="group relative ml-2 h-14 flex-grow rounded-xl border border-token-border-medium bg-token-main-surface-primary px-4 hover:bg-token-main-surface-secondary focus:outline-none" target="_self" href="/g/${gizmoResource.gizmo.short_url}?p=${conversationStarter}">
@@ -367,20 +367,20 @@ function showGizmoAboutDialog(gizmoResource, showStartChat = false) {
                   </div>
                 </div>
                 <div class="flex flex-col">
-                  <div class="font-bold mt-6 mb-2">Capabilities</div>
+                  <div class="font-bold mt-6 mb-2">Habilidades</div>
                   ${uniqueTools.map((tool) => `<div class="flex flex-row items-start gap-2 py-1 text-sm">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                       xmlns="http://www.w3.org/2000/svg" class="icon-sm mt-0.5 text-green-600">
                       <path fill-rule="evenodd" clip-rule="evenodd" d="M18.0633 5.67375C18.5196 5.98487 18.6374 6.607 18.3262 7.06331L10.8262 18.0633C10.6585 18.3093 10.3898 18.4678 10.0934 18.4956C9.79688 18.5234 9.50345 18.4176 9.29289 18.2071L4.79289 13.7071C4.40237 13.3166 4.40237 12.6834 4.79289 12.2929C5.18342 11.9023 5.81658 11.9023 6.20711 12.2929L9.85368 15.9394L16.6738 5.93664C16.9849 5.48033 17.607 5.36263 18.0633 5.67375Z" fill="currentColor"></path>
                     </svg>
                     <div>${toolPrettyName(tool)}
-                      ${tool === 'plugins_prototype' ? '<div class="text-xs text-token-text-tertiary">Retrieves or takes actions outside of ChatGPT</div>' : ''}
+                      ${tool === 'plugins_prototype' ? '<div class="text-xs text-token-text-tertiary">Recupera ou executa ações fora do ChatGPT</div>' : ''}
                     </div>
                   </div>`).join('')}
                 </div>
                 <div class="flex flex-col">
                   <div class="mb-2">
-                    <div class="font-bold mt-6">Ratings</div>
+                    <div class="font-bold mt-6">Avaliações</div>
                   </div>
                 ${gizmoResource?.review_stats?.by_rating.length > 0 ? `${gizmoResource?.review_stats?.by_rating?.reverse()?.map((ratingStat, index) => `
                   <div class="flex flex-row items-center gap-2 py-1 text-xl font-medium">
@@ -395,7 +395,7 @@ function showGizmoAboutDialog(gizmoResource, showStartChat = false) {
                       <div class="h-full bg-green-500" style="width: ${ratingStat * 100}%;"></div>
                     </div>
                   </div>`).join('')}
-                ` : '<div class="text-sm text-token-text-tertiary">Not enough ratings yet</div>'}
+                ` : '<div class="text-sm text-token-text-tertiary">Avaliações Insuficientes/div>'}
                 </div>
               </div>
             </div>
@@ -423,7 +423,7 @@ function showGizmoAboutDialog(gizmoResource, showStartChat = false) {
   getGizmosByUser(gizmoResource?.gizmo?.author?.user_id).then((response) => {
     const gizmosByUser = response.items;
     if (gizmosByUser.length === 0) return;
-    const gizmosByUserElement = `<div class="flex flex-col"><div class="mb-2"><div class="font-bold mt-6">More by ${gizmoResource.gizmo.author.display_name}</div></div><div class="no-scrollbar group flex min-h-[104px] items-center space-x-2 overflow-x-auto overflow-y-hidden">
+    const gizmosByUserElement = `<div class="flex flex-col"><div class="mb-2"><div class="font-bold mt-6">Explorar outros By ${gizmoResource.gizmo.author.display_name}</div></div><div class="no-scrollbar group flex min-h-[104px] items-center space-x-2 overflow-x-auto overflow-y-hidden">
       ${gizmosByUser.map((gizmoByUser) => `
       <a href="/g/${gizmoByUser.gizmo.short_url}" class="h-fit min-w-fit rounded-xl bg-token-main-surface-secondary px-1 py-4 md:px-3 md:py-4 lg:px-3"><div class="flex w-full flex-grow items-center gap-4 overflow-hidden"><div class="h-12 w-12 flex-shrink-0"><div class="gizmo-shadow-stroke overflow-hidden rounded-full"><img src="${gizmoByUser.gizmo.display.profile_picture_url}" class="h-full w-full bg-token-main-surface-secondary" alt="GPT" width="80" height="80"></div></div><div class="overflow-hidden text-ellipsis break-words"><span class="text-sm font-medium leading-tight line-clamp-2">${gizmoByUser.gizmo.display.name}</span><span class="text-xs line-clamp-3">${gizmoByUser.gizmo.display.description}</span><div class="mt-1 flex items-center gap-1 text-ellipsis whitespace-nowrap pr-1 text-xs text-token-text-tertiary"><div class="mt-1 flex flex-row items-center space-x-1"><div class="text-token-text-tertiary text-xs">By ${gizmoByUser.gizmo.author.display_name}</div></div><span class="text-[8px]">•</span><svg width="24" height="24" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" class="h-3 w-3"><path id="vector" fill-rule="evenodd" clip-rule="evenodd" d="M9 2.33317C5.31811 2.33317 2.33334 5.31794 2.33334 8.99984C2.33334 10.8282 3.06828 12.4833 4.2608 13.6886C4.52859 13.9592 4.57889 14.377 4.383 14.7034L3.80516 15.6665H9C12.6819 15.6665 15.6667 12.6817 15.6667 8.99984C15.6667 5.31794 12.6819 2.33317 9 2.33317ZM0.666672 8.99984C0.666672 4.39746 4.39763 0.666504 9 0.666504C13.6024 0.666504 17.3333 4.39746 17.3333 8.99984C17.3333 13.6022 13.6024 17.3332 9 17.3332H2.33334C2.03311 17.3332 1.75609 17.1717 1.60817 16.9104C1.46025 16.6492 1.4643 16.3285 1.61876 16.0711L2.63448 14.3782C1.40745 12.9272 0.666672 11.0494 0.666672 8.99984Z" fill="currentColor"></path></svg>${gizmoByUser.gizmo.vanity_metrics.num_conversations_str}</div></div></div></a>`).join('')}  
     </div></div>`;

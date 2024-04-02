@@ -7,7 +7,7 @@ function showCustomInstructionTooltip(event, aboutUser, aboutModel) {
   const { x, y } = getMousePosition(event);
   const translateX = Math.min(x - 225, window.innerWidth - 450);
   const translateY = y + 10;
-  return `<div id="custom-instruction-tooltip" data-radix-popper-content-wrapper="" style="position: fixed; left: 0px; top: 0px; transform: translate3d(${translateX}px, ${translateY}px, 0px); min-width: max-content; z-index: auto; --radix-popper-anchor-width: 20px; --radix-popper-anchor-height: 22px; --radix-popper-available-width: 891.59375px; --radix-popper-available-height: 905px; --radix-popper-transform-origin: 50% 0px;"><div data-side="bottom" data-align="center" data-state="open" role="dialog" id="radix-:r2f:" class="relative max-h-[450px] animate-slideDownAndFade select-none overflow-y-auto whitespace-pre-line rounded-xl border-gray-100 bg-white p-4 text-sm text-token-text-primary shadow-xs dark:bg-gray-900 dark:text-white sm:max-w-lg md:max-w-xl" tabindex="-1" style="min-width:450px; max-width: 450px; --radix-popover-content-transform-origin: var(--radix-popper-transform-origin); --radix-popover-content-available-width: var(--radix-popper-available-width); --radix-popover-content-available-height: var(--radix-popper-available-height); --radix-popover-trigger-width: var(--radix-popper-anchor-width); --radix-popover-trigger-height: var(--radix-popper-anchor-height);"><div class="mb-5 mt-1 border-b border-black/10 pb-5 dark:border-white/10"><div class="flex flex-row items-center gap-2 text-token-text-primary">Custom instructions are on and can only be changed at the beginning of the chat.</div></div><div class="flex flex-col gap-7"><div class="flex flex-col gap-3"><div class="font-medium text-token-text-tertiary">What would you like ChatGPT to know about you to provide better responses?</div><div style="user-select: text;" class="flex flex-row gap-1 text-token-text-primary">${aboutUser || '&nbsp;'}</div></div><div class="flex flex-col gap-3"><div class="font-medium text-token-text-tertiary">How would you like ChatGPT to respond?</div><div style="user-select: text;" class="flex flex-row gap-1 text-token-text-primary">${aboutModel || '&nbsp;'}</div></div></div></div></div>`;
+  return `<div id="custom-instruction-tooltip" data-radix-popper-content-wrapper="" style="position: fixed; left: 0px; top: 0px; transform: translate3d(${translateX}px, ${translateY}px, 0px); min-width: max-content; z-index: auto; --radix-popper-anchor-width: 20px; --radix-popper-anchor-height: 22px; --radix-popper-available-width: 891.59375px; --radix-popper-available-height: 905px; --radix-popper-transform-origin: 50% 0px;"><div data-side="bottom" data-align="center" data-state="open" role="dialog" id="radix-:r2f:" class="relative max-h-[450px] animate-slideDownAndFade select-none overflow-y-auto whitespace-pre-line rounded-xl border-gray-100 bg-white p-4 text-sm text-token-text-primary shadow-xs dark:bg-gray-900 dark:text-white sm:max-w-lg md:max-w-xl" tabindex="-1" style="min-width:450px; max-width: 450px; --radix-popover-content-transform-origin: var(--radix-popper-transform-origin); --radix-popover-content-available-width: var(--radix-popper-available-width); --radix-popover-content-available-height: var(--radix-popper-available-height); --radix-popover-trigger-width: var(--radix-popper-anchor-width); --radix-popover-trigger-height: var(--radix-popper-anchor-height);"><div class="mb-5 mt-1 border-b border-black/10 pb-5 dark:border-white/10"><div class="flex flex-row items-center gap-2 text-token-text-primary">As instruções personalizadas estão ativadas e só podem ser alteradas no início do chat.</div></div><div class="flex flex-col gap-7"><div class="flex flex-col gap-3"><div class="font-medium text-token-text-tertiary">O que você gostaria que o ChatGPT soubesse sobre você para fornecer respostas melhores?</div><div style="user-select: text;" class="flex flex-row gap-1 text-token-text-primary">${aboutUser || ' '}</div></div><div class="flex flex-col gap-3"><div class="font-medium text-token-text-tertiary">Como você gostaria que o ChatGPT respondesse?</div><div style="user-select: text;" class="flex flex-row gap-1 text-token-text-primary">${aboutModel || '&nbsp;'}</div></div></div></div></div>`;
 }
 
 function UpdatePathWithGizmoName(conversationId, gizmoId) {
@@ -181,7 +181,7 @@ function loadConversation(conversationId, isArchived = false) {
             folderName = folderConatainingConversation.name;
           }
           // set page title meta to fullConversation.title
-          document.title = fullConversation.title || 'New chat';
+          document.title = fullConversation.title || 'Novo chat';
           if (fullConversation.gizmo_id) {
             UpdatePathWithGizmoName(fullConversation.id, fullConversation.gizmo_id);
           }
@@ -341,7 +341,7 @@ function updateTotalCounter(settings) {
     totalWords += words.length;
     totalCharacters += text.replace(/\n/g, '').length;
   });
-  totalCounterElement.innerHTML = `Total: ${totalCharacters} chars / ${totalWords} words`;
+  totalCounterElement.innerHTML = `Total: ${totalCharacters} chars / ${totalWords} palavras`;
 }
 function addCopyCodeButtonsEventListeners() {
   const copyCodeButtons = document.querySelectorAll('[id="copy-code"][data-initialized="false"]');
@@ -400,11 +400,11 @@ function showCopyMenu(event, messageId, conversationId) {
   const translateY = y + 4;
   const menu = `<div data-radix-popper-content-wrapper="" id="copy-message-menu" dir="ltr" style="position:fixed;left:0;top:0;transform:translate3d(${translateX}px,${translateY}px,0);min-width:max-content;z-index:1000000;--radix-popper-anchor-width:18px;--radix-popper-anchor-height:18px;--radix-popper-available-width:1167px;--radix-popper-available-height:604px;--radix-popper-transform-origin:0% 0px"><div data-side="bottom" data-align="start" role="menu" aria-orientation="vertical" data-state="open" data-radix-menu-content="" dir="ltr" aria-labelledby="radix-:r6g:" class="mt-2 min-w-[100px] max-w-xs rounded-lg border border-gray-100 bg-token-main-surface-primary shadow-lg dark:border-gray-700" tabindex="-1" data-orientation="vertical" style="outline:0;--radix-dropdown-menu-content-transform-origin:var(--radix-popper-transform-origin);--radix-dropdown-menu-content-available-width:var(--radix-popper-available-width);--radix-dropdown-menu-content-available-height:var(--radix-popper-available-height);--radix-dropdown-menu-trigger-width:var(--radix-popper-anchor-width);--radix-dropdown-menu-trigger-height:var(--radix-popper-anchor-height);pointer-events:auto">
   
-  <div role="menuitem" id="copy-text-button-${messageId}" class="flex gap-2 m-1.5 rounded p-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-main-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Copy plain text</div>
+  <div role="menuitem" id="copy-text-button-${messageId}" class="flex gap-2 m-1.5 rounded p-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-main-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Texto Plano</div>
   
-  <div role="menuitem" id="copy-html-button-${messageId}" class="flex gap-2 m-1.5 rounded p-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-main-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Copy with format</div>
+  <div role="menuitem" id="copy-html-button-${messageId}" class="flex gap-2 m-1.5 rounded p-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-main-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Formatado</div>
   
-  <div role="menuitem" id="copy-markdown-button-${messageId}" class="flex gap-2 m-1.5 rounded p-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-main-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Copy markdown</div>
+  <div role="menuitem" id="copy-markdown-button-${messageId}" class="flex gap-2 m-1.5 rounded p-2.5 text-sm cursor-pointer focus:ring-0 hover:bg-token-main-surface-secondary radix-disabled:pointer-events-none radix-disabled:opacity-50 group" tabindex="-1" data-orientation="vertical" data-radix-collection-item="">Markdown</div>
   
   </div></div>`;
   document.querySelector(`#message-wrapper-${messageId}`).insertAdjacentHTML('beforeend', menu);
@@ -433,7 +433,7 @@ function addCopyMenuEventListeners(messageId, conversationId) {
       const text = `${result.settings.copyMode ? `>> USER: ${userElement.innerText}\n>> ASSISTANT: ` : ''}${messageText}`;
       navigator.clipboard.writeText(text.trim());
 
-      toast('Copied to clipboard', 'success');
+      toast('Salvo no clipboard (Formatado)', 'success');
     });
   });
   copyHtmlButton.addEventListener('click', () => {
@@ -455,7 +455,7 @@ function addCopyMenuEventListeners(messageId, conversationId) {
         assistantTextOnlyElements.innerHTML = `<div>USER:</div><div>${userElement.innerText}</div><br><div>ASSISTANT:</div>${assistantTextOnlyElements.innerHTML}`;
       }
       copyRichText(assistantTextOnlyElements);
-      toast('Copied to clipboard', 'success');
+      toast('Salvo no clipboard (Texto)', 'success');
     });
   });
 
@@ -481,7 +481,7 @@ function addCopyMenuEventListeners(messageId, conversationId) {
       }
       navigator.clipboard.writeText(markdown.trim());
 
-      toast('Copied to clipboard', 'success');
+      toast('Salvo no clipboard (markdown)', 'success');
     });
   });
 }
@@ -575,7 +575,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
       actionDiv.id = `action-div-${messageId}`;
       const saveButton = document.createElement('button');
       saveButton.classList = 'btn flex justify-center gap-2 btn-primary mr-2';
-      saveButton.innerText = 'Save & Submit';
+      saveButton.innerText = 'Salvar & Enviar';
       saveButton.addEventListener('click', () => {
         messageEditWrapper.style.display = 'block';
         chrome.storage.local.get(['conversations', 'settings', 'models', 'selectedModel', 'account', 'chatgptAccountId'], (result) => {
@@ -636,7 +636,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
       });
       const cancelButton = document.createElement('button');
       cancelButton.classList = 'btn flex justify-center gap-2 btn-neutral';
-      cancelButton.innerText = 'Cancel';
+      cancelButton.innerText = 'Cancelar';
       cancelButton.addEventListener('click', () => {
         messageEditWrapper.style.display = 'block';
         // add back messageReplyToPreview
@@ -968,7 +968,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
           getDownloadUrlFromFileId(imageId).then((response) => {
             // save the file to user downloads folder: response.download_url;
             if (response.status === 'error') {
-              toast('Code interpreter session expired', 'error');
+              toast('A sessão do Interpretador de Códigos expirou', 'error');
               return;
             }
             const downloadUrl = response.download_url;
@@ -978,7 +978,7 @@ function addConversationsEventListeners(conversationId, onlyUpdateLastMessage = 
           getDownloadUrlFromSandBoxPath(conversationId, node.id, sandboxUrlPath).then((response) => {
             // save the file to user downloads folder: response.download_url;
             if (response.status === 'error') {
-              toast('Code interpreter session expired', 'error');
+              toast('A sessão do Interpretador de Códigos expirou', 'error');
               return;
             }
             const downloadUrl = response.download_url;
@@ -1135,7 +1135,7 @@ function addCustomInstructionInfoIconEventListener(conversationId, customInstruc
 }
 function showCitationTooltip(e, citationElement) {
   const citationUrl = new URL(citationElement.getAttribute('href'));
-  const citationTitle = citationUrl.host ? citationElement.title : citationElement.href.includes('sandbox') ? 'Download file' : '';
+  const citationTitle = citationUrl.host ? citationElement.title : citationElement.href.includes('sandbox') ? 'Baixar arquivo' : '';
   const citationDomain = citationUrl.hostname;
   const { x, y } = citationElement.getBoundingClientRect();
   if (!citationTitle) return;

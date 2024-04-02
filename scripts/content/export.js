@@ -54,7 +54,7 @@ function exportAllConversations(exportFormat) {
             const role = m?.author?.role || m?.role;
             const recipient = m?.recipient;
             return role === 'user' || (recipient === 'all' && role === 'assistant');
-          }).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${(m.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
+          }).map((m) => `${exportMode === 'both' ? `>> ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}: ` : ''}${(m.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instruções[\s\S]*## Final das Instruções\n\n/, '')}`)?.join('\n\n');
           zip.file(`${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(exportFormat)}`, conversationText);
         }
         // download as .json file
@@ -68,7 +68,7 @@ function exportAllConversations(exportFormat) {
             const role = m?.author?.role || m?.role;
             const recipient = m?.recipient;
             return role === 'user' || (recipient === 'all' && role === 'assistant');
-          }).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${(m.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instructions[\s\S]*## End Instructions\n\n/, '')}`)?.join('\n\n');
+          }).map((m) => `${exportMode === 'both' ? `## ${m.role ? m.role.toUpperCase() : m.author?.role.toUpperCase()}\n` : ''}${(m.content?.parts || [])?.filter((p) => typeof p === 'string')?.join('\n').replace(/## Instruções[\s\S]*## Final das Instruções\n\n/, '')}`)?.join('\n\n');
           zip.file(`${folderName}/${filePrefix}-${conversationTitle}.${fileFormatConverter(exportFormat)}`, conversationMarkdown);
         }
 
@@ -108,7 +108,7 @@ function exportAllConversations(exportFormat) {
         }
         clearTimeout(timeout);
         zip.generateAsync({ type: 'blob', compression: 'DEFLATE' }).then((content) => {
-          saveAs(content, `${new Date().toISOString().slice(0, 10)}-conversations.zip`);
+          saveAs(content, `${new Date().toISOString().slice(0, 10)}-gpt-history.zip`);
           const exportAllModal = document.getElementById('export-all-modal');
           resetSelection();
           setTimeout(() => {
@@ -143,9 +143,9 @@ function openExportAllModal() {
   chrome.storage.local.get(['selectedConversations'], (result) => {
     const { selectedConversations } = result;
     if (!selectedConversations || selectedConversations.length === 0) {
-      exportAllModalTitle.textContent = 'Export All';
+      exportAllModalTitle.textContent = 'Exportar Tudo';
     } else {
-      exportAllModalTitle.textContent = `Export ${selectedConversations.length} Selected`;
+      exportAllModalTitle.textContent = `Exportar ${selectedConversations.length} Selecionadas`;
     }
   });
   exportAllModalContent.appendChild(exportAllModalTitle);
@@ -157,7 +157,7 @@ function openExportAllModal() {
   // 3 radio buttons in a row for export format: input/label, input/label, input/label
   const exportAllModalFormatTitle = document.createElement('div');
   exportAllModalFormatTitle.style = 'font-size:0.875rem;font-weight:500;margin-top:32px;';
-  exportAllModalFormatTitle.textContent = 'In what format do you want to export?';
+  exportAllModalFormatTitle.textContent = 'Escolha o formato para baixar.';
   exportAllModalContent.appendChild(exportAllModalFormatTitle);
   const exportAllModalRadioButtonsWrapper = document.createElement('div');
   exportAllModalRadioButtonsWrapper.style = 'display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:8px;';
@@ -241,7 +241,7 @@ function openExportAllModal() {
   // cancel button
   const exportAllModalCancelButton = document.createElement('button');
   exportAllModalCancelButton.style = 'width:100%;height:40px;border-radius:4px;border:1px solid #565869;background-color:#40414f;color:white;font-size:0.875rem;margin-top:auto; margin-right: 8px;';
-  exportAllModalCancelButton.textContent = 'Cancel';
+  exportAllModalCancelButton.textContent = 'Cancelar';
   exportAllModalCancelButton.addEventListener('click', () => {
     exportAllCanceled = true;
     // Get a reference to the last interval + 1
@@ -258,12 +258,12 @@ function openExportAllModal() {
   // export button
   const exportAllModalExportButton = document.createElement('button');
   exportAllModalExportButton.style = 'width:100%;height:40px;border-radius:4px;border:1px solid #565869;background-color:#40414f;color:white;font-size:0.875rem;margin-top:auto; margin-left: 8px;opacity:0.5;';
-  exportAllModalExportButton.textContent = 'Export';
+  exportAllModalExportButton.textContent = 'Exportar';
   exportAllModalExportButton.disabled = true;
   exportAllModalExportButton.addEventListener('click', () => {
     exportAllCanceled = false;
     exportAllModalExportButton.disabled = true;
-    exportAllModalExportButton.textContent = 'Exporting...';
+    exportAllModalExportButton.textContent = 'Exportando...';
     exportAllModalExportButton.style.opacity = '0.5';
     const formatRadioButtons = document.querySelectorAll('input[name="export-all-modal-radio-button"]');
     formatRadioButtons.forEach((radioButton) => {

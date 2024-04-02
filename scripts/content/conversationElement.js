@@ -65,8 +65,8 @@ function createConversation(conversation) {
   conversationTitle.id = `conversation-title-${conversation.id}`;
   conversationTitle.classList = 'flex-1 overflow-hidden text-ellipsis whitespace-nowrap max-h-5 break-all relative text-token-text-primary';
   conversationTitle.style = 'position: relative; bottom: 5px;';
-  conversationTitle.innerHTML = conversation.title || 'New chat';
-  conversationElement.title = conversation.title || 'New chat';
+  conversationTitle.innerHTML = conversation.title || 'Novo chat';
+  conversationElement.title = conversation.title || 'Novo chat';
   conversationElement.appendChild(conversationTitle);
   // add timestamp
   const timestampElement = document.createElement('div');

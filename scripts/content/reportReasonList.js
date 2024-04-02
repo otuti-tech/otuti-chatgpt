@@ -1,8 +1,7 @@
-// eslint-disable-next-line no-unused-vars
 const reportReasonList = [
-  { code: 'select', name: 'Select reason' },
-  { code: 'discriminatory', name: 'Racism, sexism, homophobia, hate, or other discrimination' },
+  { code: 'select', name: 'Selecionar motivo' },
+  { code: 'discriminatory', name: 'Racismo, sexismo, homofobia, ódio ou outra discriminação' },
   { code: 'spam', name: 'Spam' },
-  { code: 'irrelevant', name: 'Irrelevant or annoying' },
-  { code: 'wrong', name: 'Wrong category or language' },
+  { code: 'irrelevant', name: 'Irrelevante ou incômodo' },
+  { code: 'wrong', name: 'Categoria ou idioma errado' },
 ];
