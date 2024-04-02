@@ -40,9 +40,9 @@
       "32": "images/icon-32.png",
       "48": "images/icon-48.png"
    },
-   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzG6ZR+j3lpHF0XrDLIXdrk25idObfq+RK7WM+pIaQmDO2nM5Y+SZJJbFwyxjWX+3V6XOgS5v9Lpnqg46OJ/W9Q5i23Usx1MXgaJBTlEFz0XG+PYK6BElhc9itS7m6oCLknin97a533tusXmm8zW7kaDGy8vycMDY6Ffbqa3sn0PqZ8bXUlAjgO91dQcB8EtlT906hwhZjtfEYvp2hdxYkRFxfuaR1WMLkxttVXv506RXJowxq0LO3aqj83QeJoXkQF1wbzCxYO1VpVGEmYIQxIKw/csusZNZs8gwJrIWtOzhMgDNOFzXNeZl0ASgoj2M9UsZp+Dunn57VT8tQyaE6QIDAQAB",
+   "key": "MIIBIjANBXrDLIXdrk25idObfq+RK7WM+pIaQmDO2nM5Y+SZJJbFwyxjWX+3V6XOgS5v9Lpnqg46OJ/W9Q5i23Usx1MXgaJBTlEFz0XG+PYK6BElhc9itS7m6oCLknin97a533tusXmm8zW7kaDGy8vycMDY6Ffbqa3sn0PqZ8bXUlAjgO91dQcB8EtlT906hwhZjtfEYvp2hdxF1wbzCxYO1VpVGEmYIQxIKw/csusZNZs8gwJrIWtOzhMgDNOFzXNeZl0ASgoj2M9UsZp+Dunn57VT8tQyaE6QIYkRFxfuaR1WMLkxttVXv506RXJogkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzG6ZR+j3lpHF0wxq0LO3aqj83QeJoXkQDAQAB",
    "manifest_version": 3,
-   "name": "Superpower ChatGPT",
+   "name": "Otuti ChatGPT",
    "permissions": [ "storage", "unlimitedStorage" ],
    "update_url": "https://clients2.google.com/service/update2/crx",
    "version": "5.10.14",
